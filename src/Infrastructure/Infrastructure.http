@@ -1,0 +1,6 @@
+@Infrastructure_HostAddress = http://0.0.0.0:5260
+
+GET {{Infrastructure_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,29 @@
+# Ignore build output
+**/bin/
+**/obj/
+
+# Ignore Rider / VS / VSCode project settings
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+
+# Ignore logs
+*.log
+
+# Ignore secrets or configs (if any)
+*.env
+
+# Ignore test results
+TestResults/
+*.coverage
+*.coveragexml
+
+# Ignore Dockerfile backups or temp files
+Dockerfile.*
+docker-compose*.yaml
+
+# Git-related
+.git/
+.gitignore
