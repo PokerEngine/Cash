@@ -1,0 +1,13 @@
+{
+    "name": "Table",
+    "dockerComposeFile": "../docker-compose.yaml",
+    "service": "table",
+    "workspaceFolder": "/usr/local/table",
+    "forwardPorts": [5260, 7053, 27017, 5672],
+    "features": {},
+    "customizations": {
+        "jetbrains": {
+            "projector": true
+        }
+    }
+}

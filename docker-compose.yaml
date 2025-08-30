@@ -4,7 +4,7 @@ services:
             context: .
             dockerfile: Dockerfile
         volumes:
-            - .:/usr/local/project
+            - .:/usr/local/table
         ports:
             - '5260:5260'
             - '7053:7053'
