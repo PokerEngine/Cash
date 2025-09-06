@@ -1,10 +1,10 @@
 services:
-    table:
+    cash:
         build:
             context: .
             dockerfile: Dockerfile
         volumes:
-            - .:/usr/local/table
+            - .:/usr/local/cash
         ports:
             - '5260:5260'
             - '7053:7053'

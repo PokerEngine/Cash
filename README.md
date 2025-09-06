@@ -1,5 +1,5 @@
 # Table
-A microservice which is responsible for handling poker table logic
+A microservice which is responsible for handling cash game logic
 
 ## Cookbook
 
@@ -22,14 +22,14 @@ It might be helpful when you need to clear all data and run the project from scr
 
 ### How to run tests?
 ```shell
-docker compose run --rm table dotnet test
-docker compose run --rm table dotnet test src/Infrastructure.Test
-docker compose run --rm table dotnet test src/Infrastructure.Test --filter "FullyQualifiedName=Infrastructure.Test.WorkerTest.TestTableCreate"
+docker compose run --rm cash dotnet test
+docker compose run --rm cash dotnet test src/Infrastructure.Test
+docker compose run --rm cash dotnet test src/Infrastructure.Test --filter "FullyQualifiedName=Infrastructure.Test.WorkerTest.TestTableCreate"
 ```
 
 ### How to run formatting?
 ```shell
-docker compose run --rm table dotnet format
+docker compose run --rm cash dotnet format
 ```
 
 ### How to set up dev container in Rider?

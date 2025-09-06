@@ -1,8 +1,8 @@
 {
-    "name": "Table",
+    "name": "Cash",
     "dockerComposeFile": "../docker-compose.yaml",
-    "service": "table",
-    "workspaceFolder": "/usr/local/table",
+    "service": "cash",
+    "workspaceFolder": "/usr/local/cash",
     "forwardPorts": [5260, 7053, 27017, 5672],
     "features": {},
     "customizations": {
