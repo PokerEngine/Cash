@@ -12,9 +12,9 @@ public class Table
     public readonly Chips BigBlind;
     public readonly Seat MaxSeat;
 
-    public Seat SmallBlindSeat { get; private set; }
-    public Seat BigBlindSeat { get; private set; }
-    public Seat ButtonSeat { get; private set; }
+    public Seat? SmallBlindSeat { get; private set; }
+    public Seat? BigBlindSeat { get; private set; }
+    public Seat? ButtonSeat { get; private set; }
     public HandUid? HandUid { get; private set; }
 
     private readonly Player?[] _players;
@@ -29,9 +29,9 @@ public class Table
         Chips bigBlind,
         Money chipCost,
         Seat maxSeat,
-        Seat smallBlindSeat,
-        Seat bigBlindSeat,
-        Seat buttonSeat,
+        Seat? smallBlindSeat,
+        Seat? bigBlindSeat,
+        Seat? buttonSeat,
         IEnumerable<Player> players
     )
     {
@@ -48,36 +48,9 @@ public class Table
 
         _players = new Player?[maxSeat];
 
-        var allPlayers = players.ToList();
-        foreach (var player in allPlayers)
+        foreach (var player in players)
         {
-            if (player.Seat > maxSeat)
-            {
-                throw new ArgumentOutOfRangeException(nameof(players), players, $"The table supports seats till {maxSeat}");
-            }
             _players[player.Seat - 1] = player;
-        }
-
-        var nicknames = allPlayers.Select(x => x.Nickname).ToHashSet();
-        if (allPlayers.Count != nicknames.Count)
-        {
-            throw new ArgumentException("The table must contain players with unique nicknames", nameof(players));
-        }
-
-        var seats = allPlayers.Select(x => x.Seat).ToHashSet();
-        if (allPlayers.Count != seats.Count)
-        {
-            throw new ArgumentException("The table must contain players with unique seats", nameof(players));
-        }
-
-        if (SmallBlindSeat == BigBlindSeat)
-        {
-            throw new ArgumentException("The table must contain different players on the big and small blinds", nameof(smallBlindSeat));
-        }
-
-        if (ButtonSeat == BigBlindSeat)
-        {
-            throw new ArgumentException("The table must contain different players on the big blind and button", nameof(buttonSeat));
         }
     }
 
@@ -91,8 +64,6 @@ public class Table
         IEventBus eventBus
     )
     {
-        var smallBlindSeat = maxSeat == new Seat(2) ? new Seat(2) : new Seat(1);
-        var bigBlindSeat = maxSeat == new Seat(2) ? new Seat(1) : new Seat(2);
         var table = new Table(
             uid: uid,
             game: game,
@@ -100,9 +71,9 @@ public class Table
             bigBlind: bigBlind,
             chipCost: chipCost,
             maxSeat: maxSeat,
-            smallBlindSeat: smallBlindSeat,
-            bigBlindSeat: bigBlindSeat,
-            buttonSeat: maxSeat,
+            smallBlindSeat: null,
+            bigBlindSeat: null,
+            buttonSeat: null,
             players: []
         );
 
@@ -144,19 +115,21 @@ public class Table
             throw new InvalidOperationException("A player with the given nickname is already sitting down at the table");
         }
 
+        var isWaitingForBigBlind = ShouldWaitForBigBlind();
         _players[seat - 1] = new Player(
             nickname: nickname,
             seat: seat,
             stack: stack,
             isDisconnected: false,
             isSittingOut: false,
-            isWaitingForBigBlind: true
+            isWaitingForBigBlind: isWaitingForBigBlind
         );
 
         var @event = new PlayerSatDownEvent(
             Nickname: nickname,
             Seat: seat,
             Stack: stack,
+            IsWaitingForBigBlind: isWaitingForBigBlind,
             OccuredAt: DateTime.Now
         );
         eventBus.Publish(@event);
@@ -213,10 +186,14 @@ public class Table
             throw new InvalidOperationException("A player with the given nickname is not found at the table");
         }
 
-        player.SitIn();
+        var isWaitingForBigBlind = ShouldWaitForBigBlind();
+        player.SitIn(
+            isWaitingForBigBlind: isWaitingForBigBlind
+        );
 
         var @event = new PlayerSatInEvent(
             Nickname: nickname,
+            IsWaitingForBigBlind: isWaitingForBigBlind,
             OccuredAt: DateTime.Now
         );
         eventBus.Publish(@event);
@@ -229,9 +206,16 @@ public class Table
             throw new InvalidOperationException("The table does not have enough players to start a hand");
         }
 
+        var nextButtonSeat = GetNextButtonSeat();
+        var nextSmallBlindSeat = GetNextSmallBlindSeat(nextButtonSeat);
+        var nextBigBlindSeat = GetNextBigBlindSeat(nextSmallBlindSeat, nextButtonSeat);
+
+        ButtonSeat = nextButtonSeat;
+        SmallBlindSeat = nextSmallBlindSeat;
+        BigBlindSeat = nextBigBlindSeat;
         HandUid = handUid;
 
-        var bbPlayer = GetPlayerBySeat(BigBlindSeat);
+        var bbPlayer = GetPlayerBySeat(nextBigBlindSeat);
         if (bbPlayer != null && bbPlayer.IsWaitingForBigBlind)
         {
             bbPlayer.StopWaitingForBigBlind();
@@ -245,6 +229,84 @@ public class Table
     }
 
     private bool HasEnoughPlayersForHand()
+    {
+        return ActivePlayers.Count() > 1;
+    }
+
+    private Seat GetNextButtonSeat()
+    {
+        var eligibleSeats = ActivePlayers
+            .Where(p => !p.IsWaitingForBigBlind)
+            .Select(p => p.Seat)
+            .OrderBy(s => s)
+            .ToHashSet();
+
+        var nextSeat = ButtonSeat ?? MaxSeat; // For the first hand, start from the max seat
+
+        do
+        {
+            nextSeat = GetNextSeat(nextSeat);
+        } while (!eligibleSeats.Contains(nextSeat) || nextSeat == SmallBlindSeat || nextSeat == BigBlindSeat);
+
+        return nextSeat;
+    }
+
+    private Seat GetNextSmallBlindSeat(Seat nextButtonSeat)
+    {
+        var eligibleSeats = ActivePlayers
+            .Where(p => !p.IsWaitingForBigBlind)
+            .Select(p => p.Seat)
+            .OrderBy(s => s)
+            .ToList();
+
+        var smallBlindSeat = nextButtonSeat;
+
+        do
+        {
+            smallBlindSeat = GetNextSeat(smallBlindSeat);
+        } while (!eligibleSeats.Contains(smallBlindSeat) || smallBlindSeat == nextButtonSeat);
+
+        return smallBlindSeat;
+    }
+
+    private Seat GetNextBigBlindSeat(Seat nextSmallBlindSeat, Seat nextButtonSeat)
+    {
+        var eligibleSeats = ActivePlayers
+            .Select(p => p.Seat)
+            .OrderBy(s => s)
+            .ToList();
+
+        var bigBlindSeat = nextSmallBlindSeat;
+
+        do
+        {
+            bigBlindSeat = GetNextSeat(bigBlindSeat);
+        } while (!eligibleSeats.Contains(bigBlindSeat) || bigBlindSeat == nextSmallBlindSeat || bigBlindSeat == nextButtonSeat);
+
+        return bigBlindSeat;
+    }
+
+    private Seat GetNextSeat(Seat seat)
+    {
+        return seat == MaxSeat ? new Seat(1) : new Seat(seat + 1);
+    }
+
+    public IEnumerable<Participant> GetParticipants()
+    {
+        foreach (var player in ActivePlayers)
+        {
+            if (!player.IsWaitingForBigBlind)
+            {
+                yield return new Participant(
+                    Nickname: player.Nickname,
+                    Seat: player.Seat,
+                    Stack: player.Stack
+                );
+            }
+        }
+    }
+
+    private bool ShouldWaitForBigBlind()
     {
         return ActivePlayers.Count() > 1;
     }

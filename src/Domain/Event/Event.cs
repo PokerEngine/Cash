@@ -20,6 +20,7 @@ public record PlayerSatDownEvent(
     Nickname Nickname,
     Seat Seat,
     Chips Stack,
+    bool IsWaitingForBigBlind,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
 
@@ -35,6 +36,7 @@ public record PlayerSatOutEvent(
 
 public record PlayerSatInEvent(
     Nickname Nickname,
+    bool IsWaitingForBigBlind,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
 

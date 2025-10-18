@@ -66,7 +66,7 @@ public class Player : IEquatable<Player>
         IsWaitingForBigBlind = false;
     }
 
-    public void SitIn()
+    public void SitIn(bool isWaitingForBigBlind)
     {
         if (IsDisconnected)
         {
@@ -79,7 +79,7 @@ public class Player : IEquatable<Player>
         }
 
         IsSittingOut = false;
-        IsWaitingForBigBlind = true;
+        IsWaitingForBigBlind = isWaitingForBigBlind;
     }
 
     public void StopWaitingForBigBlind()

@@ -30,7 +30,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
             throw new InvalidOperationException("Cannot add money with different currencies");
         }
 
-        return new (a.Amount + b.Amount, a.Currency);
+        return new(a.Amount + b.Amount, a.Currency);
     }
 
     public static Money operator -(Money a, Money b)
@@ -40,7 +40,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
             throw new InvalidOperationException("Cannot subtract money with different currencies");
         }
 
-        return new (a.Amount - b.Amount, a.Currency);
+        return new(a.Amount - b.Amount, a.Currency);
     }
 
     public static bool operator !(Money a)
