@@ -15,7 +15,7 @@ public class Table
     public Seat SmallBlindSeat { get; private set; }
     public Seat BigBlindSeat { get; private set; }
     public Seat ButtonSeat { get; private set; }
-    public HandUid? CurrentHandUid { get; private set; }
+    public HandUid? HandUid { get; private set; }
 
     private readonly Player?[] _players;
 
@@ -220,6 +220,33 @@ public class Table
             OccuredAt: DateTime.Now
         );
         eventBus.Publish(@event);
+    }
+
+    public void StartHand(HandUid handUid, EventBus eventBus)
+    {
+        if (!HasEnoughPlayersForHand())
+        {
+            throw new InvalidOperationException("The table does not have enough players to start a hand");
+        }
+
+        HandUid = handUid;
+
+        var bbPlayer = GetPlayerBySeat(BigBlindSeat);
+        if (bbPlayer != null && bbPlayer.IsWaitingForBigBlind)
+        {
+            bbPlayer.StopWaitingForBigBlind();
+        }
+
+        var @event = new HandIsStartedEvent(
+            HandUid: handUid,
+            OccuredAt: DateTime.Now
+        );
+        eventBus.Publish(@event);
+    }
+
+    private bool HasEnoughPlayersForHand()
+    {
+        return ActivePlayers.Count() > 1;
     }
 
     private Player? GetPlayerByNickname(Nickname nickname)

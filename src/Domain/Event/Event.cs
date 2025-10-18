@@ -37,3 +37,8 @@ public record PlayerSatInEvent(
     Nickname Nickname,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
+
+public record HandIsStartedEvent(
+    HandUid HandUid,
+    DateTime OccuredAt
+) : BaseEvent(OccuredAt);

@@ -360,6 +360,7 @@ public class TableTest
         Assert.False(player.IsSittingOut);
         Assert.True(player.IsWaitingForBigBlind);
 
+        Assert.Single(events);
         var @event = Assert.IsType<PlayerSatInEvent>(events[0]);
         Assert.Equal(new Nickname("SmallBlind"), @event.Nickname);
     }
@@ -417,6 +418,96 @@ public class TableTest
 
         // Assert
         Assert.Equal("A player with the given nickname is not found at the table", exc.Message);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public void StartHand_EnoughPlayers_ShouldStartHand()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var handUid = new HandUid(Guid.NewGuid());
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("SmallBlind"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("BigBlind"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Button"),
+            seat: new Seat(3),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitOut(
+            nickname: new Nickname("Button"),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        table.StartHand(
+            handUid: handUid,
+            eventBus: eventBus
+        );
+
+        // Assert
+        Assert.Equal(handUid, table.HandUid);
+
+        Assert.Single(events);
+        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
+        Assert.Equal(handUid, @event.HandUid);
+    }
+
+    [Fact]
+    public void StartHand_NotEnoughPlayers_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var handUid = new HandUid(Guid.NewGuid());
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("SmallBlind"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("BigBlind"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitOut(
+            nickname: new Nickname("BigBlind"),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.StartHand(
+                handUid: handUid,
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("The table does not have enough players to start a hand", exc.Message);
         Assert.Empty(events);
     }
 
