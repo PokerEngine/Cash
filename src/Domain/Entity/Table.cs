@@ -206,8 +206,8 @@ public class Table
             throw new InvalidOperationException("The table does not have enough players to start a hand");
         }
 
-        var nextButtonSeat = GetNextButtonSeat();
-        var nextSmallBlindSeat = GetNextSmallBlindSeat(nextButtonSeat);
+        var nextButtonSeat = GetNextButtonSeat(ButtonSeat, SmallBlindSeat);
+        var nextSmallBlindSeat = GetNextSmallBlindSeat(nextButtonSeat, BigBlindSeat);
         var nextBigBlindSeat = GetNextBigBlindSeat(nextSmallBlindSeat, nextButtonSeat);
 
         ButtonSeat = nextButtonSeat;
@@ -233,57 +233,70 @@ public class Table
         return ActivePlayers.Count() > 1;
     }
 
-    private Seat GetNextButtonSeat()
+    private Seat GetNextButtonSeat(Seat? previousButtonSeat, Seat? previousSmallBlindSeat)
     {
+        // Corner case: if the player on the small blind has left the table, we make this seat the Dead Button
+        if (previousSmallBlindSeat is not null && GetPlayerBySeat((Seat)previousSmallBlindSeat) is null)
+        {
+            return (Seat)previousSmallBlindSeat;
+        }
+
         var eligibleSeats = ActivePlayers
             .Where(p => !p.IsWaitingForBigBlind)
             .Select(p => p.Seat)
             .OrderBy(s => s)
             .ToHashSet();
 
-        var nextSeat = ButtonSeat ?? MaxSeat; // For the first hand, start from the max seat
+        var seat = previousButtonSeat ?? MaxSeat; // For the first hand, start from the max seat
 
         do
         {
-            nextSeat = GetNextSeat(nextSeat);
-        } while (!eligibleSeats.Contains(nextSeat) || nextSeat == SmallBlindSeat || nextSeat == BigBlindSeat);
+            seat = GetNextSeat(seat);
+        } while (!eligibleSeats.Contains(seat));
 
-        return nextSeat;
+        return seat;
     }
 
-    private Seat GetNextSmallBlindSeat(Seat nextButtonSeat)
+    private Seat? GetNextSmallBlindSeat(Seat nextButtonSeat, Seat? previousBigBlindSeat)
     {
+        // Corner case: if the player on the big blind has left the table, we play the next hand without the small blind
+        if (previousBigBlindSeat is not null && GetPlayerBySeat((Seat)previousBigBlindSeat) is null)
+        {
+            return null;
+        }
+
         var eligibleSeats = ActivePlayers
             .Where(p => !p.IsWaitingForBigBlind)
             .Select(p => p.Seat)
             .OrderBy(s => s)
             .ToList();
 
-        var smallBlindSeat = nextButtonSeat;
+        var seat = nextButtonSeat;
 
         do
         {
-            smallBlindSeat = GetNextSeat(smallBlindSeat);
-        } while (!eligibleSeats.Contains(smallBlindSeat) || smallBlindSeat == nextButtonSeat);
+            seat = GetNextSeat(seat);
+        } while (!eligibleSeats.Contains(seat));
 
-        return smallBlindSeat;
+        return seat;
     }
 
-    private Seat GetNextBigBlindSeat(Seat nextSmallBlindSeat, Seat nextButtonSeat)
+    private Seat GetNextBigBlindSeat(Seat? nextSmallBlindSeat, Seat nextButtonSeat)
     {
         var eligibleSeats = ActivePlayers
             .Select(p => p.Seat)
             .OrderBy(s => s)
             .ToList();
 
-        var bigBlindSeat = nextSmallBlindSeat;
+        // Corner case: if the player on the big blind has left the table, the next big blind is right after the button
+        var seat = nextSmallBlindSeat ?? nextButtonSeat;
 
         do
         {
-            bigBlindSeat = GetNextSeat(bigBlindSeat);
-        } while (!eligibleSeats.Contains(bigBlindSeat) || bigBlindSeat == nextSmallBlindSeat || bigBlindSeat == nextButtonSeat);
+            seat = GetNextSeat(seat);
+        } while (!eligibleSeats.Contains(seat));
 
-        return bigBlindSeat;
+        return seat;
     }
 
     private Seat GetNextSeat(Seat seat)

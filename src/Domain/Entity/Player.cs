@@ -11,7 +11,7 @@ public class Player : IEquatable<Player>
     public bool IsSittingOut { get; private set; }
     public bool IsWaitingForBigBlind { get; private set; }
 
-    public bool IsActive => !IsDisconnected && !IsSittingOut && !!Stack;
+    public bool IsActive => !IsDisconnected && !IsSittingOut;
 
     public Player(
         Nickname nickname,
