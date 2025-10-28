@@ -5,6 +5,8 @@ namespace Domain.Entity;
 
 public class Table
 {
+    private const int MinPlayersForHand = 2;
+
     public readonly TableUid Uid;
     public readonly Game Game;
     public readonly Money ChipCost;
@@ -20,7 +22,7 @@ public class Table
     private readonly Player?[] _players;
 
     public IEnumerable<Player> Players => _players.OfType<Player>();
-    public IEnumerable<Player> ActivePlayers => Players.Where(x => x.IsActive);
+    private IEnumerable<Player> ActivePlayers => Players.Where(p => p.IsActive);
 
     private Table(
         TableUid uid,
@@ -216,7 +218,7 @@ public class Table
         HandUid = handUid;
 
         var bbPlayer = GetPlayerBySeat(nextBigBlindSeat);
-        if (bbPlayer != null && bbPlayer.IsWaitingForBigBlind)
+        if (bbPlayer is not null && bbPlayer.IsWaitingForBigBlind)
         {
             bbPlayer.StopWaitingForBigBlind();
         }
@@ -230,107 +232,102 @@ public class Table
 
     private bool HasEnoughPlayersForHand()
     {
-        return ActivePlayers.Count() > 1;
+        return ActivePlayers.Count() >= MinPlayersForHand;
     }
 
     private Seat GetNextButtonSeat(Seat? previousButtonSeat, Seat? previousSmallBlindSeat)
     {
-        // Corner case: if the player on the small blind has left the table, we make this seat the Dead Button
-        if (previousSmallBlindSeat is not null && GetPlayerBySeat((Seat)previousSmallBlindSeat) is null)
+        // Corner case: if a player on the small blind has left the table, we make this seat the Dead Button
+        if (previousSmallBlindSeat is not null && SeatIsNotActive((Seat)previousSmallBlindSeat))
         {
             return (Seat)previousSmallBlindSeat;
         }
 
-        var eligibleSeats = ActivePlayers
-            .Where(p => !p.IsWaitingForBigBlind)
-            .Select(p => p.Seat)
-            .OrderBy(s => s)
-            .ToHashSet();
-
-        var seat = previousButtonSeat ?? MaxSeat; // For the first hand, start from the max seat
-
-        do
-        {
-            seat = GetNextSeat(seat);
-        } while (!eligibleSeats.Contains(seat));
-
-        return seat;
+        var previousSeat = previousButtonSeat ?? MaxSeat; // For the first hand, start from the max seat
+        return GetNextSeat(previousSeat, p => p.IsActive && !p.IsWaitingForBigBlind);
     }
 
     private Seat? GetNextSmallBlindSeat(Seat nextButtonSeat, Seat? previousBigBlindSeat)
     {
-        // Corner case: if the player on the big blind has left the table, we play the next hand without the small blind
-        if (previousBigBlindSeat is not null && GetPlayerBySeat((Seat)previousBigBlindSeat) is null)
+        // Corner case: if a player on the big blind has left the table, we play the next hand without the small blind
+        if (previousBigBlindSeat is not null && SeatIsNotActive((Seat)previousBigBlindSeat))
         {
             return null;
         }
 
-        var eligibleSeats = ActivePlayers
-            .Where(p => !p.IsWaitingForBigBlind)
-            .Select(p => p.Seat)
-            .OrderBy(s => s)
-            .ToList();
-
-        var seat = nextButtonSeat;
-
-        do
+        if (ActivePlayers.Count(p => !p.IsWaitingForBigBlind) == 2)
         {
-            seat = GetNextSeat(seat);
-        } while (!eligibleSeats.Contains(seat));
+            if (ActivePlayers.Count() > 2)
+            {
+                var nextSeat = GetNextSeat(nextButtonSeat, p => p.IsActive);
+                var nextPlayer = GetPlayerBySeat(nextSeat);
+                if (nextPlayer is not null && nextPlayer.IsWaitingForBigBlind)
+                {
+                    // Corner case: if a new player joins the heads-up table and posts the big blind,
+                    // we play the next hand without the small blind
+                    return null;
+                }
+            }
 
-        return seat;
+            var buttonPlayer = GetPlayerBySeat(nextButtonSeat);
+            if (buttonPlayer is not null && buttonPlayer.IsActive)
+            {
+                // Corner case: in heads-up, the button posts the small blind (except the Dead Button case)
+                return nextButtonSeat;
+            }
+        }
+
+        var previousSeat = nextButtonSeat;
+        return GetNextSeat(previousSeat, p => p.IsActive && !p.IsWaitingForBigBlind);
     }
 
     private Seat GetNextBigBlindSeat(Seat? nextSmallBlindSeat, Seat nextButtonSeat)
     {
-        var eligibleSeats = ActivePlayers
-            .Select(p => p.Seat)
-            .OrderBy(s => s)
-            .ToList();
+        // Corner case: if a player on the big blind has left the table, the next big blind is right after the button
+        var previousSeat = nextSmallBlindSeat ?? nextButtonSeat;
+        return GetNextSeat(previousSeat, p => p.IsActive);
+    }
 
-        // Corner case: if the player on the big blind has left the table, the next big blind is right after the button
-        var seat = nextSmallBlindSeat ?? nextButtonSeat;
+    private bool SeatIsNotActive(Seat seat)
+    {
+        var player = GetPlayerBySeat(seat);
+        return player is null || !player.IsActive;
+    }
+
+    private Seat GetNextSeat(Seat previousSeat, Func<Player, bool>? predicate = null)
+    {
+        var seat = previousSeat;
 
         do
         {
-            seat = GetNextSeat(seat);
-        } while (!eligibleSeats.Contains(seat));
+            seat = seat == MaxSeat ? new Seat(1) : new Seat(seat + 1);
 
-        return seat;
-    }
-
-    private Seat GetNextSeat(Seat seat)
-    {
-        return seat == MaxSeat ? new Seat(1) : new Seat(seat + 1);
-    }
-
-    public IEnumerable<Participant> GetParticipants()
-    {
-        foreach (var player in ActivePlayers)
-        {
-            if (!player.IsWaitingForBigBlind)
+            if (seat == previousSeat)
             {
-                yield return new Participant(
-                    Nickname: player.Nickname,
-                    Seat: player.Seat,
-                    Stack: player.Stack
-                );
+                throw new InvalidOperationException("No eligible seats");
             }
-        }
+
+            var player = GetPlayerBySeat(seat);
+
+            if (player is not null && (predicate is null || predicate(player)))
+            {
+                return seat;
+            }
+        } while (true);
     }
 
     private bool ShouldWaitForBigBlind()
     {
-        return ActivePlayers.Count() > 1;
+        return HasEnoughPlayersForHand() && HandUid is not null;
     }
 
     private Player? GetPlayerByNickname(Nickname nickname)
     {
-        return Players.FirstOrDefault(x => x.Nickname == nickname);
+        return Players.FirstOrDefault(p => p.Nickname == nickname);
     }
 
     private Player? GetPlayerBySeat(Seat seat)
     {
-        return Players.FirstOrDefault(x => x.Seat == seat);
+        return _players[seat - 1];
     }
 }
