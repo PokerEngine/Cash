@@ -24,5 +24,8 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests
+      - name: Run domain tests
         run: dotnet test src/Domain.Test --configuration Release --no-build --verbosity normal
+
+      - name: Run application tests
+        run: dotnet test src/Application.Test --configuration Release --no-build --verbosity normal
