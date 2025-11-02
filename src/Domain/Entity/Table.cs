@@ -93,6 +93,78 @@ public class Table
         return table;
     }
 
+    public static Table FromEvents(IList<BaseEvent> events)
+    {
+        if (events.Count == 0 || events[0] is not TableIsCreatedEvent)
+        {
+            throw new InvalidOperationException("The first event must be a TableIsCreatedEvent");
+        }
+
+        var eventBus = new EventBus();
+
+        var createdEvent = (TableIsCreatedEvent)events[0];
+        var table = FromScratch(
+            uid: createdEvent.Uid,
+            game: createdEvent.Game,
+            maxSeat: createdEvent.MaxSeat,
+            smallBlind: createdEvent.SmallBlind,
+            bigBlind: createdEvent.BigBlind,
+            chipCost: createdEvent.ChipCost,
+            eventBus: eventBus
+        );
+
+        foreach (var @event in events)
+        {
+            switch (@event)
+            {
+                case TableIsCreatedEvent:
+                    break;
+                case PlayerSatDownEvent e:
+                    table.SitDown(
+                        nickname: e.Nickname,
+                        seat: e.Seat,
+                        stack: e.Stack,
+                        eventBus: eventBus
+                    );
+                    break;
+                case PlayerStoodUpEvent e:
+                    table.StandUp(
+                        nickname: e.Nickname,
+                        eventBus: eventBus
+                    );
+                    break;
+                case PlayerSatOutEvent e:
+                    table.SitOut(
+                        nickname: e.Nickname,
+                        eventBus: eventBus
+                    );
+                    break;
+                case PlayerSatInEvent e:
+                    table.SitIn(
+                        nickname: e.Nickname,
+                        eventBus: eventBus
+                    );
+                    break;
+                case HandIsStartedEvent e:
+                    table.StartHand(
+                        handUid: e.HandUid,
+                        eventBus: eventBus
+                    );
+                    break;
+                case HandIsFinishedEvent e:
+                    table.FinishHand(
+                        handUid: e.HandUid,
+                        eventBus: eventBus
+                    );
+                    break;
+
+                    // TODO: handle other events when they are added
+            }
+        }
+
+        return table;
+    }
+
     public void SitDown(
         Nickname nickname,
         Seat seat,
@@ -131,7 +203,6 @@ public class Table
             Nickname: nickname,
             Seat: seat,
             Stack: stack,
-            IsWaitingForBigBlind: isWaitingForBigBlind,
             OccuredAt: DateTime.Now
         );
         eventBus.Publish(@event);
@@ -195,7 +266,6 @@ public class Table
 
         var @event = new PlayerSatInEvent(
             Nickname: nickname,
-            IsWaitingForBigBlind: isWaitingForBigBlind,
             OccuredAt: DateTime.Now
         );
         eventBus.Publish(@event);
@@ -203,6 +273,11 @@ public class Table
 
     public void StartHand(HandUid handUid, EventBus eventBus)
     {
+        if (HandUid is not null)
+        {
+            throw new InvalidOperationException("The previous hand has not been finished yet");
+        }
+
         if (!HasEnoughPlayersForHand())
         {
             throw new InvalidOperationException("The table does not have enough players to start a hand");
@@ -224,6 +299,27 @@ public class Table
         }
 
         var @event = new HandIsStartedEvent(
+            HandUid: handUid,
+            OccuredAt: DateTime.Now
+        );
+        eventBus.Publish(@event);
+    }
+
+    public void FinishHand(HandUid handUid, IEventBus eventBus)
+    {
+        if (HandUid is null)
+        {
+            throw new InvalidOperationException("The hand has not been started yet");
+        }
+
+        if (handUid != HandUid)
+        {
+            throw new InvalidOperationException("The hand does not match the current one");
+        }
+
+        HandUid = null;
+
+        var @event = new HandIsFinishedEvent(
             HandUid: handUid,
             OccuredAt: DateTime.Now
         );

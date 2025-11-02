@@ -23,20 +23,20 @@ public class TableTest
         var table = Table.FromScratch(
             uid: uid,
             game: Game.NoLimitHoldem,
+            maxSeat: new Seat(maxSeat),
             smallBlind: new Chips(5),
             bigBlind: new Chips(10),
             chipCost: new Money(1, Currency.Usd),
-            maxSeat: new Seat(maxSeat),
             eventBus: eventBus
         );
 
         // Assert
         Assert.Equal(uid, table.Uid);
         Assert.Equal(Game.NoLimitHoldem, table.Game);
+        Assert.Equal(new Seat(maxSeat), table.MaxSeat);
         Assert.Equal(new Chips(5), table.SmallBlind);
         Assert.Equal(new Chips(10), table.BigBlind);
         Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
-        Assert.Equal(new Seat(maxSeat), table.MaxSeat);
         Assert.Null(table.ButtonSeat);
         Assert.Null(table.SmallBlindSeat);
         Assert.Null(table.BigBlindSeat);
@@ -50,6 +50,97 @@ public class TableTest
         Assert.Equal(new Chips(10), @event.BigBlind);
         Assert.Equal(new Money(1, Currency.Usd), @event.ChipCost);
         Assert.Equal(new Seat(maxSeat), @event.MaxSeat);
+    }
+
+    [Theory]
+    [InlineData(6)]
+    [InlineData(9)]
+    public void FromEvents_Valid_ShouldCreate(int maxSeat)
+    {
+        // Arrange
+        var uid = new TableUid(Guid.NewGuid());
+        var handUid1 = new HandUid(Guid.NewGuid());
+        var handUid2 = new HandUid(Guid.NewGuid());
+        var events = new List<BaseEvent>
+        {
+            new TableIsCreatedEvent(
+                Uid: uid,
+                Game: Game.NoLimitHoldem,
+                MaxSeat: new Seat(maxSeat),
+                SmallBlind: new Chips(5),
+                BigBlind: new Chips(10),
+                ChipCost: new Money(1, Currency.Usd),
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatDownEvent(
+                Nickname: new Nickname("Alice"),
+                Seat: new Seat(2),
+                Stack: new Chips(1000),
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatDownEvent(
+                Nickname: new Nickname("Bob"),
+                Seat: new Seat(4),
+                Stack: new Chips(1000),
+                OccuredAt: DateTime.Now
+            ),
+            new HandIsStartedEvent(
+                HandUid: handUid1,
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatDownEvent(
+                Nickname: new Nickname("Charlie"),
+                Seat: new Seat(3),
+                Stack: new Chips(1000),
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatOutEvent(
+                Nickname: new Nickname("Charlie"),
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatDownEvent(
+                Nickname: new Nickname("Diana"),
+                Seat: new Seat(5),
+                Stack: new Chips(1000),
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatOutEvent(
+                Nickname: new Nickname("Diana"),
+                OccuredAt: DateTime.Now
+            ),
+            new HandIsFinishedEvent(
+                HandUid: handUid1,
+                OccuredAt: DateTime.Now
+            ),
+            new HandIsStartedEvent(
+                HandUid: handUid2,
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerSatInEvent(
+                Nickname: new Nickname("Diana"),
+                OccuredAt: DateTime.Now
+            ),
+            new PlayerStoodUpEvent(
+                Nickname: new Nickname("Bob"),
+                OccuredAt: DateTime.Now
+            )
+        };
+
+        // Act
+        var table = Table.FromEvents(events);
+
+        // Assert
+        Assert.Equal(uid, table.Uid);
+        Assert.Equal(Game.NoLimitHoldem, table.Game);
+        Assert.Equal(new Chips(5), table.SmallBlind);
+        Assert.Equal(new Chips(10), table.BigBlind);
+        Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
+        Assert.Equal(new Seat(maxSeat), table.MaxSeat);
+        Assert.Equal(new Seat(4), table.ButtonSeat);
+        Assert.Equal(new Seat(4), table.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.Equal(handUid2, table.HandUid);
+        Assert.Equal(3, table.Players.Count());
     }
 
     [Fact]
@@ -86,7 +177,6 @@ public class TableTest
         Assert.Equal(new Nickname("Alice"), @event.Nickname);
         Assert.Equal(new Seat(1), @event.Seat);
         Assert.Equal(new Chips(1000), @event.Stack);
-        Assert.False(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -129,7 +219,6 @@ public class TableTest
         Assert.Equal(new Nickname("Bob"), @event.Nickname);
         Assert.Equal(new Seat(2), @event.Seat);
         Assert.Equal(new Chips(1000), @event.Stack);
-        Assert.False(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -178,7 +267,6 @@ public class TableTest
         Assert.Equal(new Nickname("Charlie"), @event.Nickname);
         Assert.Equal(new Seat(3), @event.Seat);
         Assert.Equal(new Chips(1000), @event.Stack);
-        Assert.False(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -231,7 +319,6 @@ public class TableTest
         Assert.Equal(new Nickname("Charlie"), @event.Nickname);
         Assert.Equal(new Seat(3), @event.Seat);
         Assert.Equal(new Chips(1000), @event.Stack);
-        Assert.True(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -511,7 +598,6 @@ public class TableTest
         Assert.Single(events);
         var @event = Assert.IsType<PlayerSatInEvent>(events[0]);
         Assert.Equal(new Nickname("Alice"), @event.Nickname);
-        Assert.False(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -555,7 +641,6 @@ public class TableTest
         Assert.Single(events);
         var @event = Assert.IsType<PlayerSatInEvent>(events[0]);
         Assert.Equal(new Nickname("Alice"), @event.Nickname);
-        Assert.False(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -605,7 +690,6 @@ public class TableTest
         Assert.Single(events);
         var @event = Assert.IsType<PlayerSatInEvent>(events[0]);
         Assert.Equal(new Nickname("Alice"), @event.Nickname);
-        Assert.False(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -659,7 +743,6 @@ public class TableTest
         Assert.Single(events);
         var @event = Assert.IsType<PlayerSatInEvent>(events[0]);
         Assert.Equal(new Nickname("Alice"), @event.Nickname);
-        Assert.True(@event.IsWaitingForBigBlind);
     }
 
     [Fact]
@@ -785,6 +868,10 @@ public class TableTest
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
         ); // Alice is BU/SB, Bob is BB
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -836,6 +923,10 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -884,6 +975,10 @@ public class TableTest
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
             eventBus: new EventBus()
         );
 
@@ -940,10 +1035,18 @@ public class TableTest
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
         ); // Alice is BB, Bob's seat is dead button, Charlie is SB
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1038,6 +1141,10 @@ public class TableTest
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
         ); // Alice is BU, Bob is SB, Charlie is BB
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1093,6 +1200,10 @@ public class TableTest
             nickname: new Nickname("Diana"),
             seat: new Seat(3),
             stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
             eventBus: new EventBus()
         );
 
@@ -1151,6 +1262,10 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1207,6 +1322,10 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1261,6 +1380,10 @@ public class TableTest
             nickname: new Nickname("Alice"),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1312,6 +1435,10 @@ public class TableTest
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1361,6 +1488,10 @@ public class TableTest
         ); // Alice is BU, Bob is SB, Charlie is BB
         table.StandUp(
             nickname: new Nickname("Charlie"),
+            eventBus: new EventBus()
+        );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
             eventBus: new EventBus()
         );
 
@@ -1420,10 +1551,18 @@ public class TableTest
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
         ); // Alice is CO, Bob's seat is the dead button, Charlie is SB, Diana is BB
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1479,6 +1618,10 @@ public class TableTest
         ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StandUp(
             nickname: new Nickname("Alice"),
+            eventBus: new EventBus()
+        );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
             eventBus: new EventBus()
         );
 
@@ -1538,6 +1681,10 @@ public class TableTest
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1593,6 +1740,10 @@ public class TableTest
         ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StandUp(
             nickname: new Nickname("Charlie"),
+            eventBus: new EventBus()
+        );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
             eventBus: new EventBus()
         );
 
@@ -1652,6 +1803,10 @@ public class TableTest
             nickname: new Nickname("Diana"),
             eventBus: new EventBus()
         );
+        table.FinishHand(
+            handUid: (HandUid)table.HandUid,
+            eventBus: new EventBus()
+        );
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
@@ -1665,6 +1820,48 @@ public class TableTest
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
+    }
+
+    [Fact]
+    public void StartHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var handUid = new HandUid(Guid.NewGuid());
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.StartHand(
+            handUid: new HandUid(Guid.NewGuid()),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.StartHand(
+                handUid: new HandUid(Guid.NewGuid()),
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("The previous hand has not been finished yet", exc.Message);
+        Assert.Empty(events);
     }
 
     [Fact]
@@ -1706,6 +1903,126 @@ public class TableTest
 
         // Assert
         Assert.Equal("The table does not have enough players to start a hand", exc.Message);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public void FinishHand_Valid_ShouldFinishHand()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var handUid = new HandUid(Guid.NewGuid());
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.StartHand(
+            handUid: handUid,
+            eventBus: new EventBus()
+        );
+
+        // Act
+        table.FinishHand(
+            handUid: handUid,
+            eventBus: eventBus
+        );
+
+        // Assert
+        Assert.Null(table.HandUid);
+
+        Assert.Single(events);
+        var @event = Assert.IsType<HandIsFinishedEvent>(events[0]);
+        Assert.Equal(handUid, @event.HandUid);
+    }
+
+    [Fact]
+    public void FinishHand_NotStarted_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.FinishHand(
+                handUid: new HandUid(Guid.NewGuid()),
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("The hand has not been started yet", exc.Message);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public void FinishHand_DifferentUid_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.StartHand(
+            handUid: new HandUid(Guid.NewGuid()),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.FinishHand(
+                handUid: new HandUid(Guid.NewGuid()),
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("The hand does not match the current one", exc.Message);
         Assert.Empty(events);
     }
 

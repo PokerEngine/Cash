@@ -9,10 +9,10 @@ public abstract record BaseEvent(
 public record TableIsCreatedEvent(
     TableUid Uid,
     Game Game,
+    Seat MaxSeat,
     Chips SmallBlind,
     Chips BigBlind,
     Money ChipCost,
-    Seat MaxSeat,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
 
@@ -20,7 +20,6 @@ public record PlayerSatDownEvent(
     Nickname Nickname,
     Seat Seat,
     Chips Stack,
-    bool IsWaitingForBigBlind,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
 
@@ -36,11 +35,15 @@ public record PlayerSatOutEvent(
 
 public record PlayerSatInEvent(
     Nickname Nickname,
-    bool IsWaitingForBigBlind,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
 
 public record HandIsStartedEvent(
+    HandUid HandUid,
+    DateTime OccuredAt
+) : BaseEvent(OccuredAt);
+
+public record HandIsFinishedEvent(
     HandUid HandUid,
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
