@@ -38,6 +38,10 @@ public record PlayerSatInEvent(
     DateTime OccuredAt
 ) : BaseEvent(OccuredAt);
 
+public record ButtonIsRotatedEvent(
+    DateTime OccuredAt
+) : BaseEvent(OccuredAt);
+
 public record HandIsStartedEvent(
     HandUid HandUid,
     DateTime OccuredAt

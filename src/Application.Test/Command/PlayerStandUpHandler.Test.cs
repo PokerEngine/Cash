@@ -62,7 +62,10 @@ public class PlayerStandUpHandlerTest
         int stack
     )
     {
-        var handler = new PlayerSitDownHandler(repository: repository);
+        var handler = new PlayerSitDownHandler(
+            repository: repository,
+            handService: new StubHandService()
+        );
         var command = new PlayerSitDownCommand(
             TableUid: tableUid,
             Nickname: nickname,

@@ -84,6 +84,9 @@ public class TableTest
                 Stack: new Chips(1000),
                 OccuredAt: DateTime.Now
             ),
+            new ButtonIsRotatedEvent(
+                OccuredAt: DateTime.Now
+            ),
             new HandIsStartedEvent(
                 HandUid: handUid1,
                 OccuredAt: DateTime.Now
@@ -110,6 +113,9 @@ public class TableTest
             ),
             new HandIsFinishedEvent(
                 HandUid: handUid1,
+                OccuredAt: DateTime.Now
+            ),
+            new ButtonIsRotatedEvent(
                 OccuredAt: DateTime.Now
             ),
             new HandIsStartedEvent(
@@ -139,7 +145,7 @@ public class TableTest
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(4), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
-        Assert.Equal(handUid2, table.HandUid);
+        Assert.Equal(handUid2, table.GetHandUid());
         Assert.Equal(3, table.Players.Count());
     }
 
@@ -289,6 +295,9 @@ public class TableTest
             nickname: new Nickname("Bob"),
             seat: new Seat(2),
             stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.RotateButton(
             eventBus: new EventBus()
         );
         table.StartHand(
@@ -724,6 +733,9 @@ public class TableTest
             nickname: new Nickname("Alice"),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        );
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
@@ -802,7 +814,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_HeadsUpInitial_ShouldAssignButton()
+    public void RotateButton_HeadsUpInitial_ShouldAssignButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -825,25 +837,21 @@ public class TableTest
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(2), table.ButtonSeat);
         Assert.Equal(new Seat(2), table.SmallBlindSeat);
         Assert.Equal(new Seat(4), table.BigBlindSeat);
 
         Assert.Single(events);
-        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
-        Assert.Equal(handUid, @event.HandUid);
+        Assert.IsType<ButtonIsRotatedEvent>(events[0]);
     }
 
     [Fact]
-    public void StartHand_HeadsUpStandard_ShouldRotateButton()
+    public void RotateButton_HeadsUpStandard_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -864,35 +872,34 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU/SB, Bob is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU/SB, Bob is BB
+        );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(4), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
 
         Assert.Single(events);
-        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
-        Assert.Equal(handUid, @event.HandUid);
+        Assert.IsType<ButtonIsRotatedEvent>(events[0]);
     }
 
     [Fact]
-    public void StartHand_HeadsUpPlayerSatDownNextToSmallBlind_ShouldWaitForBigBlind()
+    public void RotateButton_HeadsUpPlayerSatDownNextToSmallBlind_ShouldWaitForBigBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -913,10 +920,13 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        );  // Alice is SB/BU, Bob is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is SB/BU, Bob is BB
+        );
         table.SitDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
@@ -924,19 +934,16 @@ public class TableTest
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(4), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
@@ -946,7 +953,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_HeadsUpPlayerSatDownNextToBigBlind_ShouldSkipSmallBlind()
+    public void RotateButton_HeadsUpPlayerSatDownNextToBigBlind_ShouldSkipSmallBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -967,10 +974,13 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is SB/BU, Bob is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is SB/BU, Bob is BB
+        );
         table.SitDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
@@ -978,19 +988,16 @@ public class TableTest
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Null(table.SmallBlindSeat); // No small blind when a heads-up table transformed into 3max
         Assert.Equal(new Seat(6), table.BigBlindSeat);
@@ -1000,7 +1007,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_HeadsUpFromDeadButton_ShouldKeepBigBlind()
+    public void RotateButton_HeadsUpFromDeadButton_ShouldKeepBigBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1027,43 +1034,46 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.StandUp(
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BB, Bob's seat is dead button, Charlie is SB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BB, Bob's seat is dead button, Charlie is SB
+        );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(6), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat); // Posts 2nd BB in a row
     }
 
     [Fact]
-    public void StartHand_3MaxInitial_ShouldAssignButton()
+    public void RotateButton_3MaxInitial_ShouldAssignButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1092,25 +1102,21 @@ public class TableTest
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(2), table.ButtonSeat);
         Assert.Equal(new Seat(4), table.SmallBlindSeat);
         Assert.Equal(new Seat(6), table.BigBlindSeat);
 
         Assert.Single(events);
-        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
-        Assert.Equal(handUid, @event.HandUid);
+        Assert.IsType<ButtonIsRotatedEvent>(events[0]);
     }
 
     [Fact]
-    public void StartHand_3MaxStandard_ShouldRotateButton()
+    public void RotateButton_3MaxStandard_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1137,35 +1143,34 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
 
         Assert.Single(events);
-        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
-        Assert.Equal(handUid, @event.HandUid);
+        Assert.IsType<ButtonIsRotatedEvent>(events[0]);
     }
 
     [Fact]
-    public void StartHand_3MaxPlayerSatDownNextToButton_ShouldWaitForBigBlind()
+    public void RotateButton_3MaxPlayerSatDownNextToButton_ShouldWaitForBigBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1192,10 +1197,13 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.SitDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(3),
@@ -1203,19 +1211,16 @@ public class TableTest
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
@@ -1225,7 +1230,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_3MaxPlayerSatDownNextToSmallBlind_ShouldWaitForBigBlind()
+    public void RotateButton_3MaxPlayerSatDownNextToSmallBlind_ShouldWaitForBigBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1252,10 +1257,13 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.SitDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(5),
@@ -1263,19 +1271,16 @@ public class TableTest
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
@@ -1285,7 +1290,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_3MaxPlayerSatDownNextToBigBlind_ShouldRotateButton()
+    public void RotateButton_3MaxPlayerSatDownNextToBigBlind_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1312,10 +1317,13 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.SitDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(7),
@@ -1323,19 +1331,16 @@ public class TableTest
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(7), table.BigBlindSeat);
@@ -1345,7 +1350,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_3MaxButtonStoodUp_ShouldKeepBigBlind()
+    public void RotateButton_3MaxButtonStoodUp_ShouldKeepBigBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1372,35 +1377,35 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.StandUp(
             nickname: new Nickname("Alice"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(4), table.SmallBlindSeat);
         Assert.Equal(new Seat(6), table.BigBlindSeat); // Posts 2nd BB in a row
     }
 
     [Fact]
-    public void StartHand_3MaxSmallBlindStoodUp_ShouldRotateButtonToEmptySeat()
+    public void RotateButton_3MaxSmallBlindStoodUp_ShouldRotateButtonToEmptySeat()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1427,35 +1432,35 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: eventBus
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.StandUp(
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat); // Dead button
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
     }
 
     [Fact]
-    public void StartHand_3MaxBigBlindStoodUp_ShouldSkipSmallBlind()
+    public void RotateButton_3MaxBigBlindStoodUp_ShouldSkipSmallBlind()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1482,35 +1487,35 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB
+        );
         table.StandUp(
             nickname: new Nickname("Charlie"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Null(table.SmallBlindSeat); // No small blind after big blind left the table
         Assert.Equal(new Seat(2), table.BigBlindSeat);
     }
 
     [Fact]
-    public void StartHand_3MaxFromDeadButton_ShouldRotateButton()
+    public void RotateButton_3MaxFromDeadButton_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1543,43 +1548,46 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        );
         table.StandUp(
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is CO, Bob's seat is the dead button, Charlie is SB, Diana is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is CO, Bob's seat is the dead button, Charlie is SB, Diana is BB
+        );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid(),
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(6), table.ButtonSeat);
         Assert.Equal(new Seat(8), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
     }
 
     [Fact]
-    public void StartHand_4MaxButtonStoodUp_ShouldRotateButton()
+    public void RotateButton_4MaxButtonStoodUp_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1612,35 +1620,35 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        );
         table.StandUp(
             nickname: new Nickname("Alice"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(8), table.BigBlindSeat);
     }
 
     [Fact]
-    public void StartHand_4MaxSmallBlindStoodUp_ShouldRotateButtonToEmptySeat()
+    public void RotateButton_4MaxSmallBlindStoodUp_ShouldRotateButtonToEmptySeat()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1673,35 +1681,35 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        );
         table.StandUp(
             nickname: new Nickname("Bob"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat); // Dead button
         Assert.Equal(new Seat(6), table.SmallBlindSeat);
         Assert.Equal(new Seat(8), table.BigBlindSeat);
     }
 
     [Fact]
-    public void StartHand_4MaxBigBlindStoodUp_ShouldRotateButton()
+    public void RotateButton_4MaxBigBlindStoodUp_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1734,35 +1742,35 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        );
         table.StandUp(
             nickname: new Nickname("Charlie"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
             eventBus: new EventBus()
         );
 
         // Act
-        var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
-            handUid: handUid,
+        table.RotateButton(
             eventBus: eventBus
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Null(table.SmallBlindSeat); // No small blind after big blind left the table
         Assert.Equal(new Seat(8), table.BigBlindSeat);
     }
 
     [Fact]
-    public void StartHand_4MaxCutOffStoodUp_ShouldRotateButton()
+    public void RotateButton_4MaxCutOffStoodUp_ShouldRotateButton()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1795,16 +1803,139 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid()),
             eventBus: new EventBus()
-        ); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        );
         table.StandUp(
             nickname: new Nickname("Diana"),
             eventBus: new EventBus()
         );
         table.FinishHand(
-            handUid: (HandUid)table.HandUid,
+            handUid: table.GetHandUid()!,
+            eventBus: new EventBus()
+        );
+
+        // Act
+        table.RotateButton(
+            eventBus: eventBus
+        );
+
+        // Assert
+        Assert.Equal(new Seat(4), table.ButtonSeat);
+        Assert.Equal(new Seat(6), table.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.BigBlindSeat);
+    }
+
+    [Fact]
+    public void RotateButton_NotEnoughPlayers_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(4),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitOut(
+            nickname: new Nickname("Bob"),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.RotateButton(
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("Not enough players to rotate the button", exc.Message);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public void RotateButton_HandIsInProgress_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(4),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.RotateButton(
+            eventBus: new EventBus()
+        );
+        table.StartHand(
+            handUid: new HandUid(Guid.NewGuid()),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.RotateButton(
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("The previous hand has not been finished yet", exc.Message);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public void StartHand_Valid_ShouldStartHand()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(4),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.RotateButton(
             eventBus: new EventBus()
         );
 
@@ -1816,14 +1947,16 @@ public class TableTest
         );
 
         // Assert
-        Assert.Equal(handUid, table.HandUid);
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.Equal(handUid, table.GetHandUid());
+        Assert.True(table.IsHandInProgress());
+
+        Assert.Single(events);
+        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
+        Assert.Equal(handUid, @event.HandUid);
     }
 
     [Fact]
-    public void StartHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
+    public void StartHand_ButtonIsNotRotated_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var events = new List<BaseEvent>();
@@ -1831,7 +1964,6 @@ public class TableTest
         var eventBus = new EventBus();
         eventBus.Subscribe(listener);
 
-        var handUid = new HandUid(Guid.NewGuid());
         var table = CreateTable();
         table.SitDown(
             nickname: new Nickname("Alice"),
@@ -1843,6 +1975,46 @@ public class TableTest
             nickname: new Nickname("Bob"),
             seat: new Seat(1),
             stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.StartHand(
+                handUid: new HandUid(Guid.NewGuid()),
+                eventBus: eventBus
+            );
+        });
+
+        // Assert
+        Assert.Equal("The button must be rotated before starting a hand", exc.Message);
+        Assert.Empty(events);
+    }
+
+    [Fact]
+    public void StartHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var events = new List<BaseEvent>();
+        var listener = (BaseEvent e) => events.Add(e);
+        var eventBus = new EventBus();
+        eventBus.Subscribe(listener);
+
+        var table = CreateTable();
+        table.SitDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(2),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.SitDown(
+            nickname: new Nickname("Bob"),
+            seat: new Seat(1),
+            stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.RotateButton(
             eventBus: new EventBus()
         );
         table.StartHand(
@@ -1881,16 +2053,6 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
-        table.SitDown(
-            nickname: new Nickname("Bob"),
-            seat: new Seat(1),
-            stack: new Chips(1000),
-            eventBus: new EventBus()
-        );
-        table.SitOut(
-            nickname: new Nickname("Bob"),
-            eventBus: new EventBus()
-        );
 
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
@@ -1902,7 +2064,7 @@ public class TableTest
         });
 
         // Assert
-        Assert.Equal("The table does not have enough players to start a hand", exc.Message);
+        Assert.Equal("Not enough players to start a hand", exc.Message);
         Assert.Empty(events);
     }
 
@@ -1929,6 +2091,9 @@ public class TableTest
             stack: new Chips(1000),
             eventBus: new EventBus()
         );
+        table.RotateButton(
+            eventBus: new EventBus()
+        );
         table.StartHand(
             handUid: handUid,
             eventBus: new EventBus()
@@ -1941,7 +2106,7 @@ public class TableTest
         );
 
         // Assert
-        Assert.Null(table.HandUid);
+        Assert.False(table.IsHandInProgress());
 
         Assert.Single(events);
         var @event = Assert.IsType<HandIsFinishedEvent>(events[0]);
@@ -2005,6 +2170,9 @@ public class TableTest
             nickname: new Nickname("Bob"),
             seat: new Seat(1),
             stack: new Chips(1000),
+            eventBus: new EventBus()
+        );
+        table.RotateButton(
             eventBus: new EventBus()
         );
         table.StartHand(

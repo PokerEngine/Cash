@@ -8,11 +8,12 @@ namespace Application.Test.Command;
 public class PlayerSitDownHandlerTest
 {
     [Fact]
-    public async Task HandleAsync_Valid_ShouldSitDown()
+    public async Task HandleAsync_1stPlayer_ShouldSitDownAndWait()
     {
         // Arrange
         var repository = new StubRepository();
         await repository.ConnectAsync();
+        var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository);
 
         var command = new PlayerSitDownCommand(
@@ -21,7 +22,10 @@ public class PlayerSitDownHandlerTest
             Seat: 2,
             Stack: 1000
         );
-        var handler = new PlayerSitDownHandler(repository: repository);
+        var handler = new PlayerSitDownHandler(
+            repository: repository,
+            handService: handService
+        );
 
         // Act
         var result = await handler.HandleAsync(command);
@@ -34,10 +38,57 @@ public class PlayerSitDownHandlerTest
 
         var events = await repository.GetEventsAsync(result.TableUid);
         var table = Table.FromEvents(events);
+        Assert.False(table.IsHandInProgress());
+
         var player = table.Players.First();
         Assert.Equal(new Nickname("Alice"), player.Nickname);
         Assert.Equal(new Seat(2), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
+    }
+
+    [Fact]
+    public async Task HandleAsync_2ndPlayer_ShouldSitDownAndStartHand()
+    {
+        // Arrange
+        var repository = new StubRepository();
+        await repository.ConnectAsync();
+        var handService = new StubHandService();
+        var tableUid = await CreateTableAsync(repository);
+        await SitDownPlayerAsync(
+            repository: repository,
+            handService: handService,
+            tableUid: tableUid,
+            nickname: "Alice",
+            seat: 2,
+            stack: 1000
+        );
+
+        var command = new PlayerSitDownCommand(
+            TableUid: tableUid,
+            Nickname: "Bob",
+            Seat: 4,
+            Stack: 1000
+        );
+        var handler = new PlayerSitDownHandler(
+            repository: repository,
+            handService: handService
+        );
+
+        // Act
+        var result = await handler.HandleAsync(command);
+
+        // Assert
+        Assert.Equal(command.TableUid, result.TableUid);
+        Assert.Equal(command.Nickname, result.Nickname);
+        Assert.Equal(command.Seat, result.Seat);
+        Assert.Equal(command.Stack, result.Stack);
+
+        var events = await repository.GetEventsAsync(result.TableUid);
+        var table = Table.FromEvents(events);
+        Assert.True(table.IsHandInProgress());
+        Assert.Equal(new Seat(2), table.ButtonSeat);
+        Assert.Equal(new Seat(2), table.SmallBlindSeat);
+        Assert.Equal(new Seat(4), table.BigBlindSeat);
     }
 
     private async Task<Guid> CreateTableAsync(StubRepository repository)
@@ -53,5 +104,27 @@ public class PlayerSitDownHandlerTest
         );
         var result = await handler.HandleAsync(command);
         return result.TableUid;
+    }
+
+    private async Task SitDownPlayerAsync(
+        StubRepository repository,
+        StubHandService handService,
+        Guid tableUid,
+        string nickname,
+        int seat,
+        int stack
+    )
+    {
+        var handler = new PlayerSitDownHandler(
+            repository: repository,
+            handService: handService
+        );
+        var command = new PlayerSitDownCommand(
+            TableUid: tableUid,
+            Nickname: nickname,
+            Seat: seat,
+            Stack: stack
+        );
+        await handler.HandleAsync(command);
     }
 }

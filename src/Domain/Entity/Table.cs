@@ -17,7 +17,7 @@ public class Table
     public Seat? SmallBlindSeat { get; private set; }
     public Seat? BigBlindSeat { get; private set; }
     public Seat? ButtonSeat { get; private set; }
-    public HandUid? HandUid { get; private set; }
+    private HandUid? HandUid { get; set; }
 
     private readonly Player?[] _players;
 
@@ -142,6 +142,11 @@ public class Table
                 case PlayerSatInEvent e:
                     table.SitIn(
                         nickname: e.Nickname,
+                        eventBus: eventBus
+                    );
+                    break;
+                case ButtonIsRotatedEvent:
+                    table.RotateButton(
                         eventBus: eventBus
                     );
                     break;
@@ -271,16 +276,16 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    public void StartHand(HandUid handUid, EventBus eventBus)
+    public void RotateButton(EventBus eventBus)
     {
-        if (HandUid is not null)
+        if (IsHandInProgress())
         {
             throw new InvalidOperationException("The previous hand has not been finished yet");
         }
 
         if (!HasEnoughPlayersForHand())
         {
-            throw new InvalidOperationException("The table does not have enough players to start a hand");
+            throw new InvalidOperationException("Not enough players to rotate the button");
         }
 
         var nextButtonSeat = GetNextButtonSeat(ButtonSeat, SmallBlindSeat);
@@ -290,13 +295,37 @@ public class Table
         ButtonSeat = nextButtonSeat;
         SmallBlindSeat = nextSmallBlindSeat;
         BigBlindSeat = nextBigBlindSeat;
-        HandUid = handUid;
 
-        var bbPlayer = GetPlayerBySeat(nextBigBlindSeat);
+        var bbPlayer = GetPlayerBySeat((Seat)BigBlindSeat);
         if (bbPlayer is not null && bbPlayer.IsWaitingForBigBlind)
         {
             bbPlayer.StopWaitingForBigBlind();
         }
+
+        var @event = new ButtonIsRotatedEvent(
+            OccuredAt: DateTime.Now
+        );
+        eventBus.Publish(@event);
+    }
+
+    public void StartHand(HandUid handUid, EventBus eventBus)
+    {
+        if (IsHandInProgress())
+        {
+            throw new InvalidOperationException("The previous hand has not been finished yet");
+        }
+
+        if (!HasEnoughPlayersForHand())
+        {
+            throw new InvalidOperationException("Not enough players to start a hand");
+        }
+
+        if (ButtonSeat == null || BigBlindSeat == null)
+        {
+            throw new InvalidOperationException("The button must be rotated before starting a hand");
+        }
+
+        HandUid = handUid;
 
         var @event = new HandIsStartedEvent(
             HandUid: handUid,
@@ -307,7 +336,7 @@ public class Table
 
     public void FinishHand(HandUid handUid, IEventBus eventBus)
     {
-        if (HandUid is null)
+        if (!IsHandInProgress())
         {
             throw new InvalidOperationException("The hand has not been started yet");
         }
@@ -326,9 +355,33 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    private bool HasEnoughPlayersForHand()
+    public HandUid GetHandUid()
+    {
+        if (!IsHandInProgress())
+        {
+            throw new InvalidOperationException("The hand has not been started yet");
+        }
+
+        return (HandUid)HandUid!;
+    }
+
+    public bool IsHandInProgress()
+    {
+        return HandUid is not null;
+    }
+
+    public bool HasEnoughPlayersForHand()
     {
         return ActivePlayers.Count() >= MinPlayersForHand;
+    }
+
+    public IEnumerable<Participant> GetParticipants()
+    {
+        return ActivePlayers.Select(p => new Participant(
+            Nickname: p.Nickname,
+            Seat: p.Seat,
+            Stack: p.Stack
+        ));
     }
 
     private Seat GetNextButtonSeat(Seat? previousButtonSeat, Seat? previousSmallBlindSeat)
@@ -414,7 +467,7 @@ public class Table
 
     private bool ShouldWaitForBigBlind()
     {
-        return HasEnoughPlayersForHand() && HandUid is not null;
+        return IsHandInProgress();
     }
 
     private Player? GetPlayerByNickname(Nickname nickname)

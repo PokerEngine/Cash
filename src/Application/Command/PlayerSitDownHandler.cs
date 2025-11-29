@@ -1,6 +1,8 @@
 using Application.Repository;
+using Application.Service;
 using Domain.Entity;
 using Domain.Event;
+using Domain.ValueObject;
 
 namespace Application.Command;
 
@@ -19,7 +21,8 @@ public record PlayerSitDownResult(
 ) : IResult;
 
 public class PlayerSitDownHandler(
-    IRepository repository
+    IRepository repository,
+    IHandService handService
 ) : ICommandHandler<PlayerSitDownCommand, PlayerSitDownResult>
 {
     public async Task<PlayerSitDownResult> HandleAsync(PlayerSitDownCommand command)
@@ -39,6 +42,30 @@ public class PlayerSitDownHandler(
             stack: command.Stack,
             eventBus: eventBus
         );
+
+        if (table.HasEnoughPlayersForHand() && !table.IsHandInProgress())
+        {
+            table.RotateButton(
+                eventBus: eventBus
+            );
+
+            var handState = await handService.CreateHandAsync(
+                tableUid: table.Uid,
+                game: table.Game,
+                maxSeat: table.MaxSeat,
+                smallBlind: table.SmallBlind,
+                bigBlind: table.BigBlind,
+                smallBlindSeat: table.SmallBlindSeat,
+                bigBlindSeat: (Seat)table.BigBlindSeat!,
+                buttonSeat: (Seat)table.ButtonSeat!,
+                participants: table.GetParticipants()
+            );
+
+            table.StartHand(
+                handUid: handState.Uid,
+                eventBus: eventBus
+            );
+        }
 
         eventBus.Unsubscribe(listener);
 
