@@ -1,10 +1,10 @@
 using Domain.ValueObject;
 
-namespace Application.Service;
+namespace Application.Service.Hand;
 
-public record HandState(
-    HandUid Uid,
-    IReadOnlyList<Participant> Participants
+public record struct HandState(
+    HandUid HandUid,
+    List<Participant> Participants
 );
 
 public interface IHandService

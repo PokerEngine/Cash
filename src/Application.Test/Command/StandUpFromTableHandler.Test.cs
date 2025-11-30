@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.Test.Command;
 
-public class PlayerStandUpHandlerTest
+public class StandUpFromTableHandlerTest
 {
     [Fact]
     public async Task HandleAsync_Valid_ShouldSitDown()
@@ -21,11 +21,11 @@ public class PlayerStandUpHandlerTest
             stack: 1000
         );
 
-        var command = new PlayerStandUpCommand(
+        var command = new StandUpFromTableCommand(
             TableUid: tableUid,
             Nickname: "Alice"
         );
-        var handler = new PlayerStandUpHandler(repository);
+        var handler = new StandUpFromTableHandler(repository);
 
         // Act
         var result = await handler.HandleAsync(command);
@@ -41,8 +41,8 @@ public class PlayerStandUpHandlerTest
 
     private async Task<Guid> CreateTableAsync(StubRepository repository)
     {
-        var handler = new TableCreateHandler(repository: repository);
-        var command = new TableCreateCommand(
+        var handler = new CreateTableHandler(repository: repository);
+        var command = new CreateTableCommand(
             Game: "NoLimitHoldem",
             MaxSeat: 6,
             SmallBlind: 5,
@@ -62,11 +62,11 @@ public class PlayerStandUpHandlerTest
         int stack
     )
     {
-        var handler = new PlayerSitDownHandler(
+        var handler = new SitDownAtTableHandler(
             repository: repository,
             handService: new StubHandService()
         );
-        var command = new PlayerSitDownCommand(
+        var command = new SitDownAtTableCommand(
             TableUid: tableUid,
             Nickname: nickname,
             Seat: seat,

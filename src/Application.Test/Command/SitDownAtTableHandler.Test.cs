@@ -5,7 +5,7 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class PlayerSitDownHandlerTest
+public class SitDownAtTableHandlerTest
 {
     [Fact]
     public async Task HandleAsync_1stPlayer_ShouldSitDownAndWait()
@@ -16,13 +16,13 @@ public class PlayerSitDownHandlerTest
         var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository);
 
-        var command = new PlayerSitDownCommand(
+        var command = new SitDownAtTableCommand(
             TableUid: tableUid,
             Nickname: "Alice",
             Seat: 2,
             Stack: 1000
         );
-        var handler = new PlayerSitDownHandler(
+        var handler = new SitDownAtTableHandler(
             repository: repository,
             handService: handService
         );
@@ -63,13 +63,13 @@ public class PlayerSitDownHandlerTest
             stack: 1000
         );
 
-        var command = new PlayerSitDownCommand(
+        var command = new SitDownAtTableCommand(
             TableUid: tableUid,
             Nickname: "Bob",
             Seat: 4,
             Stack: 1000
         );
-        var handler = new PlayerSitDownHandler(
+        var handler = new SitDownAtTableHandler(
             repository: repository,
             handService: handService
         );
@@ -93,8 +93,8 @@ public class PlayerSitDownHandlerTest
 
     private async Task<Guid> CreateTableAsync(StubRepository repository)
     {
-        var handler = new TableCreateHandler(repository: repository);
-        var command = new TableCreateCommand(
+        var handler = new CreateTableHandler(repository: repository);
+        var command = new CreateTableCommand(
             Game: "NoLimitHoldem",
             MaxSeat: 6,
             SmallBlind: 5,
@@ -115,11 +115,11 @@ public class PlayerSitDownHandlerTest
         int stack
     )
     {
-        var handler = new PlayerSitDownHandler(
+        var handler = new SitDownAtTableHandler(
             repository: repository,
             handService: handService
         );
-        var command = new PlayerSitDownCommand(
+        var command = new SitDownAtTableCommand(
             TableUid: tableUid,
             Nickname: nickname,
             Seat: seat,
