@@ -5,7 +5,7 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class TableCreateHandlerTest
+public class CreateTableHandlerTest
 {
     [Fact]
     public async Task HandleAsync_Valid_ShouldCreateTable()
@@ -13,7 +13,7 @@ public class TableCreateHandlerTest
         // Arrange
         var repository = new StubRepository();
         await repository.ConnectAsync();
-        var command = new TableCreateCommand(
+        var command = new CreateTableCommand(
             Game: "NoLimitHoldem",
             MaxSeat: 6,
             SmallBlind: 5,
@@ -21,7 +21,7 @@ public class TableCreateHandlerTest
             ChipCostAmount: 1,
             ChipCostCurrency: "Usd"
         );
-        var handler = new TableCreateHandler(repository: repository);
+        var handler = new CreateTableHandler(repository: repository);
 
         // Act
         var result = await handler.HandleAsync(command);

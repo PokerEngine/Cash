@@ -1,31 +1,31 @@
 using Application.Repository;
-using Application.Service;
+using Application.Service.Hand;
 using Domain.Entity;
 using Domain.Event;
 using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record PlayerSitDownCommand(
+public record SitDownAtTableCommand(
     Guid TableUid,
     string Nickname,
     int Seat,
     int Stack
-) : ICommand;
+);
 
-public record PlayerSitDownResult(
+public record SitDownAtTableResult(
     Guid TableUid,
     string Nickname,
     int Seat,
     int Stack
-) : IResult;
+);
 
-public class PlayerSitDownHandler(
+public class SitDownAtTableHandler(
     IRepository repository,
     IHandService handService
-) : ICommandHandler<PlayerSitDownCommand, PlayerSitDownResult>
+) : ICommandHandler<SitDownAtTableCommand, SitDownAtTableResult>
 {
-    public async Task<PlayerSitDownResult> HandleAsync(PlayerSitDownCommand command)
+    public async Task<SitDownAtTableResult> HandleAsync(SitDownAtTableCommand command)
     {
         var table = Table.FromEvents(
             events: await repository.GetEventsAsync(command.TableUid)
@@ -62,7 +62,7 @@ public class PlayerSitDownHandler(
             );
 
             table.StartHand(
-                handUid: handState.Uid,
+                handUid: handState.HandUid,
                 eventBus: eventBus
             );
         }
@@ -71,7 +71,7 @@ public class PlayerSitDownHandler(
 
         await repository.AddEventsAsync(table.Uid, events);
 
-        return new PlayerSitDownResult(
+        return new SitDownAtTableResult(
             TableUid: table.Uid,
             Nickname: command.Nickname,
             Seat: command.Seat,

@@ -5,16 +5,16 @@ using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record TableCreateCommand(
+public record CreateTableCommand(
     string Game,
     int MaxSeat,
     int SmallBlind,
     int BigBlind,
     decimal ChipCostAmount,
     string ChipCostCurrency
-) : ICommand;
+);
 
-public record TableCreateResult(
+public record CreateTableResult(
     Guid TableUid,
     string Game,
     int MaxSeat,
@@ -22,13 +22,13 @@ public record TableCreateResult(
     int BigBlind,
     decimal ChipCostAmount,
     string ChipCostCurrency
-) : IResult;
+);
 
-public class TableCreateHandler(
+public class CreateTableHandler(
     IRepository repository
-) : ICommandHandler<TableCreateCommand, TableCreateResult>
+) : ICommandHandler<CreateTableCommand, CreateTableResult>
 {
-    public async Task<TableCreateResult> HandleAsync(TableCreateCommand command)
+    public async Task<CreateTableResult> HandleAsync(CreateTableCommand command)
     {
         var game = (Game)Enum.Parse(typeof(Game), command.Game);
         var chipCostCurrency = (Currency)Enum.Parse(typeof(Currency), command.ChipCostCurrency);
@@ -52,7 +52,7 @@ public class TableCreateHandler(
 
         await repository.AddEventsAsync(table.Uid, events);
 
-        return new TableCreateResult(
+        return new CreateTableResult(
             TableUid: table.Uid,
             Game: table.Game.ToString(),
             MaxSeat: table.MaxSeat,

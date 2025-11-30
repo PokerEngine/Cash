@@ -1,41 +1,94 @@
-var builder = WebApplication.CreateBuilder(args);
+using Application.Command;
+using Application.Query;
+using Application.Repository;
+using Application.Service.Hand;
+using Infrastructure.Command;
+using Infrastructure.Query;
+using Infrastructure.Repository;
+using Infrastructure.Service.Hand;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+namespace Infrastructure;
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+public static class Bootstrapper
 {
-    app.MapOpenApi();
+    public static WebApplicationBuilder PrepareApplicationBuilder(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Configuration.AddEnvironmentVariables();
+        builder.Services.AddOpenApi();
+
+        // Register dependencies
+        builder.Services.AddSingleton<IRepository, InMemoryRepository>();
+
+        builder.Services.Configure<RemoteHandServiceOptions>(
+            builder.Configuration.GetSection(RemoteHandServiceOptions.SectionName)
+        );
+        builder.Services.AddHttpClient<IHandService>();
+        builder.Services.AddSingleton<IHandService, RemoteHandService>();
+
+        void RegisterCommandHandler<TCommand, THandler, TResult>(IServiceCollection services)
+            where TCommand : class
+            where THandler : class, ICommandHandler<TCommand, TResult>
+        {
+            services.AddScoped<THandler>();
+            services.AddScoped<ICommandHandler<TCommand, TResult>>(provider => provider.GetRequiredService<THandler>());
+        }
+
+        void RegisterQueryHandler<TQuery, THandler, TResult>(IServiceCollection services)
+            where TQuery : class
+            where THandler : class, IQueryHandler<TQuery, TResult>
+        {
+            services.AddScoped<THandler>();
+            services.AddScoped<IQueryHandler<TQuery, TResult>>(provider => provider.GetRequiredService<THandler>());
+        }
+
+        // Register commands
+        RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResult>(builder.Services);
+        RegisterCommandHandler<SitDownAtTableCommand, SitDownAtTableHandler, SitDownAtTableResult>(builder.Services);
+        RegisterCommandHandler<StandUpFromTableCommand, StandUpFromTableHandler, StandUpFromTableResult>(builder.Services);
+        builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
+
+        // Register queries
+        RegisterQueryHandler<GetTableByUidQuery, GetTableByUidHandler, GetTableByUidResponse>(builder.Services);
+        builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+
+        return builder;
+    }
 }
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
+public class Program
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
+    public static void Main(string[] args)
     {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
+        var app = CreateWebApplication(args);
+        app.Run();
+    }
 
-app.Run();
+    // Public method for creating the WebApplication - can be called by tests
+    // This allows WebApplicationFactory to work properly with the minimal hosting model
+    private static WebApplication CreateWebApplication(string[] args)
+    {
+        var builder = Bootstrapper.PrepareApplicationBuilder(args);
+        return ConfigureApplication(builder);
+    }
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    // Configure the application pipeline
+    private static WebApplication ConfigureApplication(WebApplicationBuilder builder)
+    {
+        var app = builder.Build();
+
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
+
+        app.MapOpenApi();
+        app.MapControllers();
+
+        return app;
+    }
 }

@@ -1,10 +1,16 @@
 using Application.Service.Hand;
 using Domain.ValueObject;
+using Microsoft.Extensions.Options;
 
-namespace Application.Test.Stub;
+namespace Infrastructure.Service.Hand;
 
-public class StubHandService : IHandService
+public class RemoteHandService(
+    HttpClient httpClient,
+    IOptions<RemoteHandServiceOptions> options
+) : IHandService
 {
+    // TODO: implement remote calls
+
     public async Task<HandState> CreateHandAsync(
         TableUid tableUid,
         Game game,
@@ -25,4 +31,10 @@ public class StubHandService : IHandService
             Participants: participants.ToList()
         );
     }
+}
+
+public class RemoteHandServiceOptions
+{
+    public const string SectionName = "RemoteHandService";
+    public required string BaseUrl { init; get; }
 }
