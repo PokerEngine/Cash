@@ -1,6 +1,12 @@
 namespace Application.Command;
 
-public interface ICommandHandler<in TCommand, TResult>
+public interface ICommandRequest;
+
+public interface ICommandResponse;
+
+public interface ICommandHandler<in TCommandRequest, TCommandResponse>
+    where TCommandRequest : ICommandRequest
+    where TCommandResponse : ICommandResponse
 {
-    Task<TResult> HandleAsync(TCommand command);
+    Task<TCommandResponse> HandleAsync(TCommandRequest command);
 }

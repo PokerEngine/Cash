@@ -10,9 +10,8 @@ namespace Infrastructure.Controller;
 [Route("api/table")]
 [Produces("application/json")]
 public class TableController(
-    ICommandDispatcher commandDispatcher,
-    IQueryDispatcher queryDispatcher,
-    ILogger<TableController> logger
+    CommandDispatcher commandDispatcher,
+    QueryDispatcher queryDispatcher
 ) : ControllerBase
 {
     [HttpPost]

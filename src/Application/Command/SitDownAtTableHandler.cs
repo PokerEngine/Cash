@@ -11,14 +11,14 @@ public record SitDownAtTableCommand(
     string Nickname,
     int Seat,
     int Stack
-);
+) : ICommandRequest;
 
 public record SitDownAtTableResult(
     Guid TableUid,
     string Nickname,
     int Seat,
     int Stack
-);
+) : ICommandResponse;
 
 public class SitDownAtTableHandler(
     IRepository repository,

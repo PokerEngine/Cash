@@ -7,12 +7,12 @@ namespace Application.Command;
 public record StandUpFromTableCommand(
     Guid TableUid,
     string Nickname
-);
+) : ICommandRequest;
 
 public record StandUpFromTableResult(
     Guid TableUid,
     string Nickname
-);
+) : ICommandResponse;
 
 public class StandUpFromTableHandler(
     IRepository repository

@@ -3,6 +3,7 @@ using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
 using Infrastructure.Command;
+using Infrastructure.Controller;
 using Infrastructure.Query;
 using Infrastructure.Repository;
 using Infrastructure.Service.Hand;
@@ -27,31 +28,33 @@ public static class Bootstrapper
         builder.Services.AddHttpClient<IHandService>();
         builder.Services.AddSingleton<IHandService, RemoteHandService>();
 
-        void RegisterCommandHandler<TCommand, THandler, TResult>(IServiceCollection services)
-            where TCommand : class
-            where THandler : class, ICommandHandler<TCommand, TResult>
+        void RegisterCommandHandler<TCommandRequest, TCommandHandler, TCommandResponse>(IServiceCollection services)
+            where TCommandRequest : ICommandRequest
+            where TCommandResponse : ICommandResponse
+            where TCommandHandler : class, ICommandHandler<TCommandRequest, TCommandResponse>
         {
-            services.AddScoped<THandler>();
-            services.AddScoped<ICommandHandler<TCommand, TResult>>(provider => provider.GetRequiredService<THandler>());
+            services.AddScoped<TCommandHandler>();
+            services.AddScoped<ICommandHandler<TCommandRequest, TCommandResponse>>(provider => provider.GetRequiredService<TCommandHandler>());
         }
 
-        void RegisterQueryHandler<TQuery, THandler, TResult>(IServiceCollection services)
-            where TQuery : class
-            where THandler : class, IQueryHandler<TQuery, TResult>
+        void RegisterQueryHandler<TQueryRequest, TQueryHandler, TQueryResponse>(IServiceCollection services)
+            where TQueryRequest : IQueryRequest
+            where TQueryResponse : IQueryResponse
+            where TQueryHandler : class, IQueryHandler<TQueryRequest, TQueryResponse>
         {
-            services.AddScoped<THandler>();
-            services.AddScoped<IQueryHandler<TQuery, TResult>>(provider => provider.GetRequiredService<THandler>());
+            services.AddScoped<TQueryHandler>();
+            services.AddScoped<IQueryHandler<TQueryRequest, TQueryResponse>>(provider => provider.GetRequiredService<TQueryHandler>());
         }
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResult>(builder.Services);
         RegisterCommandHandler<SitDownAtTableCommand, SitDownAtTableHandler, SitDownAtTableResult>(builder.Services);
         RegisterCommandHandler<StandUpFromTableCommand, StandUpFromTableHandler, StandUpFromTableResult>(builder.Services);
-        builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
+        builder.Services.AddScoped<CommandDispatcher>();
 
         // Register queries
         RegisterQueryHandler<GetTableByUidQuery, GetTableByUidHandler, GetTableByUidResponse>(builder.Services);
-        builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+        builder.Services.AddScoped<QueryDispatcher>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();

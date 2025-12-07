@@ -6,12 +6,12 @@ namespace Application.Query;
 
 public record GetTableByUidQuery(
     Guid TableUid
-);
+) : IQueryRequest;
 
 public record GetTableByUidResponse(
     Guid TableUid,
     List<Participant> Participants
-);
+) : IQueryResponse;
 
 public class GetTableByUidHandler(
     IRepository repository

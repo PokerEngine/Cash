@@ -12,7 +12,7 @@ public record CreateTableCommand(
     int BigBlind,
     decimal ChipCostAmount,
     string ChipCostCurrency
-);
+) : ICommandRequest;
 
 public record CreateTableResult(
     Guid TableUid,
@@ -22,7 +22,7 @@ public record CreateTableResult(
     int BigBlind,
     decimal ChipCostAmount,
     string ChipCostCurrency
-);
+) : ICommandResponse;
 
 public class CreateTableHandler(
     IRepository repository

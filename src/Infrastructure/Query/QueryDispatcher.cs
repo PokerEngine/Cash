@@ -5,20 +5,22 @@ namespace Infrastructure.Query;
 public class QueryDispatcher(
     IServiceProvider serviceProvider,
     ILogger<QueryDispatcher> logger
-) : IQueryDispatcher
+)
 {
-    public async Task<TResult> DispatchAsync<TQuery, TResult>(TQuery query)
+    public async Task<TResponse> DispatchAsync<TQueryRequest, TResponse>(TQueryRequest query)
+    where TQueryRequest : IQueryRequest
+    where TResponse : IQueryResponse
     {
-        logger.LogInformation($"Dispatching query {typeof(TQuery).Name}");
+        logger.LogInformation($"Dispatching query {typeof(TQueryRequest).Name}");
 
-        var handlerType = typeof(IQueryHandler<TQuery, TResult>);
+        var handlerType = typeof(IQueryHandler<TQueryRequest, TResponse>);
         var handler = serviceProvider.GetService(handlerType);
 
         if (handler is null)
         {
-            throw new InvalidOperationException($"No handler found for query {typeof(TQuery).Name}");
+            throw new InvalidOperationException($"No handler found for query {typeof(TQueryRequest).Name}");
         }
 
-        return await ((IQueryHandler<TQuery, TResult>)handler).HandleAsync(query);
+        return await ((IQueryHandler<TQueryRequest, TResponse>)handler).HandleAsync(query);
     }
 }
