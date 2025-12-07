@@ -59,6 +59,9 @@ public static class Bootstrapper
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
 
+        // Add websocket controllers
+        builder.Services.AddScoped<TableWsController>();
+
         return builder;
     }
 }
@@ -89,8 +92,24 @@ public class Program
             app.UseHttpsRedirection();
         }
 
+        app.UseWebSockets();
+
         app.MapOpenApi();
         app.MapControllers();
+
+        // Map websocket endpoints
+        app.Map("/ws/table/{uid:guid}", async (
+            HttpContext context,
+            Guid uid,
+            TableWsController controller,
+            CancellationToken cancellationToken) =>
+        {
+            await controller.HandleAsync(
+                context: context,
+                uid: uid,
+                cancellationToken: cancellationToken
+            );
+        });
 
         return app;
     }
