@@ -11,7 +11,20 @@ public class RemoteHandService(
 {
     // TODO: implement remote calls
 
-    public async Task<HandState> CreateHandAsync(
+    public async Task<HandState> GetAsync(
+        HandUid handUid,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await Task.CompletedTask;
+
+        return new HandState(
+            HandUid: handUid,
+            Participants: []
+        );
+    }
+
+    public async Task<HandState> CreateAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -30,6 +43,24 @@ public class RemoteHandService(
             HandUid: new HandUid(Guid.NewGuid()),
             Participants: participants.ToList()
         );
+    }
+
+    public async Task<HandState> StartAsync(
+        HandUid handUid,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await GetAsync(handUid, cancellationToken);
+    }
+
+    public async Task<HandState> CommitDecisionAsync(
+        HandUid handUid,
+        Nickname nickname,
+        Decision decision,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await GetAsync(handUid, cancellationToken);
     }
 }
 

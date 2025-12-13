@@ -5,7 +5,24 @@ namespace Application.Test.Stub;
 
 public class StubHandService : IHandService
 {
-    public async Task<HandState> CreateHandAsync(
+    private Dictionary<HandUid, List<Participant>> _hands = new();
+
+    public async Task<HandState> GetAsync(HandUid handUid, CancellationToken cancellationToken = default)
+    {
+        await Task.CompletedTask;
+
+        if (_hands.TryGetValue(handUid, out var participants))
+        {
+            return new HandState(
+                HandUid: handUid,
+                Participants: participants
+            );
+        }
+
+        throw new InvalidOperationException("The hand is not found");
+    }
+
+    public async Task<HandState> CreateAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -20,9 +37,30 @@ public class StubHandService : IHandService
     {
         await Task.CompletedTask;
 
+        var handUid = new HandUid(Guid.NewGuid());
+        _hands[handUid] = participants.ToList();
+
         return new HandState(
-            HandUid: new HandUid(Guid.NewGuid()),
-            Participants: participants.ToList()
+            HandUid: handUid,
+            Participants: _hands[handUid]
         );
+    }
+
+    public async Task<HandState> StartAsync(
+        HandUid handUid,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await GetAsync(handUid, cancellationToken);
+    }
+
+    public async Task<HandState> CommitDecisionAsync(
+        HandUid handUid,
+        Nickname nickname,
+        Decision decision,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await GetAsync(handUid, cancellationToken);
     }
 }

@@ -176,7 +176,8 @@ public class TableWsController(
         var response = new Response
         {
             Type = "Error",
-            Data = JsonSerializer.SerializeToElement(new {
+            Data = JsonSerializer.SerializeToElement(new
+            {
                 message = exception.Message
             })
         };

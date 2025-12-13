@@ -49,7 +49,7 @@ public class SitDownAtTableHandler(
                 eventBus: eventBus
             );
 
-            var handState = await handService.CreateHandAsync(
+            var handState = await handService.CreateAsync(
                 tableUid: table.Uid,
                 game: table.Game,
                 maxSeat: table.MaxSeat,

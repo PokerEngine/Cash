@@ -9,7 +9,12 @@ public record struct HandState(
 
 public interface IHandService
 {
-    Task<HandState> CreateHandAsync(
+    Task<HandState> GetAsync(
+        HandUid handUid,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<HandState> CreateAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -19,6 +24,18 @@ public interface IHandService
         Seat bigBlindSeat,
         Seat buttonSeat,
         IEnumerable<Participant> participants,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<HandState> StartAsync(
+        HandUid handUid,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<HandState> CommitDecisionAsync(
+        HandUid handUid,
+        Nickname nickname,
+        Decision decision,
         CancellationToken cancellationToken = default
     );
 }
