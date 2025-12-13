@@ -7,20 +7,20 @@ public class QueryDispatcher(
     ILogger<QueryDispatcher> logger
 )
 {
-    public async Task<TResponse> DispatchAsync<TQueryRequest, TResponse>(TQueryRequest query)
-    where TQueryRequest : IQueryRequest
+    public async Task<TResponse> DispatchAsync<TQuery, TResponse>(TQuery query)
+    where TQuery : IQueryRequest
     where TResponse : IQueryResponse
     {
-        logger.LogInformation($"Dispatching query {typeof(TQueryRequest).Name}");
+        logger.LogInformation($"Dispatching query {typeof(TQuery).Name}");
 
-        var handlerType = typeof(IQueryHandler<TQueryRequest, TResponse>);
+        var handlerType = typeof(IQueryHandler<TQuery, TResponse>);
         var handler = serviceProvider.GetService(handlerType);
 
         if (handler is null)
         {
-            throw new InvalidOperationException($"No handler found for query {typeof(TQueryRequest).Name}");
+            throw new InvalidOperationException($"No handler found for query {typeof(TQuery).Name}");
         }
 
-        return await ((IQueryHandler<TQueryRequest, TResponse>)handler).HandleAsync(query);
+        return await ((IQueryHandler<TQuery, TResponse>)handler).HandleAsync(query);
     }
 }

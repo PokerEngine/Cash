@@ -1,9 +1,11 @@
 using Application.Command;
+using Application.IntegrationEvent;
 using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
 using Infrastructure.Command;
 using Infrastructure.Controller;
+using Infrastructure.IntegrationEvent;
 using Infrastructure.Query;
 using Infrastructure.Repository;
 using Infrastructure.Service.Hand;
@@ -28,24 +30,6 @@ public static class Bootstrapper
         builder.Services.AddHttpClient<IHandService>();
         builder.Services.AddSingleton<IHandService, RemoteHandService>();
 
-        void RegisterCommandHandler<TCommandRequest, TCommandHandler, TCommandResponse>(IServiceCollection services)
-            where TCommandRequest : ICommandRequest
-            where TCommandResponse : ICommandResponse
-            where TCommandHandler : class, ICommandHandler<TCommandRequest, TCommandResponse>
-        {
-            services.AddScoped<TCommandHandler>();
-            services.AddScoped<ICommandHandler<TCommandRequest, TCommandResponse>>(provider => provider.GetRequiredService<TCommandHandler>());
-        }
-
-        void RegisterQueryHandler<TQueryRequest, TQueryHandler, TQueryResponse>(IServiceCollection services)
-            where TQueryRequest : IQueryRequest
-            where TQueryResponse : IQueryResponse
-            where TQueryHandler : class, IQueryHandler<TQueryRequest, TQueryResponse>
-        {
-            services.AddScoped<TQueryHandler>();
-            services.AddScoped<IQueryHandler<TQueryRequest, TQueryResponse>>(provider => provider.GetRequiredService<TQueryHandler>());
-        }
-
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResult>(builder.Services);
         RegisterCommandHandler<SitDownAtTableCommand, SitDownAtTableHandler, SitDownAtTableResult>(builder.Services);
@@ -56,6 +40,17 @@ public static class Bootstrapper
         RegisterQueryHandler<GetTableByUidQuery, GetTableByUidHandler, GetTableByUidResponse>(builder.Services);
         builder.Services.AddScoped<QueryDispatcher>();
 
+        // Register integration events
+        RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<DecisionIsCommittedIntegrationEvent, DecisionIsCommittedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<PlayerSatDownIntegrationEvent, PlayerSatDownHandler>(builder.Services);
+        RegisterIntegrationEventHandler<PlayerSatOutIntegrationEvent, PlayerSatOutHandler>(builder.Services);
+        RegisterIntegrationEventHandler<PlayerSatInIntegrationEvent, PlayerSatInHandler>(builder.Services);
+        RegisterIntegrationEventHandler<PlayerStoodUpIntegrationEvent, PlayerStoodUpHandler>(builder.Services);
+        builder.Services.AddScoped<IntegrationEventDispatcher>();
+
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
 
@@ -63,6 +58,32 @@ public static class Bootstrapper
         builder.Services.AddScoped<TableWsController>();
 
         return builder;
+    }
+
+    private static void RegisterCommandHandler<TCommand, THandler, TResponse>(IServiceCollection services)
+        where TCommand : ICommandRequest
+        where TResponse : ICommandResponse
+        where THandler : class, ICommandHandler<TCommand, TResponse>
+    {
+        services.AddScoped<THandler>();
+        services.AddScoped<ICommandHandler<TCommand, TResponse>>(provider => provider.GetRequiredService<THandler>());
+    }
+
+    private static void RegisterQueryHandler<TQuery, THandler, TResponse>(IServiceCollection services)
+        where TQuery : IQueryRequest
+        where TResponse : IQueryResponse
+        where THandler : class, IQueryHandler<TQuery, TResponse>
+    {
+        services.AddScoped<THandler>();
+        services.AddScoped<IQueryHandler<TQuery, TResponse>>(provider => provider.GetRequiredService<THandler>());
+    }
+
+    private static void RegisterIntegrationEventHandler<TIntegrationEvent, THandler>(IServiceCollection services)
+        where TIntegrationEvent : IIntegrationEvent
+        where THandler : class, IIntegrationEventHandler<TIntegrationEvent>
+    {
+        services.AddScoped<THandler>();
+        services.AddScoped<IIntegrationEventHandler<TIntegrationEvent>>(provider => provider.GetRequiredService<THandler>());
     }
 }
 
