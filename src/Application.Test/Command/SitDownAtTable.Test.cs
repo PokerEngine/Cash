@@ -5,7 +5,7 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class SitDownAtTableHandlerTest
+public class SitDownAtTableTest
 {
     [Fact]
     public async Task HandleAsync_1stPlayer_ShouldSitDownAndWait()
@@ -28,15 +28,15 @@ public class SitDownAtTableHandlerTest
         );
 
         // Act
-        var result = await handler.HandleAsync(command);
+        var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.TableUid, result.TableUid);
-        Assert.Equal(command.Nickname, result.Nickname);
-        Assert.Equal(command.Seat, result.Seat);
-        Assert.Equal(command.Stack, result.Stack);
+        Assert.Equal(command.TableUid, response.TableUid);
+        Assert.Equal(command.Nickname, response.Nickname);
+        Assert.Equal(command.Seat, response.Seat);
+        Assert.Equal(command.Stack, response.Stack);
 
-        var events = await repository.GetEventsAsync(result.TableUid);
+        var events = await repository.GetEventsAsync(response.TableUid);
         var table = Table.FromEvents(events);
         Assert.False(table.IsHandInProgress());
 
@@ -75,20 +75,49 @@ public class SitDownAtTableHandlerTest
         );
 
         // Act
-        var result = await handler.HandleAsync(command);
+        var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.TableUid, result.TableUid);
-        Assert.Equal(command.Nickname, result.Nickname);
-        Assert.Equal(command.Seat, result.Seat);
-        Assert.Equal(command.Stack, result.Stack);
+        Assert.Equal(command.TableUid, response.TableUid);
+        Assert.Equal(command.Nickname, response.Nickname);
+        Assert.Equal(command.Seat, response.Seat);
+        Assert.Equal(command.Stack, response.Stack);
 
-        var events = await repository.GetEventsAsync(result.TableUid);
+        var events = await repository.GetEventsAsync(response.TableUid);
         var table = Table.FromEvents(events);
         Assert.True(table.IsHandInProgress());
         Assert.Equal(new Seat(2), table.ButtonSeat);
         Assert.Equal(new Seat(2), table.SmallBlindSeat);
         Assert.Equal(new Seat(4), table.BigBlindSeat);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NotExists_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var repository = new StubRepository();
+        await repository.ConnectAsync();
+        var handService = new StubHandService();
+
+        var command = new SitDownAtTableCommand(
+            TableUid: new TableUid(Guid.NewGuid()),
+            Nickname: "Alice",
+            Seat: 2,
+            Stack: 1000
+        );
+        var handler = new SitDownAtTableHandler(
+            repository: repository,
+            handService: handService
+        );
+
+        // Act
+        var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await handler.HandleAsync(command);
+        });
+
+        // Assert
+        Assert.Equal("The table is not found", exc.Message);
     }
 
     private async Task<Guid> CreateTableAsync(StubRepository repository)
@@ -102,8 +131,8 @@ public class SitDownAtTableHandlerTest
             ChipCostAmount: 1,
             ChipCostCurrency: "Usd"
         );
-        var result = await handler.HandleAsync(command);
-        return result.TableUid;
+        var response = await handler.HandleAsync(command);
+        return response.TableUid;
     }
 
     private async Task SitDownPlayerAsync(

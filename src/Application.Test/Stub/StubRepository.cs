@@ -47,7 +47,7 @@ public class StubRepository : IRepository
 
         if (!_mapping.TryGetValue(tableUid, out var events))
         {
-            events = [];
+            throw new InvalidOperationException("The table is not found");
         }
 
         await Task.CompletedTask;

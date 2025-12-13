@@ -20,8 +20,8 @@ public class TableController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateTable([FromBody] CreateTableCommand request)
     {
-        var result = await commandDispatcher.DispatchAsync<CreateTableCommand, CreateTableResult>(request);
-        return CreatedAtAction(nameof(GetTableByUid), new { uid = result.TableUid }, result);
+        var response = await commandDispatcher.DispatchAsync<CreateTableCommand, CreateTableResult>(request);
+        return CreatedAtAction(nameof(GetTableByUid), new { uid = response.TableUid }, response);
     }
 
     [HttpGet("{uid:guid}")]

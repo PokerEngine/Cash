@@ -1,10 +1,11 @@
 using Application.Command;
 using Application.Test.Stub;
 using Domain.Entity;
+using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class StandUpFromTableHandlerTest
+public class StandUpFromTableTest
 {
     [Fact]
     public async Task HandleAsync_Valid_ShouldSitDown()
@@ -28,15 +29,39 @@ public class StandUpFromTableHandlerTest
         var handler = new StandUpFromTableHandler(repository);
 
         // Act
-        var result = await handler.HandleAsync(command);
+        var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.TableUid, result.TableUid);
-        Assert.Equal(command.Nickname, result.Nickname);
+        Assert.Equal(command.TableUid, response.TableUid);
+        Assert.Equal(command.Nickname, response.Nickname);
 
-        var events = await repository.GetEventsAsync(result.TableUid);
+        var events = await repository.GetEventsAsync(response.TableUid);
         var table = Table.FromEvents(events);
         Assert.Empty(table.Players);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NotExists_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var repository = new StubRepository();
+        await repository.ConnectAsync();
+        var handService = new StubHandService();
+
+        var command = new StandUpFromTableCommand(
+            TableUid: new TableUid(Guid.NewGuid()),
+            Nickname: "Alice"
+        );
+        var handler = new StandUpFromTableHandler(repository);
+
+        // Act
+        var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await handler.HandleAsync(command);
+        });
+
+        // Assert
+        Assert.Equal("The table is not found", exc.Message);
     }
 
     private async Task<Guid> CreateTableAsync(StubRepository repository)
@@ -50,8 +75,8 @@ public class StandUpFromTableHandlerTest
             ChipCostAmount: 1,
             ChipCostCurrency: "Usd"
         );
-        var result = await handler.HandleAsync(command);
-        return result.TableUid;
+        var response = await handler.HandleAsync(command);
+        return response.TableUid;
     }
 
     private async Task SitDownPlayerAsync(
