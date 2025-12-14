@@ -4,21 +4,21 @@ using Domain.Event;
 
 namespace Application.Command;
 
-public record StandUpFromTableCommand(
+public record StandUpPlayerCommand(
     Guid TableUid,
     string Nickname
 ) : ICommandRequest;
 
-public record StandUpFromTableResult(
+public record StandUpPlayerResult(
     Guid TableUid,
     string Nickname
 ) : ICommandResponse;
 
-public class StandUpFromTableHandler(
+public class StandUpPlayerHandler(
     IRepository repository
-) : ICommandHandler<StandUpFromTableCommand, StandUpFromTableResult>
+) : ICommandHandler<StandUpPlayerCommand, StandUpPlayerResult>
 {
-    public async Task<StandUpFromTableResult> HandleAsync(StandUpFromTableCommand command)
+    public async Task<StandUpPlayerResult> HandleAsync(StandUpPlayerCommand command)
     {
         var table = Table.FromEvents(
             events: await repository.GetEventsAsync(command.TableUid)
@@ -38,7 +38,7 @@ public class StandUpFromTableHandler(
 
         await repository.AddEventsAsync(table.Uid, events);
 
-        return new StandUpFromTableResult(
+        return new StandUpPlayerResult(
             TableUid: table.Uid,
             Nickname: command.Nickname
         );

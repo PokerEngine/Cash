@@ -14,8 +14,8 @@ public class TableWsController(
     private const int ReceiveBufferSize = 4 * 1024;
     private static readonly Dictionary<string, (Type TCommandRequest, Type TCommandResponse)> CommandMapping = new()
     {
-        {"SitDownAtTableCommand", (typeof(SitDownAtTableCommand), typeof(SitDownAtTableResult))},
-        {"StandUpFromTableCommand", (typeof(StandUpFromTableCommand), typeof(StandUpFromTableResult))}
+        {"SitDownPlayerCommand", (typeof(SitDownPlayerCommand), typeof(SitDownPlayerResult))},
+        {"StandUpPlayerCommand", (typeof(StandUpPlayerCommand), typeof(StandUpPlayerResult))}
     };
 
     public async Task HandleAsync(HttpContext context, Guid uid, CancellationToken cancellationToken)

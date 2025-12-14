@@ -32,8 +32,8 @@ public static class Bootstrapper
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResult>(builder.Services);
-        RegisterCommandHandler<SitDownAtTableCommand, SitDownAtTableHandler, SitDownAtTableResult>(builder.Services);
-        RegisterCommandHandler<StandUpFromTableCommand, StandUpFromTableHandler, StandUpFromTableResult>(builder.Services);
+        RegisterCommandHandler<SitDownPlayerCommand, SitDownPlayerHandler, SitDownPlayerResult>(builder.Services);
+        RegisterCommandHandler<StandUpPlayerCommand, StandUpPlayerHandler, StandUpPlayerResult>(builder.Services);
         builder.Services.AddScoped<CommandDispatcher>();
 
         // Register queries

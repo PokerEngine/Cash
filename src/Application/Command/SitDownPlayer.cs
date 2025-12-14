@@ -6,26 +6,26 @@ using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record SitDownAtTableCommand(
+public record SitDownPlayerCommand(
     Guid TableUid,
     string Nickname,
     int Seat,
     int Stack
 ) : ICommandRequest;
 
-public record SitDownAtTableResult(
+public record SitDownPlayerResult(
     Guid TableUid,
     string Nickname,
     int Seat,
     int Stack
 ) : ICommandResponse;
 
-public class SitDownAtTableHandler(
+public class SitDownPlayerHandler(
     IRepository repository,
     IHandService handService
-) : ICommandHandler<SitDownAtTableCommand, SitDownAtTableResult>
+) : ICommandHandler<SitDownPlayerCommand, SitDownPlayerResult>
 {
-    public async Task<SitDownAtTableResult> HandleAsync(SitDownAtTableCommand command)
+    public async Task<SitDownPlayerResult> HandleAsync(SitDownPlayerCommand command)
     {
         var table = Table.FromEvents(
             events: await repository.GetEventsAsync(command.TableUid)
@@ -71,7 +71,7 @@ public class SitDownAtTableHandler(
 
         await repository.AddEventsAsync(table.Uid, events);
 
-        return new SitDownAtTableResult(
+        return new SitDownPlayerResult(
             TableUid: table.Uid,
             Nickname: command.Nickname,
             Seat: command.Seat,

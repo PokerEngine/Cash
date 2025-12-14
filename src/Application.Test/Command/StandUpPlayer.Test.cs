@@ -5,7 +5,7 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class StandUpFromTableTest
+public class StandUpPlayerTest
 {
     [Fact]
     public async Task HandleAsync_Valid_ShouldSitDown()
@@ -22,11 +22,11 @@ public class StandUpFromTableTest
             stack: 1000
         );
 
-        var command = new StandUpFromTableCommand(
+        var command = new StandUpPlayerCommand(
             TableUid: tableUid,
             Nickname: "Alice"
         );
-        var handler = new StandUpFromTableHandler(repository);
+        var handler = new StandUpPlayerHandler(repository);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -48,11 +48,11 @@ public class StandUpFromTableTest
         await repository.ConnectAsync();
         var handService = new StubHandService();
 
-        var command = new StandUpFromTableCommand(
+        var command = new StandUpPlayerCommand(
             TableUid: new TableUid(Guid.NewGuid()),
             Nickname: "Alice"
         );
-        var handler = new StandUpFromTableHandler(repository);
+        var handler = new StandUpPlayerHandler(repository);
 
         // Act
         var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -87,11 +87,11 @@ public class StandUpFromTableTest
         int stack
     )
     {
-        var handler = new SitDownAtTableHandler(
+        var handler = new SitDownPlayerHandler(
             repository: repository,
             handService: new StubHandService()
         );
-        var command = new SitDownAtTableCommand(
+        var command = new SitDownPlayerCommand(
             TableUid: tableUid,
             Nickname: nickname,
             Seat: seat,
