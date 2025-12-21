@@ -170,12 +170,7 @@ public class Table
         return table;
     }
 
-    public void SitDown(
-        Nickname nickname,
-        Seat seat,
-        Chips stack,
-        EventBus eventBus
-    )
+    public void SitDown(Nickname nickname, Seat seat, Chips stack, IEventBus eventBus)
     {
         if (seat > MaxSeat)
         {
@@ -213,10 +208,7 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    public void StandUp(
-        Nickname nickname,
-        EventBus eventBus
-    )
+    public void StandUp(Nickname nickname, IEventBus eventBus)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -233,10 +225,7 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    public void SitOut(
-        Nickname nickname,
-        EventBus eventBus
-    )
+    public void SitOut(Nickname nickname, IEventBus eventBus)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -253,10 +242,7 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    public void SitIn(
-        Nickname nickname,
-        EventBus eventBus
-    )
+    public void SitIn(Nickname nickname, IEventBus eventBus)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -276,7 +262,7 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    public void RotateButton(EventBus eventBus)
+    public void RotateButton(IEventBus eventBus)
     {
         if (IsHandInProgress())
         {
@@ -308,7 +294,7 @@ public class Table
         eventBus.Publish(@event);
     }
 
-    public void StartHand(HandUid handUid, EventBus eventBus)
+    public void StartHand(HandUid handUid, IEventBus eventBus)
     {
         if (IsHandInProgress())
         {
