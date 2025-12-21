@@ -1,9 +1,11 @@
 using Application.Command;
+using Application.Connection;
 using Application.IntegrationEvent;
 using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
 using Infrastructure.Command;
+using Infrastructure.Connection;
 using Infrastructure.Controller;
 using Infrastructure.IntegrationEvent;
 using Infrastructure.Query;
@@ -29,6 +31,8 @@ public static class Bootstrapper
         );
         builder.Services.AddHttpClient<IHandService>();
         builder.Services.AddSingleton<IHandService, RemoteHandService>();
+
+        builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResult>(builder.Services);
@@ -119,15 +123,17 @@ public class Program
         app.MapControllers();
 
         // Map websocket endpoints
-        app.Map("/ws/table/{uid:guid}", async (
+        app.Map("/ws/table/{uid:guid}/events/{nickname}", async (
             HttpContext context,
             Guid uid,
+            string nickname,
             TableWsController controller,
             CancellationToken cancellationToken) =>
         {
             await controller.HandleAsync(
                 context: context,
                 uid: uid,
+                nickname: nickname,
                 cancellationToken: cancellationToken
             );
         });
