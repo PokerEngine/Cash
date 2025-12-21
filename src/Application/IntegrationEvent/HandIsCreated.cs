@@ -1,3 +1,6 @@
+using Application.Connection;
+using Application.Repository;
+
 namespace Application.IntegrationEvent;
 
 public record struct IntegrationEventParticipant
@@ -22,10 +25,15 @@ public record struct HandIsCreatedIntegrationEvent : IIntegrationEvent
     public required DateTime OccuredAt { get; init; }
 }
 
-public class HandIsCreatedHandler : IIntegrationEventHandler<HandIsCreatedIntegrationEvent>
+public class HandIsCreatedHandler(
+    IConnectionRegistry connectionRegistry
+) : IIntegrationEventHandler<HandIsCreatedIntegrationEvent>
 {
     public async Task HandleAsync(HandIsCreatedIntegrationEvent integrationEvent)
     {
-        await Task.CompletedTask;
+        await connectionRegistry.SendIntegrationEventToTableAsync(
+            tableUid: integrationEvent.TableUid,
+            integrationEvent: integrationEvent
+        );
     }
 }

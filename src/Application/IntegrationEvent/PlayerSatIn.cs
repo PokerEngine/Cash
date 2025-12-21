@@ -1,3 +1,5 @@
+using Application.Connection;
+
 namespace Application.IntegrationEvent;
 
 public record struct PlayerSatInIntegrationEvent : IIntegrationEvent
@@ -7,10 +9,15 @@ public record struct PlayerSatInIntegrationEvent : IIntegrationEvent
     public required DateTime OccuredAt { get; init; }
 }
 
-public class PlayerSatInHandler : IIntegrationEventHandler<PlayerSatInIntegrationEvent>
+public class PlayerSatInHandler(
+    IConnectionRegistry connectionRegistry
+) : IIntegrationEventHandler<PlayerSatInIntegrationEvent>
 {
     public async Task HandleAsync(PlayerSatInIntegrationEvent integrationEvent)
     {
-        await Task.CompletedTask;
+        await connectionRegistry.SendIntegrationEventToTableAsync(
+            tableUid: integrationEvent.TableUid,
+            integrationEvent: integrationEvent
+        );
     }
 }

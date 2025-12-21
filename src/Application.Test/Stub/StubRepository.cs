@@ -15,7 +15,7 @@ public class StubRepository : IRepository
         return new TableUid(Guid.NewGuid());
     }
 
-    public async Task<IList<BaseEvent>> GetEventsAsync(TableUid tableUid)
+    public async Task<List<BaseEvent>> GetEventsAsync(TableUid tableUid)
     {
         if (!_mapping.TryGetValue(tableUid, out var events))
         {
@@ -27,7 +27,7 @@ public class StubRepository : IRepository
         return events;
     }
 
-    public async Task AddEventsAsync(TableUid tableUid, IList<BaseEvent> events)
+    public async Task AddEventsAsync(TableUid tableUid, List<BaseEvent> events)
     {
         if (!_mapping.TryAdd(tableUid, events.ToList()))
         {

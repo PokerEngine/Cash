@@ -1,3 +1,5 @@
+using Application.Connection;
+
 namespace Application.IntegrationEvent;
 
 public record struct DecisionIsCommittedIntegrationEvent : IIntegrationEvent
@@ -9,10 +11,15 @@ public record struct DecisionIsCommittedIntegrationEvent : IIntegrationEvent
     public required DateTime OccuredAt { get; init; }
 }
 
-public class DecisionIsCommittedHandler : IIntegrationEventHandler<DecisionIsCommittedIntegrationEvent>
+public class DecisionIsCommittedHandler(
+    IConnectionRegistry connectionRegistry
+) : IIntegrationEventHandler<DecisionIsCommittedIntegrationEvent>
 {
     public async Task HandleAsync(DecisionIsCommittedIntegrationEvent integrationEvent)
     {
-        await Task.CompletedTask;
+        await connectionRegistry.SendIntegrationEventToTableAsync(
+            tableUid: integrationEvent.TableUid,
+            integrationEvent: integrationEvent
+        );
     }
 }

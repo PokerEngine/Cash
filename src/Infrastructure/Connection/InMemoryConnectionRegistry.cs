@@ -6,34 +6,42 @@ namespace Infrastructure.Connection;
 
 public class InMemoryConnectionRegistry(ILogger<InMemoryConnectionRegistry> logger) : IConnectionRegistry
 {
-    private readonly ConcurrentDictionary<(Guid, string), HashSet<IConnection>> _connections = new();
+    private readonly ConcurrentDictionary<Guid, HashSet<IConnection>> _tableMapping = new();
+    private readonly ConcurrentDictionary<(Guid, string), HashSet<IConnection>> _playerMapping = new();
 
     public void Connect(Guid tableUid, string nickname, IConnection connection)
     {
-        logger.LogInformation("Connect to the table {TableUid} by {Nickname}", tableUid, nickname);
+        logger.LogInformation("Connect {Nickname} to the table {TableUid}", nickname, tableUid);
 
-        var key = GetKey(tableUid, nickname);
-        var connections = _connections.GetOrAdd(key, _ => new HashSet<IConnection>());
+        var connections = _tableMapping.GetOrAdd(tableUid, _ => new HashSet<IConnection>());
+        lock (connections)
+            connections.Add(connection);
+
+        connections = _playerMapping.GetOrAdd((tableUid, nickname), _ => new HashSet<IConnection>());
         lock (connections)
             connections.Add(connection);
     }
 
     public void Disconnect(Guid tableUid, string nickname, IConnection connection)
     {
-        logger.LogInformation("Disconnect from the table {TableUid} by {Nickname}", tableUid, nickname);
+        logger.LogInformation("Disconnect {Nickname} from the table {TableUid}", nickname, tableUid);
 
-        var key = GetKey(tableUid, nickname);
-        if (_connections.TryGetValue(key, out var connections))
+        if (_tableMapping.TryGetValue(tableUid, out var connections))
+        {
+            lock (connections)
+                connections.Remove(connection);
+        }
+
+        if (_playerMapping.TryGetValue((tableUid, nickname), out connections))
         {
             lock (connections)
                 connections.Remove(connection);
         }
     }
 
-    public async Task SendIntegrationEventAsync(Guid tableUid, string nickname, IIntegrationEvent integrationEvent)
+    public async Task SendIntegrationEventToTableAsync(Guid tableUid, IIntegrationEvent integrationEvent)
     {
-        var key = GetKey(tableUid, nickname);
-        if (!_connections.TryGetValue(key, out var connections))
+        if (!_tableMapping.TryGetValue(tableUid, out var connections))
             return;
 
         List<IConnection> snapshot;
@@ -46,8 +54,22 @@ public class InMemoryConnectionRegistry(ILogger<InMemoryConnectionRegistry> logg
         }
     }
 
-    private (Guid, string) GetKey(Guid tableUid, string nickname)
+    public async Task SendIntegrationEventToPlayerAsync(
+        Guid tableUid,
+        string nickname,
+        IIntegrationEvent integrationEvent
+    )
     {
-        return (tableUid, nickname);
+        if (!_playerMapping.TryGetValue((tableUid, nickname), out var connections))
+            return;
+
+        List<IConnection> snapshot;
+        lock (connections)
+            snapshot = connections.ToList();
+
+        foreach (var connection in snapshot)
+        {
+            await connection.SendIntegrationEventAsync(integrationEvent);
+        }
     }
 }
