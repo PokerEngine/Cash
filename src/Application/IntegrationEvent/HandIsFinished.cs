@@ -1,10 +1,11 @@
 namespace Application.IntegrationEvent;
 
-public record HandIsFinishedIntegrationEvent(
-    Guid HandUid,
-    Guid TableUid,
-    DateTime OccuredAt
-) : IIntegrationEvent;
+public record struct HandIsFinishedIntegrationEvent : IIntegrationEvent
+{
+    public required Guid TableUid { get; init; }
+    public required Guid HandUid { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
 public class HandIsFinishedHandler : IIntegrationEventHandler<HandIsFinishedIntegrationEvent>
 {

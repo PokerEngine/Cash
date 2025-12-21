@@ -1,12 +1,11 @@
 namespace Application.IntegrationEvent;
 
-public record PlayerSatInIntegrationEvent(
-    string NickName,
-    int Seat,
-    int Stack,
-    Guid TableUid,
-    DateTime OccuredAt
-) : IIntegrationEvent;
+public record struct PlayerSatInIntegrationEvent : IIntegrationEvent
+{
+    public required Guid TableUid { get; init; }
+    public required string NickName { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
 public class PlayerSatInHandler : IIntegrationEventHandler<PlayerSatInIntegrationEvent>
 {
