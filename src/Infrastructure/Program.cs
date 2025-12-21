@@ -38,11 +38,11 @@ public static class Bootstrapper
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);
         RegisterCommandHandler<SitDownPlayerCommand, SitDownPlayerHandler, SitDownPlayerResponse>(builder.Services);
         RegisterCommandHandler<StandUpPlayerCommand, StandUpPlayerHandler, StandUpPlayerResponse>(builder.Services);
-        builder.Services.AddScoped<CommandDispatcher>();
+        builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 
         // Register queries
         RegisterQueryHandler<GetTableByUidQuery, GetTableByUidHandler, GetTableByUidResponse>(builder.Services);
-        builder.Services.AddScoped<QueryDispatcher>();
+        builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
         // Register integration events
         RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
@@ -53,7 +53,7 @@ public static class Bootstrapper
         RegisterIntegrationEventHandler<PlayerSatOutIntegrationEvent, PlayerSatOutHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerSatInIntegrationEvent, PlayerSatInHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerStoodUpIntegrationEvent, PlayerStoodUpHandler>(builder.Services);
-        builder.Services.AddScoped<IntegrationEventDispatcher>();
+        builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();

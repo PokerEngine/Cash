@@ -10,3 +10,10 @@ public interface ICommandHandler<in TCommandRequest, TCommandResponse>
 {
     Task<TCommandResponse> HandleAsync(TCommandRequest command);
 }
+
+public interface ICommandDispatcher
+{
+    Task<TResponse> DispatchAsync<TCommand, TResponse>(TCommand command)
+        where TCommand : ICommandRequest
+        where TResponse : ICommandResponse;
+}

@@ -10,3 +10,10 @@ public interface IQueryHandler<in TQueryRequest, TQueryResponse>
 {
     Task<TQueryResponse> HandleAsync(TQueryRequest query);
 }
+
+public interface IQueryDispatcher
+{
+    Task<TResponse> DispatchAsync<TQuery, TResponse>(TQuery query)
+        where TQuery : IQueryRequest
+        where TResponse : IQueryResponse;
+}

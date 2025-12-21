@@ -6,13 +6,13 @@ namespace Application.Query;
 
 public record struct GetTableByUidQuery : IQueryRequest
 {
-    public required Guid Uid;
+    public required Guid Uid { get; init; }
 }
 
 public record struct GetTableByUidResponse : IQueryResponse
 {
-    public required Guid Uid;
-    public required List<Participant> Participants;
+    public required Guid Uid { get; init; }
+    public required List<Participant> Participants { get; init; }
 }
 
 public class GetTableByUidHandler(
