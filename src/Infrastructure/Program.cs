@@ -35,9 +35,9 @@ public static class Bootstrapper
         builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
 
         // Register commands
-        RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResult>(builder.Services);
-        RegisterCommandHandler<SitDownPlayerCommand, SitDownPlayerHandler, SitDownPlayerResult>(builder.Services);
-        RegisterCommandHandler<StandUpPlayerCommand, StandUpPlayerHandler, StandUpPlayerResult>(builder.Services);
+        RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);
+        RegisterCommandHandler<SitDownPlayerCommand, SitDownPlayerHandler, SitDownPlayerResponse>(builder.Services);
+        RegisterCommandHandler<StandUpPlayerCommand, StandUpPlayerHandler, StandUpPlayerResponse>(builder.Services);
         builder.Services.AddScoped<CommandDispatcher>();
 
         // Register queries

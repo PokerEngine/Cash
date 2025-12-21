@@ -15,12 +15,13 @@ public class SitDownPlayerTest
         var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository);
 
-        var command = new SitDownPlayerCommand(
-            TableUid: tableUid,
-            Nickname: "Alice",
-            Seat: 2,
-            Stack: 1000
-        );
+        var command = new SitDownPlayerCommand
+        {
+            TableUid = tableUid,
+            Nickname = "Alice",
+            Seat = 2,
+            Stack = 1000
+        };
         var handler = new SitDownPlayerHandler(
             repository: repository,
             handService: handService
@@ -61,12 +62,13 @@ public class SitDownPlayerTest
             stack: 1000
         );
 
-        var command = new SitDownPlayerCommand(
-            TableUid: tableUid,
-            Nickname: "Bob",
-            Seat: 4,
-            Stack: 1000
-        );
+        var command = new SitDownPlayerCommand
+        {
+            TableUid = tableUid,
+            Nickname = "Bob",
+            Seat = 4,
+            Stack = 1000
+        };
         var handler = new SitDownPlayerHandler(
             repository: repository,
             handService: handService
@@ -96,12 +98,13 @@ public class SitDownPlayerTest
         var repository = new StubRepository();
         var handService = new StubHandService();
 
-        var command = new SitDownPlayerCommand(
-            TableUid: new TableUid(Guid.NewGuid()),
-            Nickname: "Alice",
-            Seat: 2,
-            Stack: 1000
-        );
+        var command = new SitDownPlayerCommand
+        {
+            TableUid = new TableUid(Guid.NewGuid()),
+            Nickname = "Alice",
+            Seat = 2,
+            Stack = 1000
+        };
         var handler = new SitDownPlayerHandler(
             repository: repository,
             handService: handService
@@ -120,16 +123,17 @@ public class SitDownPlayerTest
     private async Task<Guid> CreateTableAsync(StubRepository repository)
     {
         var handler = new CreateTableHandler(repository: repository);
-        var command = new CreateTableCommand(
-            Game: "NoLimitHoldem",
-            MaxSeat: 6,
-            SmallBlind: 5,
-            BigBlind: 10,
-            ChipCostAmount: 1,
-            ChipCostCurrency: "Usd"
-        );
+        var command = new CreateTableCommand
+        {
+            Game = "NoLimitHoldem",
+            MaxSeat = 6,
+            SmallBlind = 5,
+            BigBlind = 10,
+            ChipCostAmount = 1,
+            ChipCostCurrency = "Usd"
+        };
         var response = await handler.HandleAsync(command);
-        return response.TableUid;
+        return response.Uid;
     }
 
     private async Task SitDownPlayerAsync(
@@ -145,12 +149,13 @@ public class SitDownPlayerTest
             repository: repository,
             handService: handService
         );
-        var command = new SitDownPlayerCommand(
-            TableUid: tableUid,
-            Nickname: nickname,
-            Seat: seat,
-            Stack: stack
-        );
+        var command = new SitDownPlayerCommand
+        {
+            TableUid = tableUid,
+            Nickname = nickname,
+            Seat = seat,
+            Stack = stack
+        };
         await handler.HandleAsync(command);
     }
 }

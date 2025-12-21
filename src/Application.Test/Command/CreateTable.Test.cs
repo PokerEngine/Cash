@@ -12,14 +12,15 @@ public class CreateTableTest
     {
         // Arrange
         var repository = new StubRepository();
-        var command = new CreateTableCommand(
-            Game: "NoLimitHoldem",
-            MaxSeat: 6,
-            SmallBlind: 5,
-            BigBlind: 10,
-            ChipCostAmount: 1,
-            ChipCostCurrency: "Usd"
-        );
+        var command = new CreateTableCommand
+        {
+            Game = "NoLimitHoldem",
+            MaxSeat = 6,
+            SmallBlind = 5,
+            BigBlind = 10,
+            ChipCostAmount = 1,
+            ChipCostCurrency = "Usd"
+        };
         var handler = new CreateTableHandler(repository: repository);
 
         // Act
@@ -33,9 +34,9 @@ public class CreateTableTest
         Assert.Equal(command.ChipCostAmount, response.ChipCostAmount);
         Assert.Equal(command.ChipCostCurrency, response.ChipCostCurrency);
 
-        var events = await repository.GetEventsAsync(response.TableUid);
+        var events = await repository.GetEventsAsync(response.Uid);
         var table = Table.FromEvents(events);
-        Assert.Equal(new TableUid(response.TableUid), table.Uid);
+        Assert.Equal(new TableUid(response.Uid), table.Uid);
         Assert.Equal(Game.NoLimitHoldem, table.Game);
         Assert.Equal(new Seat(6), table.MaxSeat);
         Assert.Equal(new Chips(5), table.SmallBlind);

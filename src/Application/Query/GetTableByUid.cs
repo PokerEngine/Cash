@@ -4,14 +4,16 @@ using Domain.ValueObject;
 
 namespace Application.Query;
 
-public record GetTableByUidQuery(
-    Guid TableUid
-) : IQueryRequest;
+public record struct GetTableByUidQuery : IQueryRequest
+{
+    public required Guid Uid;
+}
 
-public record GetTableByUidResponse(
-    Guid TableUid,
-    List<Participant> Participants
-) : IQueryResponse;
+public record struct GetTableByUidResponse : IQueryResponse
+{
+    public required Guid Uid;
+    public required List<Participant> Participants;
+}
 
 public class GetTableByUidHandler(
     IRepository repository
@@ -20,12 +22,13 @@ public class GetTableByUidHandler(
     public async Task<GetTableByUidResponse> HandleAsync(GetTableByUidQuery command)
     {
         var table = Table.FromEvents(
-            events: await repository.GetEventsAsync(command.TableUid)
+            events: await repository.GetEventsAsync(command.Uid)
         );
 
-        return new GetTableByUidResponse(
-            TableUid: table.Uid,
-            Participants: table.GetParticipants().ToList()
-        );
+        return new GetTableByUidResponse
+        {
+            Uid = table.Uid,
+            Participants = table.GetParticipants().ToList()
+        };
     }
 }

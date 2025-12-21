@@ -5,30 +5,32 @@ using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record CreateTableCommand(
-    string Game,
-    int MaxSeat,
-    int SmallBlind,
-    int BigBlind,
-    decimal ChipCostAmount,
-    string ChipCostCurrency
-) : ICommandRequest;
+public record struct CreateTableCommand : ICommandRequest
+{
+    public required string Game { get; init; }
+    public required int MaxSeat { get; init; }
+    public required int SmallBlind { get; init; }
+    public required int BigBlind { get; init; }
+    public required decimal ChipCostAmount { get; init; }
+    public required string ChipCostCurrency { get; init; }
+}
 
-public record CreateTableResult(
-    Guid TableUid,
-    string Game,
-    int MaxSeat,
-    int SmallBlind,
-    int BigBlind,
-    decimal ChipCostAmount,
-    string ChipCostCurrency
-) : ICommandResponse;
+public record struct CreateTableResponse : ICommandResponse
+{
+    public required Guid Uid { get; init; }
+    public required string Game { get; init; }
+    public required int MaxSeat { get; init; }
+    public required int SmallBlind { get; init; }
+    public required int BigBlind { get; init; }
+    public required decimal ChipCostAmount { get; init; }
+    public required string ChipCostCurrency { get; init; }
+}
 
 public class CreateTableHandler(
     IRepository repository
-) : ICommandHandler<CreateTableCommand, CreateTableResult>
+) : ICommandHandler<CreateTableCommand, CreateTableResponse>
 {
-    public async Task<CreateTableResult> HandleAsync(CreateTableCommand command)
+    public async Task<CreateTableResponse> HandleAsync(CreateTableCommand command)
     {
         var game = (Game)Enum.Parse(typeof(Game), command.Game);
         var chipCostCurrency = (Currency)Enum.Parse(typeof(Currency), command.ChipCostCurrency);
@@ -52,14 +54,15 @@ public class CreateTableHandler(
 
         await repository.AddEventsAsync(table.Uid, events);
 
-        return new CreateTableResult(
-            TableUid: table.Uid,
-            Game: table.Game.ToString(),
-            MaxSeat: table.MaxSeat,
-            SmallBlind: table.SmallBlind,
-            BigBlind: table.BigBlind,
-            ChipCostAmount: table.ChipCost.Amount,
-            ChipCostCurrency: table.ChipCost.Currency.ToString()
-        );
+        return new CreateTableResponse
+        {
+            Uid = table.Uid,
+            Game = table.Game.ToString(),
+            MaxSeat = table.MaxSeat,
+            SmallBlind = table.SmallBlind,
+            BigBlind = table.BigBlind,
+            ChipCostAmount = table.ChipCost.Amount,
+            ChipCostCurrency = table.ChipCost.Currency.ToString()
+        };
     }
 }

@@ -14,11 +14,27 @@ Content-Type: application/json
   "chipCostCurrency": "Usd"
 }
 > {%
-    client.global.set("tableUid", response.body.tableUid);
-    client.log("Extracted table UID: " + response.body.tableUid);
+    client.global.set("tableUid", response.body.uid);
 %}
 
-### Get a specific table
+### Sit down at the table
+PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/alice
+Accept: application/json
+Content-Type: application/json
+
+{
+  "seat": 1,
+  "stack": 1000
+}
+
+### Stand up from the table
+PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/alice
+Accept: application/json
+Content-Type: application/json
+
+{}
+
+### Get the table
 GET {{Infrastructure_HostAddress}}/api/table/{{tableUid}}
 Accept: application/json
 

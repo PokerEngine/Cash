@@ -1,7 +1,6 @@
 using Application.Command;
 using Application.Query;
 using Application.Test.Stub;
-using Domain.ValueObject;
 
 namespace Application.Test.Query;
 
@@ -14,9 +13,7 @@ public class GetTableByUidTest
         var repository = new StubRepository();
         var tableUid = await CreateTableAsync(repository);
 
-        var query = new GetTableByUidQuery(
-            TableUid: tableUid
-        );
+        var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
             repository: repository
         );
@@ -25,7 +22,7 @@ public class GetTableByUidTest
         var response = await handler.HandleAsync(query);
 
         // Assert
-        Assert.Equal(query.TableUid, response.TableUid);
+        Assert.Equal(query.Uid, response.Uid);
         Assert.Empty(response.Participants);
     }
 
@@ -35,9 +32,7 @@ public class GetTableByUidTest
         // Arrange
         var repository = new StubRepository();
 
-        var query = new GetTableByUidQuery(
-            TableUid: new TableUid(Guid.NewGuid())
-        );
+        var query = new GetTableByUidQuery { Uid = Guid.NewGuid() };
         var handler = new GetTableByUidHandler(
             repository: repository
         );
@@ -55,15 +50,16 @@ public class GetTableByUidTest
     private async Task<Guid> CreateTableAsync(StubRepository repository)
     {
         var handler = new CreateTableHandler(repository: repository);
-        var command = new CreateTableCommand(
-            Game: "NoLimitHoldem",
-            MaxSeat: 6,
-            SmallBlind: 5,
-            BigBlind: 10,
-            ChipCostAmount: 1,
-            ChipCostCurrency: "Usd"
-        );
+        var command = new CreateTableCommand
+        {
+            Game = "NoLimitHoldem",
+            MaxSeat = 6,
+            SmallBlind = 5,
+            BigBlind = 10,
+            ChipCostAmount = 1,
+            ChipCostCurrency = "Usd"
+        };
         var response = await handler.HandleAsync(command);
-        return response.TableUid;
+        return response.Uid;
     }
 }

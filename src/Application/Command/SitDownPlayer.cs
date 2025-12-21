@@ -6,26 +6,28 @@ using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record SitDownPlayerCommand(
-    Guid TableUid,
-    string Nickname,
-    int Seat,
-    int Stack
-) : ICommandRequest;
+public record struct SitDownPlayerCommand : ICommandRequest
+{
+    public required Guid TableUid { get; init; }
+    public required string Nickname { get; init; }
+    public required int Seat { get; init; }
+    public required int Stack { get; init; }
+}
 
-public record SitDownPlayerResult(
-    Guid TableUid,
-    string Nickname,
-    int Seat,
-    int Stack
-) : ICommandResponse;
+public record struct SitDownPlayerResponse : ICommandResponse
+{
+    public required Guid TableUid { get; init; }
+    public required string Nickname { get; init; }
+    public required int Seat { get; init; }
+    public required int Stack { get; init; }
+}
 
 public class SitDownPlayerHandler(
     IRepository repository,
     IHandService handService
-) : ICommandHandler<SitDownPlayerCommand, SitDownPlayerResult>
+) : ICommandHandler<SitDownPlayerCommand, SitDownPlayerResponse>
 {
-    public async Task<SitDownPlayerResult> HandleAsync(SitDownPlayerCommand command)
+    public async Task<SitDownPlayerResponse> HandleAsync(SitDownPlayerCommand command)
     {
         var table = Table.FromEvents(
             events: await repository.GetEventsAsync(command.TableUid)
@@ -71,11 +73,12 @@ public class SitDownPlayerHandler(
 
         await repository.AddEventsAsync(table.Uid, events);
 
-        return new SitDownPlayerResult(
-            TableUid: table.Uid,
-            Nickname: command.Nickname,
-            Seat: command.Seat,
-            Stack: command.Stack
-        );
+        return new SitDownPlayerResponse
+        {
+            TableUid = table.Uid,
+            Nickname = command.Nickname,
+            Seat = command.Seat,
+            Stack = command.Stack
+        };
     }
 }
