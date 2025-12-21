@@ -1,6 +1,25 @@
 @Infrastructure_HostAddress = http://0.0.0.0:5260
 
-GET {{Infrastructure_HostAddress}}/weatherforecast/
+### Create a new table
+POST {{Infrastructure_HostAddress}}/api/table
+Accept: application/json
+Content-Type: application/json
+
+{
+  "game": "NoLimitHoldem",
+  "maxSeat": 6,
+  "smallBlind": 5,
+  "bigBlind": 10,
+  "chipCostAmount": 1,
+  "chipCostCurrency": "Usd"
+}
+> {%
+    client.global.set("tableUid", response.body.tableUid);
+    client.log("Extracted table UID: " + response.body.tableUid);
+%}
+
+### Get a specific table
+GET {{Infrastructure_HostAddress}}/api/table/{{tableUid}}
 Accept: application/json
 
 ###

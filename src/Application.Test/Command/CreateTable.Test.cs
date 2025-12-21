@@ -12,7 +12,6 @@ public class CreateTableTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
         var command = new CreateTableCommand(
             Game: "NoLimitHoldem",
             MaxSeat: 6,

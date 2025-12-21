@@ -12,7 +12,6 @@ public class GetTableByUidTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
         var tableUid = await CreateTableAsync(repository);
 
         var query = new GetTableByUidQuery(
@@ -35,7 +34,6 @@ public class GetTableByUidTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
 
         var query = new GetTableByUidQuery(
             TableUid: new TableUid(Guid.NewGuid())

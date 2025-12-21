@@ -12,7 +12,6 @@ public class StandUpPlayerTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
         var tableUid = await CreateTableAsync(repository);
         await SitDownPlayerAsync(
             repository: repository,
@@ -45,8 +44,6 @@ public class StandUpPlayerTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
-        var handService = new StubHandService();
 
         var command = new StandUpPlayerCommand(
             TableUid: new TableUid(Guid.NewGuid()),

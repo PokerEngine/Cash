@@ -12,7 +12,6 @@ public class SitDownPlayerTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
         var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository);
 
@@ -51,7 +50,6 @@ public class SitDownPlayerTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
         var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository);
         await SitDownPlayerAsync(
@@ -96,7 +94,6 @@ public class SitDownPlayerTest
     {
         // Arrange
         var repository = new StubRepository();
-        await repository.ConnectAsync();
         var handService = new StubHandService();
 
         var command = new SitDownPlayerCommand(
