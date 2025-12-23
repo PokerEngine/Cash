@@ -23,37 +23,30 @@ public class Table
 
     public IEnumerable<Player> Players => _players.OfType<Player>();
     private IEnumerable<Player> ActivePlayers => Players.Where(p => p.IsActive);
+    private List<IEvent> _events;
 
     private Table(
         TableUid uid,
         Game game,
+        Seat maxSeat,
         Chips smallBlind,
         Chips bigBlind,
-        Money chipCost,
-        Seat maxSeat,
-        Seat? smallBlindSeat,
-        Seat? bigBlindSeat,
-        Seat? buttonSeat,
-        IEnumerable<Player> players
+        Money chipCost
     )
     {
         Uid = uid;
         Game = game;
+        MaxSeat = maxSeat;
         SmallBlind = smallBlind;
         BigBlind = bigBlind;
         ChipCost = chipCost;
 
-        MaxSeat = maxSeat;
-        SmallBlindSeat = smallBlindSeat;
-        BigBlindSeat = bigBlindSeat;
-        ButtonSeat = buttonSeat;
+        SmallBlindSeat = null;
+        BigBlindSeat = null;
+        ButtonSeat = null;
 
         _players = new Player?[maxSeat];
-
-        foreach (var player in players)
-        {
-            _players[player.Seat - 1] = player;
-        }
+        _events = [];
     }
 
     public static Table FromScratch(
@@ -62,8 +55,7 @@ public class Table
         Seat maxSeat,
         Chips smallBlind,
         Chips bigBlind,
-        Money chipCost,
-        IEventBus eventBus
+        Money chipCost
     )
     {
         var table = new Table(
@@ -72,45 +64,38 @@ public class Table
             smallBlind: smallBlind,
             bigBlind: bigBlind,
             chipCost: chipCost,
-            maxSeat: maxSeat,
-            smallBlindSeat: null,
-            bigBlindSeat: null,
-            buttonSeat: null,
-            players: []
+            maxSeat: maxSeat
         );
 
-        var @event = new TableIsCreatedEvent(
-            Uid: uid,
-            Game: game,
-            SmallBlind: smallBlind,
-            BigBlind: bigBlind,
-            ChipCost: chipCost,
-            MaxSeat: maxSeat,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new TableIsCreatedEvent
+        {
+            Game = game,
+            SmallBlind = smallBlind,
+            BigBlind = bigBlind,
+            ChipCost = chipCost,
+            MaxSeat = maxSeat,
+            OccuredAt = DateTime.Now
+        };
+        table.AddEvent(@event);
 
         return table;
     }
 
-    public static Table FromEvents(IList<BaseEvent> events)
+    public static Table FromEvents(TableUid uid, List<IEvent> events)
     {
         if (events.Count == 0 || events[0] is not TableIsCreatedEvent)
         {
             throw new InvalidOperationException("The first event must be a TableIsCreatedEvent");
         }
 
-        var eventBus = new EventBus();
-
         var createdEvent = (TableIsCreatedEvent)events[0];
         var table = FromScratch(
-            uid: createdEvent.Uid,
+            uid: uid,
             game: createdEvent.Game,
             maxSeat: createdEvent.MaxSeat,
             smallBlind: createdEvent.SmallBlind,
             bigBlind: createdEvent.BigBlind,
-            chipCost: createdEvent.ChipCost,
-            eventBus: eventBus
+            chipCost: createdEvent.ChipCost
         );
 
         foreach (var @event in events)
@@ -120,57 +105,37 @@ public class Table
                 case TableIsCreatedEvent:
                     break;
                 case PlayerSatDownEvent e:
-                    table.SitDown(
-                        nickname: e.Nickname,
-                        seat: e.Seat,
-                        stack: e.Stack,
-                        eventBus: eventBus
-                    );
+                    table.SitDown(e.Nickname, e.Seat, e.Stack);
                     break;
                 case PlayerStoodUpEvent e:
-                    table.StandUp(
-                        nickname: e.Nickname,
-                        eventBus: eventBus
-                    );
+                    table.StandUp(e.Nickname);
                     break;
                 case PlayerSatOutEvent e:
-                    table.SitOut(
-                        nickname: e.Nickname,
-                        eventBus: eventBus
-                    );
+                    table.SitOut(e.Nickname);
                     break;
                 case PlayerSatInEvent e:
-                    table.SitIn(
-                        nickname: e.Nickname,
-                        eventBus: eventBus
-                    );
+                    table.SitIn(e.Nickname);
                     break;
                 case ButtonIsRotatedEvent:
-                    table.RotateButton(
-                        eventBus: eventBus
-                    );
+                    table.RotateButton();
                     break;
                 case HandIsStartedEvent e:
-                    table.StartHand(
-                        handUid: e.HandUid,
-                        eventBus: eventBus
-                    );
+                    table.StartHand(e.HandUid);
                     break;
                 case HandIsFinishedEvent e:
-                    table.FinishHand(
-                        handUid: e.HandUid,
-                        eventBus: eventBus
-                    );
+                    table.FinishHand(e.HandUid);
                     break;
 
                     // TODO: handle other events when they are added
             }
         }
 
+        table.PullEvents();
+
         return table;
     }
 
-    public void SitDown(Nickname nickname, Seat seat, Chips stack, IEventBus eventBus)
+    public void SitDown(Nickname nickname, Seat seat, Chips stack)
     {
         if (seat > MaxSeat)
         {
@@ -199,16 +164,17 @@ public class Table
             isWaitingForBigBlind: isWaitingForBigBlind
         );
 
-        var @event = new PlayerSatDownEvent(
-            Nickname: nickname,
-            Seat: seat,
-            Stack: stack,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new PlayerSatDownEvent
+        {
+            Nickname = nickname,
+            Seat = seat,
+            Stack = stack,
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
-    public void StandUp(Nickname nickname, IEventBus eventBus)
+    public void StandUp(Nickname nickname)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -218,14 +184,15 @@ public class Table
 
         _players[player.Seat - 1] = null;
 
-        var @event = new PlayerStoodUpEvent(
-            Nickname: nickname,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new PlayerStoodUpEvent
+        {
+            Nickname = nickname,
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
-    public void SitOut(Nickname nickname, IEventBus eventBus)
+    public void SitOut(Nickname nickname)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -235,14 +202,15 @@ public class Table
 
         player.SitOut();
 
-        var @event = new PlayerSatOutEvent(
-            Nickname: nickname,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new PlayerSatOutEvent
+        {
+            Nickname = nickname,
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
-    public void SitIn(Nickname nickname, IEventBus eventBus)
+    public void SitIn(Nickname nickname)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -255,14 +223,15 @@ public class Table
             isWaitingForBigBlind: isWaitingForBigBlind
         );
 
-        var @event = new PlayerSatInEvent(
-            Nickname: nickname,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new PlayerSatInEvent
+        {
+            Nickname = nickname,
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
-    public void RotateButton(IEventBus eventBus)
+    public void RotateButton()
     {
         if (IsHandInProgress())
         {
@@ -288,13 +257,14 @@ public class Table
             bbPlayer.StopWaitingForBigBlind();
         }
 
-        var @event = new ButtonIsRotatedEvent(
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new ButtonIsRotatedEvent
+        {
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
-    public void StartHand(HandUid handUid, IEventBus eventBus)
+    public void StartHand(HandUid handUid)
     {
         if (IsHandInProgress())
         {
@@ -313,14 +283,15 @@ public class Table
 
         HandUid = handUid;
 
-        var @event = new HandIsStartedEvent(
-            HandUid: handUid,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new HandIsStartedEvent
+        {
+            HandUid = handUid,
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
-    public void FinishHand(HandUid handUid, IEventBus eventBus)
+    public void FinishHand(HandUid handUid)
     {
         if (!IsHandInProgress())
         {
@@ -334,11 +305,12 @@ public class Table
 
         HandUid = null;
 
-        var @event = new HandIsFinishedEvent(
-            HandUid: handUid,
-            OccuredAt: DateTime.Now
-        );
-        eventBus.Publish(@event);
+        var @event = new HandIsFinishedEvent
+        {
+            HandUid = handUid,
+            OccuredAt = DateTime.Now
+        };
+        AddEvent(@event);
     }
 
     public HandUid GetHandUid()
@@ -465,4 +437,21 @@ public class Table
     {
         return _players[seat - 1];
     }
+
+    # region Events
+
+    public List<IEvent> PullEvents()
+    {
+        var events = _events.ToList();
+        _events.Clear();
+
+        return events;
+    }
+
+    private void AddEvent(IEvent @event)
+    {
+        _events.Add(@event);
+    }
+
+    # endregion
 }

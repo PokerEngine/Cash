@@ -6,6 +6,6 @@ namespace Application.Repository;
 public interface IRepository
 {
     Task<TableUid> GetNextUidAsync();
-    Task<List<BaseEvent>> GetEventsAsync(TableUid tableUid);
-    Task AddEventsAsync(TableUid tableUid, List<BaseEvent> events);
+    Task<List<IEvent>> GetEventsAsync(TableUid tableUid);
+    Task AddEventsAsync(TableUid tableUid, List<IEvent> events);
 }

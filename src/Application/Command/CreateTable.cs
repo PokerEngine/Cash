@@ -1,6 +1,5 @@
 using Application.Repository;
 using Domain.Entity;
-using Domain.Event;
 using Domain.ValueObject;
 
 namespace Application.Command;
@@ -35,23 +34,16 @@ public class CreateTableHandler(
         var game = (Game)Enum.Parse(typeof(Game), command.Game);
         var chipCostCurrency = (Currency)Enum.Parse(typeof(Currency), command.ChipCostCurrency);
 
-        var eventBus = new EventBus();
-        var events = new List<BaseEvent>();
-        var listener = (BaseEvent @event) => events.Add(@event);
-        eventBus.Subscribe(listener);
-
         var table = Table.FromScratch(
             uid: await repository.GetNextUidAsync(),
             game: game,
             maxSeat: command.MaxSeat,
             smallBlind: command.SmallBlind,
             bigBlind: command.BigBlind,
-            chipCost: new Money(command.ChipCostAmount, chipCostCurrency),
-            eventBus: eventBus
+            chipCost: new Money(command.ChipCostAmount, chipCostCurrency)
         );
 
-        eventBus.Unsubscribe(listener);
-
+        var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
 
         return new CreateTableResponse

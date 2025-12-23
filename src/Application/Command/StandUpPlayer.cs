@@ -1,6 +1,5 @@
 using Application.Repository;
 using Domain.Entity;
-using Domain.Event;
 
 namespace Application.Command;
 
@@ -23,21 +22,13 @@ public class StandUpPlayerHandler(
     public async Task<StandUpPlayerResponse> HandleAsync(StandUpPlayerCommand command)
     {
         var table = Table.FromEvents(
+            uid: command.TableUid,
             events: await repository.GetEventsAsync(command.TableUid)
         );
 
-        var eventBus = new EventBus();
-        var events = new List<BaseEvent>();
-        var listener = (BaseEvent @event) => events.Add(@event);
-        eventBus.Subscribe(listener);
+        table.StandUp(command.Nickname);
 
-        table.StandUp(
-            nickname: command.Nickname,
-            eventBus: eventBus
-        );
-
-        eventBus.Unsubscribe(listener);
-
+        var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
 
         return new StandUpPlayerResponse

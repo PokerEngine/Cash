@@ -2,52 +2,60 @@ using Domain.ValueObject;
 
 namespace Domain.Event;
 
-public abstract record BaseEvent(
-    DateTime OccuredAt
-);
+public interface IEvent
+{
+    DateTime OccuredAt { init; get; }
+}
 
-public record TableIsCreatedEvent(
-    TableUid Uid,
-    Game Game,
-    Seat MaxSeat,
-    Chips SmallBlind,
-    Chips BigBlind,
-    Money ChipCost,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct TableIsCreatedEvent : IEvent
+{
+    public required Game Game { get; init; }
+    public required Seat MaxSeat { get; init; }
+    public required Chips SmallBlind { get; init; }
+    public required Chips BigBlind { get; init; }
+    public required Money ChipCost { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record PlayerSatDownEvent(
-    Nickname Nickname,
-    Seat Seat,
-    Chips Stack,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct PlayerSatDownEvent : IEvent
+{
+    public required Nickname Nickname { get; init; }
+    public required Seat Seat { get; init; }
+    public required Chips Stack { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record PlayerStoodUpEvent(
-    Nickname Nickname,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct PlayerStoodUpEvent : IEvent
+{
+    public required Nickname Nickname { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record PlayerSatOutEvent(
-    Nickname Nickname,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct PlayerSatOutEvent : IEvent
+{
+    public required Nickname Nickname { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record PlayerSatInEvent(
-    Nickname Nickname,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct PlayerSatInEvent : IEvent
+{
+    public required Nickname Nickname { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record ButtonIsRotatedEvent(
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct ButtonIsRotatedEvent : IEvent
+{
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record HandIsStartedEvent(
-    HandUid HandUid,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct HandIsStartedEvent : IEvent
+{
+    public required HandUid HandUid { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}
 
-public record HandIsFinishedEvent(
-    HandUid HandUid,
-    DateTime OccuredAt
-) : BaseEvent(OccuredAt);
+public record struct HandIsFinishedEvent : IEvent
+{
+    public required HandUid HandUid { get; init; }
+    public required DateTime OccuredAt { get; init; }
+}

@@ -35,7 +35,7 @@ public class CreateTableTest
         Assert.Equal(command.ChipCostCurrency, response.ChipCostCurrency);
 
         var events = await repository.GetEventsAsync(response.Uid);
-        var table = Table.FromEvents(events);
+        var table = Table.FromEvents(response.Uid, events);
         Assert.Equal(new TableUid(response.Uid), table.Uid);
         Assert.Equal(Game.NoLimitHoldem, table.Game);
         Assert.Equal(new Seat(6), table.MaxSeat);

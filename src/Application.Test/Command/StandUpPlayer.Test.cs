@@ -36,7 +36,7 @@ public class StandUpPlayerTest
         Assert.Equal(command.Nickname, response.Nickname);
 
         var events = await repository.GetEventsAsync(response.TableUid);
-        var table = Table.FromEvents(events);
+        var table = Table.FromEvents(response.TableUid, events);
         Assert.Empty(table.Players);
     }
 

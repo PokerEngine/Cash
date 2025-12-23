@@ -37,7 +37,7 @@ public class SitDownPlayerTest
         Assert.Equal(command.Stack, response.Stack);
 
         var events = await repository.GetEventsAsync(response.TableUid);
-        var table = Table.FromEvents(events);
+        var table = Table.FromEvents(response.TableUid, events);
         Assert.False(table.IsHandInProgress());
 
         var player = table.Players.First();
@@ -84,7 +84,7 @@ public class SitDownPlayerTest
         Assert.Equal(command.Stack, response.Stack);
 
         var events = await repository.GetEventsAsync(response.TableUid);
-        var table = Table.FromEvents(events);
+        var table = Table.FromEvents(response.TableUid, events);
         Assert.True(table.IsHandInProgress());
         Assert.Equal(new Seat(2), table.ButtonSeat);
         Assert.Equal(new Seat(2), table.SmallBlindSeat);

@@ -22,6 +22,7 @@ public class GetTableByUidHandler(
     public async Task<GetTableByUidResponse> HandleAsync(GetTableByUidQuery command)
     {
         var table = Table.FromEvents(
+            uid: command.Uid,
             events: await repository.GetEventsAsync(command.Uid)
         );
 

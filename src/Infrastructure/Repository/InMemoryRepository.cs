@@ -7,7 +7,7 @@ namespace Infrastructure.Repository;
 
 public class InMemoryRepository(ILogger<InMemoryRepository> logger) : IRepository
 {
-    private readonly ConcurrentDictionary<TableUid, List<BaseEvent>> _mapping = new();
+    private readonly ConcurrentDictionary<TableUid, List<IEvent>> _mapping = new();
 
     public async Task<TableUid> GetNextUidAsync()
     {
@@ -16,14 +16,14 @@ public class InMemoryRepository(ILogger<InMemoryRepository> logger) : IRepositor
         return new TableUid(Guid.NewGuid());
     }
 
-    public Task<List<BaseEvent>> GetEventsAsync(TableUid tableUid)
+    public Task<List<IEvent>> GetEventsAsync(TableUid tableUid)
     {
         if (!_mapping.TryGetValue(tableUid, out var events))
         {
             throw new InvalidOperationException("The table is not found");
         }
 
-        List<BaseEvent> snapshot;
+        List<IEvent> snapshot;
         lock (events)
             snapshot = events.ToList();
 
@@ -31,9 +31,9 @@ public class InMemoryRepository(ILogger<InMemoryRepository> logger) : IRepositor
         return Task.FromResult(snapshot);
     }
 
-    public Task AddEventsAsync(TableUid tableUid, List<BaseEvent> events)
+    public Task AddEventsAsync(TableUid tableUid, List<IEvent> events)
     {
-        var items = _mapping.GetOrAdd(tableUid, _ => new List<BaseEvent>());
+        var items = _mapping.GetOrAdd(tableUid, _ => new List<IEvent>());
         lock (items)
             items.AddRange(events);
 
