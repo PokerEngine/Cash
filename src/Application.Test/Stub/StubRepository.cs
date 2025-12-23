@@ -1,39 +1,39 @@
 using Application.Repository;
 using Domain.Event;
 using Domain.ValueObject;
+using System.Collections.Concurrent;
 
 namespace Application.Test.Stub;
 
 public class StubRepository : IRepository
 {
-    private readonly Dictionary<TableUid, List<IEvent>> _mapping = new();
+    private readonly ConcurrentDictionary<TableUid, List<IEvent>> _mapping = new();
 
-    public async Task<TableUid> GetNextUidAsync()
+    public Task<TableUid> GetNextUidAsync()
     {
-        await Task.CompletedTask;
-
-        return new TableUid(Guid.NewGuid());
+        return Task.FromResult(new TableUid(Guid.NewGuid()));
     }
 
-    public async Task<List<IEvent>> GetEventsAsync(TableUid tableUid)
+    public Task<List<IEvent>> GetEventsAsync(TableUid tableUid)
     {
         if (!_mapping.TryGetValue(tableUid, out var events))
         {
             throw new InvalidOperationException("The table is not found");
         }
 
-        await Task.CompletedTask;
+        List<IEvent> snapshot;
+        lock (events)
+            snapshot = events.ToList();
 
-        return events;
+        return Task.FromResult(snapshot);
     }
 
-    public async Task AddEventsAsync(TableUid tableUid, List<IEvent> events)
+    public Task AddEventsAsync(TableUid tableUid, List<IEvent> events)
     {
-        if (!_mapping.TryAdd(tableUid, events.ToList()))
-        {
-            _mapping[tableUid].AddRange(events);
-        }
+        var items = _mapping.GetOrAdd(tableUid, _ => new List<IEvent>());
+        lock (items)
+            items.AddRange(events);
 
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

@@ -11,7 +11,8 @@ public class GetTableByUidTest
     {
         // Arrange
         var repository = new StubRepository();
-        var tableUid = await CreateTableAsync(repository);
+        var eventDispatcher = new StubEventDispatcher();
+        var tableUid = await CreateTableAsync(repository, eventDispatcher);
 
         var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
@@ -47,9 +48,9 @@ public class GetTableByUidTest
         Assert.Equal("The table is not found", exc.Message);
     }
 
-    private async Task<Guid> CreateTableAsync(StubRepository repository)
+    private async Task<Guid> CreateTableAsync(StubRepository repository, StubEventDispatcher eventDispatcher)
     {
-        var handler = new CreateTableHandler(repository: repository);
+        var handler = new CreateTableHandler(repository, eventDispatcher);
         var command = new CreateTableCommand
         {
             Game = "NoLimitHoldem",

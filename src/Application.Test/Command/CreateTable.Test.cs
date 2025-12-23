@@ -1,6 +1,7 @@
 ﻿using Application.Command;
 using Application.Test.Stub;
 using Domain.Entity;
+using Domain.Event;
 using Domain.ValueObject;
 
 namespace Application.Test.Command;
@@ -12,6 +13,7 @@ public class CreateTableTest
     {
         // Arrange
         var repository = new StubRepository();
+        var eventDispatcher = new StubEventDispatcher();
         var command = new CreateTableCommand
         {
             Game = "NoLimitHoldem",
@@ -21,7 +23,7 @@ public class CreateTableTest
             ChipCostAmount = 1,
             ChipCostCurrency = "Usd"
         };
-        var handler = new CreateTableHandler(repository: repository);
+        var handler = new CreateTableHandler(repository, eventDispatcher);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -34,13 +36,16 @@ public class CreateTableTest
         Assert.Equal(command.ChipCostAmount, response.ChipCostAmount);
         Assert.Equal(command.ChipCostCurrency, response.ChipCostCurrency);
 
-        var events = await repository.GetEventsAsync(response.Uid);
-        var table = Table.FromEvents(response.Uid, events);
+        var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.Equal(new TableUid(response.Uid), table.Uid);
         Assert.Equal(Game.NoLimitHoldem, table.Game);
         Assert.Equal(new Seat(6), table.MaxSeat);
         Assert.Equal(new Chips(5), table.SmallBlind);
         Assert.Equal(new Chips(10), table.BigBlind);
         Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
+
+        var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
+        Assert.Single(events);
+        Assert.IsType<TableIsCreatedEvent>(events[0]);
     }
 }

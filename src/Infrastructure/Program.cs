@@ -1,12 +1,15 @@
 using Application.Command;
 using Application.Connection;
+using Application.Event;
 using Application.IntegrationEvent;
 using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
+using Domain.Event;
 using Infrastructure.Command;
 using Infrastructure.Connection;
 using Infrastructure.Controller;
+using Infrastructure.Event;
 using Infrastructure.IntegrationEvent;
 using Infrastructure.Query;
 using Infrastructure.Repository;
@@ -43,6 +46,12 @@ public static class Bootstrapper
         // Register queries
         RegisterQueryHandler<GetTableByUidQuery, GetTableByUidHandler, GetTableByUidResponse>(builder.Services);
         builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+        // Register domain events
+        RegisterEventHandler<TableIsCreatedEvent, TableIsCreatedEventHandler>(builder.Services);
+        RegisterEventHandler<PlayerSatDownEvent, PlayerSatDownEventHandler>(builder.Services);
+        RegisterEventHandler<PlayerStoodUpEvent, PlayerStoodUpEventHandler>(builder.Services);
+        builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 
         // Register integration events
         builder.Services.AddSingleton<IIntegrationEventQueue, InMemoryIntegrationEventQueue>();
@@ -82,6 +91,14 @@ public static class Bootstrapper
     {
         services.AddScoped<THandler>();
         services.AddScoped<IQueryHandler<TQuery, TResponse>>(provider => provider.GetRequiredService<THandler>());
+    }
+
+    private static void RegisterEventHandler<TEvent, THandler>(IServiceCollection services)
+        where TEvent : IEvent
+        where THandler : class, IEventHandler<TEvent>
+    {
+        services.AddScoped<THandler>();
+        services.AddScoped<IEventHandler<TEvent>>(provider => provider.GetRequiredService<THandler>());
     }
 
     private static void RegisterIntegrationEventHandler<TIntegrationEvent, THandler>(IServiceCollection services)

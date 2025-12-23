@@ -1,0 +1,24 @@
+using Application.IntegrationEvent;
+using Domain.Event;
+using Domain.ValueObject;
+
+namespace Application.Event;
+
+public class PlayerSatDownEventHandler(
+    IIntegrationEventPublisher integrationEventPublisher
+) : IEventHandler<PlayerSatDownEvent>
+{
+    public async Task HandleAsync(PlayerSatDownEvent @event, TableUid tableUid)
+    {
+        var integrationEvent = new PlayerSatDownIntegrationEvent
+        {
+            TableUid = tableUid,
+            NickName = @event.Nickname,
+            Seat = @event.Seat,
+            Stack = @event.Stack,
+            OccuredAt = @event.OccuredAt
+        };
+
+        await integrationEventPublisher.PublishAsync(integrationEvent, IntegrationEventChannel.Default);
+    }
+}

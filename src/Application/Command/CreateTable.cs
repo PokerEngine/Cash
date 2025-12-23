@@ -1,3 +1,4 @@
+using Application.Event;
 using Application.Repository;
 using Domain.Entity;
 using Domain.ValueObject;
@@ -26,7 +27,8 @@ public record struct CreateTableResponse : ICommandResponse
 }
 
 public class CreateTableHandler(
-    IRepository repository
+    IRepository repository,
+    IEventDispatcher eventDispatcher
 ) : ICommandHandler<CreateTableCommand, CreateTableResponse>
 {
     public async Task<CreateTableResponse> HandleAsync(CreateTableCommand command)
@@ -45,6 +47,11 @@ public class CreateTableHandler(
 
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
+
+        foreach (var @event in events)
+        {
+            await eventDispatcher.DispatchAsync(@event, table.Uid);
+        }
 
         return new CreateTableResponse
         {

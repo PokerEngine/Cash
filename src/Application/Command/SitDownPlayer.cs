@@ -1,3 +1,4 @@
+using Application.Event;
 using Application.Repository;
 using Application.Service.Hand;
 using Domain.Entity;
@@ -23,6 +24,7 @@ public record struct SitDownPlayerResponse : ICommandResponse
 
 public class SitDownPlayerHandler(
     IRepository repository,
+    IEventDispatcher eventDispatcher,
     IHandService handService
 ) : ICommandHandler<SitDownPlayerCommand, SitDownPlayerResponse>
 {
@@ -56,6 +58,11 @@ public class SitDownPlayerHandler(
 
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
+
+        foreach (var @event in events)
+        {
+            await eventDispatcher.DispatchAsync(@event, table.Uid);
+        }
 
         return new SitDownPlayerResponse
         {
