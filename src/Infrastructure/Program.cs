@@ -45,6 +45,8 @@ public static class Bootstrapper
         builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
         // Register integration events
+        builder.Services.AddSingleton<IIntegrationEventQueue, InMemoryIntegrationEventQueue>();
+        builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
         RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
