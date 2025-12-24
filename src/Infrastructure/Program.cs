@@ -65,6 +65,14 @@ public static class Bootstrapper
         RegisterIntegrationEventHandler<PlayerSatInIntegrationEvent, PlayerSatInHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerStoodUpIntegrationEvent, PlayerStoodUpHandler>(builder.Services);
         builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
+        builder.Services.AddHostedService(provider =>
+            new IntegrationEventConsumer(
+                scopeFactory: provider.GetRequiredService<IServiceScopeFactory>(),
+                queue: provider.GetRequiredService<IIntegrationEventQueue>(),
+                logger: provider.GetRequiredService<ILogger<IntegrationEventConsumer>>(),
+                channel: IntegrationEventChannel.Cash
+            )
+        );
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();

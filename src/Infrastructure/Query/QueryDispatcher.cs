@@ -11,7 +11,7 @@ public class QueryDispatcher(
         where TQuery : IQueryRequest
         where TResponse : IQueryResponse
     {
-        logger.LogInformation("Dispatching query {QueryName}", typeof(TQuery).Name);
+        logger.LogInformation("Dispatching {QueryName}", typeof(TQuery).Name);
 
         var handlerType = typeof(IQueryHandler<TQuery, TResponse>);
         var handler = serviceProvider.GetService(handlerType);

@@ -9,19 +9,27 @@ public class EventDispatcher(
     ILogger<EventDispatcher> logger
 ) : IEventDispatcher
 {
-    public async Task DispatchAsync<T>(T @event, TableUid tableUid) where T : IEvent
+    public async Task DispatchAsync(IEvent @event, TableUid tableUid)
     {
-        logger.LogInformation("Dispatching event {EventName} of table {TableUid}", typeof(T).Name, tableUid);
+        var eventType = @event.GetType();
 
-        var handlerType = typeof(IEventHandler<T>);
+        logger.LogInformation("Dispatching {EventName} of the table {TableUid}", eventType.Name, tableUid);
+
+        var handlerType = typeof(IEventHandler<>).MakeGenericType(eventType);
         var handler = serviceProvider.GetService(handlerType);
 
         if (handler is null)
         {
+            logger.LogDebug("No handler is found for {EventName}", eventType.Name);
             // It's a regular case when we don't handle all events
             return;
         }
 
-        await ((IEventHandler<T>)handler).HandleAsync(@event, tableUid);
+        var method = handlerType.GetMethod(nameof(IEventHandler<IEvent>.HandleAsync))!;
+
+        await (Task)method.Invoke(
+            handler,
+            new object[] { @event, tableUid }
+        )!;
     }
 }

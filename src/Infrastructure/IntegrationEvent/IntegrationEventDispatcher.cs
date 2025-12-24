@@ -7,18 +7,27 @@ public class IntegrationEventDispatcher(
     ILogger<IntegrationEventDispatcher> logger
 ) : IIntegrationEventDispatcher
 {
-    public async Task DispatchAsync<T>(T integrationEvent) where T : IIntegrationEvent
+    public async Task DispatchAsync(IIntegrationEvent integrationEvent)
     {
-        logger.LogInformation("Dispatching integration event {IntegrationEventName}", typeof(T).Name);
+        var integrationEventType = integrationEvent.GetType();
 
-        var handlerType = typeof(IIntegrationEventHandler<T>);
+        logger.LogInformation("Dispatching {IntegrationEventName}", integrationEventType.Name);
+
+        var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(integrationEventType);
         var handler = serviceProvider.GetService(handlerType);
 
         if (handler is null)
         {
-            throw new InvalidOperationException("Handler is not found");
+            logger.LogDebug("No handler is found for {IntegrationEventName}", integrationEventType.Name);
+            // It's a regular case when we don't handle all events
+            return;
         }
 
-        await ((IIntegrationEventHandler<T>)handler).HandleAsync(integrationEvent);
+        var method = handlerType.GetMethod(nameof(IIntegrationEventHandler<IIntegrationEvent>.HandleAsync))!;
+
+        await (Task)method.Invoke(
+            handler,
+            new object[] { integrationEvent }
+        )!;
     }
 }

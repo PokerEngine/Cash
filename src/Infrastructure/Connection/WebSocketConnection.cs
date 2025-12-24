@@ -55,7 +55,7 @@ public class WebSocketConnection(
 
     public async Task SendIntegrationEventAsync(IIntegrationEvent integrationEvent)
     {
-        await SendDataAsync("Event", integrationEvent);
+        await SendDataAsync(integrationEvent.GetType().Name, integrationEvent);
     }
 
     private async Task SendDataAsync(string type, object data)
@@ -78,6 +78,6 @@ public class WebSocketConnection(
 
 internal record Response
 {
-    public required string Type;
-    public required JsonElement Data;
+    public required string Type { get; init; }
+    public required JsonElement Data { get; init; }
 }

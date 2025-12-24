@@ -11,7 +11,7 @@ public class CommandDispatcher(
         where TCommand : ICommandRequest
         where TResponse : ICommandResponse
     {
-        logger.LogInformation("Dispatching command {CommandName}", typeof(TCommand).Name);
+        logger.LogInformation("Dispatching {CommandName}", typeof(TCommand).Name);
 
         var handlerType = typeof(ICommandHandler<TCommand, TResponse>);
         var handler = serviceProvider.GetService(handlerType);
