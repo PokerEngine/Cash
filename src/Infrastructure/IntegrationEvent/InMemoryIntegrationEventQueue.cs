@@ -19,9 +19,6 @@ public class InMemoryIntegrationEventQueue : IIntegrationEventQueue
         CancellationToken cancellationToken = default
     )
     {
-        if (integrationEvent is null)
-            throw new ArgumentNullException(nameof(integrationEvent));
-
         var channelQueue = GetChannelQueue(channel);
 
         channelQueue.Queue.Enqueue(integrationEvent);
@@ -39,11 +36,13 @@ public class InMemoryIntegrationEventQueue : IIntegrationEventQueue
 
         await channelQueue.Signal.WaitAsync(cancellationToken);
 
-        if (channelQueue.Queue.TryDequeue(out var integrationEvent))
-            return integrationEvent;
+        if (!channelQueue.Queue.TryDequeue(out var integrationEvent))
+        {
+            // This should be extremely rare, but keeps correctness
+            throw new InvalidOperationException($"Signaled dequeue for channel {channel} but no event was available");
+        }
 
-        // This should be extremely rare, but keeps correctness
-        throw new InvalidOperationException($"Signaled dequeue for channel {channel} but no event was available");
+        return integrationEvent;
     }
 
     private ChannelQueue GetChannelQueue(IntegrationEventChannel channel)
