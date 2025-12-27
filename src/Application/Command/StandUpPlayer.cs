@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.Command;
 
-public record struct StandUpPlayerCommand : ICommandRequest
+public record struct StandUpPlayerCommand : ICommand
 {
     public required Guid TableUid { get; init; }
     public required string Nickname { get; init; }

@@ -1,7 +1,7 @@
 using Application.Service.Hand;
 using Domain.ValueObject;
 
-namespace Application.Test.Stub;
+namespace Application.Test.Service.Hand;
 
 public class StubHandService : IHandService
 {

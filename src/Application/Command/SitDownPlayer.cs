@@ -6,7 +6,7 @@ using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record struct SitDownPlayerCommand : ICommandRequest
+public record struct SitDownPlayerCommand : ICommand
 {
     public required Guid TableUid { get; init; }
     public required string Nickname { get; init; }

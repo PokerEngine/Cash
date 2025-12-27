@@ -8,7 +8,7 @@ public class QueryDispatcher(
 ) : IQueryDispatcher
 {
     public async Task<TResponse> DispatchAsync<TQuery, TResponse>(TQuery query)
-        where TQuery : IQueryRequest
+        where TQuery : IQuery
         where TResponse : IQueryResponse
     {
         logger.LogInformation("Dispatching {QueryName}", typeof(TQuery).Name);

@@ -1,5 +1,5 @@
 namespace Application.Query;
 
-public interface IQueryRequest;
+public interface IQuery;
 
 public interface IQueryResponse;

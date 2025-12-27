@@ -84,7 +84,7 @@ public static class Bootstrapper
     }
 
     private static void RegisterCommandHandler<TCommand, THandler, TResponse>(IServiceCollection services)
-        where TCommand : ICommandRequest
+        where TCommand : ICommand
         where TResponse : ICommandResponse
         where THandler : class, ICommandHandler<TCommand, TResponse>
     {
@@ -93,7 +93,7 @@ public static class Bootstrapper
     }
 
     private static void RegisterQueryHandler<TQuery, THandler, TResponse>(IServiceCollection services)
-        where TQuery : IQueryRequest
+        where TQuery : IQuery
         where TResponse : IQueryResponse
         where THandler : class, IQueryHandler<TQuery, TResponse>
     {

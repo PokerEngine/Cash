@@ -4,7 +4,7 @@ using Domain.ValueObject;
 
 namespace Application.Query;
 
-public record struct GetTableByUidQuery : IQueryRequest
+public record struct GetTableByUidQuery : IQuery
 {
     public required Guid Uid { get; init; }
 }

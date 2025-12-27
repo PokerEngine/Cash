@@ -1,5 +1,5 @@
 namespace Application.Command;
 
-public interface ICommandRequest;
+public interface ICommand;
 
 public interface ICommandResponse;

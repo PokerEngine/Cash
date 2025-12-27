@@ -1,6 +1,7 @@
 using Application.Command;
 using Application.Query;
-using Application.Test.Stub;
+using Application.Test.Event;
+using Application.Test.Repository;
 
 namespace Application.Test.Query;
 

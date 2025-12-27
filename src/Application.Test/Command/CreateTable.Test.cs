@@ -1,5 +1,6 @@
 ﻿using Application.Command;
-using Application.Test.Stub;
+using Application.Test.Event;
+using Application.Test.Repository;
 using Domain.Entity;
 using Domain.Event;
 using Domain.ValueObject;

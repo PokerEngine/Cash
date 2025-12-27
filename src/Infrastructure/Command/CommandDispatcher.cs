@@ -8,7 +8,7 @@ public class CommandDispatcher(
 ) : ICommandDispatcher
 {
     public async Task<TResponse> DispatchAsync<TCommand, TResponse>(TCommand command)
-        where TCommand : ICommandRequest
+        where TCommand : ICommand
         where TResponse : ICommandResponse
     {
         logger.LogInformation("Dispatching {CommandName}", typeof(TCommand).Name);

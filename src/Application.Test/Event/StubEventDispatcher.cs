@@ -3,7 +3,7 @@ using Domain.Event;
 using Domain.ValueObject;
 using System.Collections.Concurrent;
 
-namespace Application.Test.Stub;
+namespace Application.Test.Event;
 
 public class StubEventDispatcher : IEventDispatcher
 {

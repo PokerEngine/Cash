@@ -5,7 +5,7 @@ using Domain.ValueObject;
 
 namespace Application.Command;
 
-public record struct CreateTableCommand : ICommandRequest
+public record struct CreateTableCommand : ICommand
 {
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
