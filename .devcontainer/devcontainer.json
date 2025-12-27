@@ -6,11 +6,11 @@
     "postCreateCommand": "git config --global --add safe.directory /usr/local/cash",
     "forwardPorts": [5260, 7053, 27017],
     "runArgs": [
-      "-v",
-      "/var/run/docker.sock:/var/run/docker.sock"
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock"
     ],
     "features": {
-      "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
     },
     "customizations": {
         "jetbrains": {
