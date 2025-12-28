@@ -1,30 +1,27 @@
 using Application.Service.Hand;
 using Domain.ValueObject;
-using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 
 namespace Infrastructure.Service.Hand;
 
-public class RemoteHandService(
-    HttpClient httpClient,
-    IOptions<RemoteHandServiceOptions> options
-) : IHandService
+public class InMemoryHandService : IHandService
 {
-    // TODO: implement remote calls
+    private readonly ConcurrentDictionary<HandUid, HandState> _mapping = new();
 
-    public async Task<HandState> GetAsync(
+    public Task<HandState> GetAsync(
         HandUid handUid,
         CancellationToken cancellationToken = default
     )
     {
-        await Task.CompletedTask;
+        if (!_mapping.TryGetValue(handUid, out var state))
+        {
+            throw new InvalidOperationException("The hand is not found");
+        }
 
-        return new HandState(
-            HandUid: handUid,
-            Participants: []
-        );
+        return Task.FromResult(state);
     }
 
-    public async Task<HandState> CreateAsync(
+    public Task<HandState> CreateAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -37,12 +34,13 @@ public class RemoteHandService(
         CancellationToken cancellationToken = default
     )
     {
-        await Task.CompletedTask;
-
-        return new HandState(
+        var state = new HandState(
             HandUid: new HandUid(Guid.NewGuid()),
             Participants: participants.ToList()
         );
+        _mapping.TryAdd(state.HandUid, state);
+
+        return GetAsync(state.HandUid, cancellationToken);
     }
 
     public async Task<HandState> StartAsync(
@@ -62,10 +60,4 @@ public class RemoteHandService(
     {
         return await GetAsync(handUid, cancellationToken);
     }
-}
-
-public class RemoteHandServiceOptions
-{
-    public const string SectionName = "RemoteHandService";
-    public required string BaseUrl { init; get; }
 }

@@ -9,7 +9,7 @@ services:
             - '5260:5260'
             - '7053:7053'
         environment:
-            DOTNET_ENVIRONMENT: Development
+            ASPNETCORE_ENVIRONMENT: Development
             MongoDB__Host: mongodb
             MongoDB__Port: 27017
             MongoDB__Username: ${MONGODB_USERNAME}

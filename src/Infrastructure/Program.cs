@@ -26,16 +26,30 @@ public static class Bootstrapper
         builder.Configuration.AddEnvironmentVariables();
         builder.Services.AddOpenApi();
 
-        // Register dependencies
-        builder.Services.AddSingleton<IRepository, InMemoryRepository>();
-
-        builder.Services.Configure<RemoteHandServiceOptions>(
-            builder.Configuration.GetSection(RemoteHandServiceOptions.SectionName)
+        // Register repository
+        builder.Services.Configure<MongoDbRepositoryOptions>(
+            builder.Configuration.GetSection(MongoDbRepositoryOptions.SectionName)
         );
-        builder.Services.AddHttpClient<IHandService>();
-        builder.Services.AddSingleton<IHandService, RemoteHandService>();
+        builder.Services.AddSingleton<IRepository, MongoDbRepository>();
 
+        // Register event queue
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddSingleton<IIntegrationEventQueue, InMemoryIntegrationEventQueue>();
+        }
+        else
+        {
+            builder.Services.Configure<RabbitMqIntegrationEventQueueOptions>(
+                builder.Configuration.GetSection(RabbitMqIntegrationEventQueueOptions.SectionName)
+            );
+            builder.Services.AddSingleton<IIntegrationEventQueue, RabbitMqIntegrationEventQueue>();
+        }
+
+        // Register connection registry
         builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
+
+        // Register services
+        builder.Services.AddSingleton<IHandService, InMemoryHandService>();
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);
@@ -54,7 +68,6 @@ public static class Bootstrapper
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 
         // Register integration events
-        builder.Services.AddSingleton<IIntegrationEventQueue, InMemoryIntegrationEventQueue>();
         builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
         RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
