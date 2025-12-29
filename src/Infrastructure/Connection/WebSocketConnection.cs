@@ -14,6 +14,10 @@ public class WebSocketConnection(
 ) : IConnection
 {
     private const int ReceiveBufferSize = 4 * 1024;
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public async Task ListenAsync(CancellationToken cancellationToken)
     {
@@ -60,11 +64,12 @@ public class WebSocketConnection(
 
     private async Task SendDataAsync(string type, object data)
     {
-        var json = JsonSerializer.Serialize(new Response
+        var envelope = new Envelope
         {
             Type = type,
-            Data = JsonSerializer.SerializeToElement(data)
-        });
+            Data = JsonSerializer.SerializeToElement(data, JsonSerializerOptions)
+        };
+        var json = JsonSerializer.Serialize(envelope, JsonSerializerOptions);
 
         var buffer = Encoding.UTF8.GetBytes(json);
         await socket.SendAsync(
@@ -76,7 +81,7 @@ public class WebSocketConnection(
     }
 }
 
-internal record Response
+internal record Envelope
 {
     public required string Type { get; init; }
     public required JsonElement Data { get; init; }

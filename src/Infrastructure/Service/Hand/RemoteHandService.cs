@@ -3,14 +3,21 @@ using Domain.ValueObject;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Infrastructure.Service.Hand;
 
 public class RemoteHandService(
     HttpClient httpClient,
-    IOptions<RemoteHandServiceOptions> options
+    IOptions<RemoteHandServiceOptions> options,
+    ILogger<RemoteHandService> logger
 ) : IHandService
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public async Task<HandState> GetAsync(HandUid handUid, CancellationToken cancellationToken = default)
     {
         var url = $"/api/hand/{handUid}";
@@ -110,11 +117,14 @@ public class RemoteHandService(
     private async Task<TResponse> GetAsync<TResponse>(string url, CancellationToken cancellationToken)
     {
         var absoluteUrl = $"{options.Value.BaseUrl}{url}";
+
+        logger.LogInformation("Send GET request to {Url}", absoluteUrl);
+
         var response = await httpClient.GetAsync(absoluteUrl, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonSerializer.Deserialize<TResponse>(responseJson)!;
+        return JsonSerializer.Deserialize<TResponse>(responseJson, JsonSerializerOptions)!;
     }
     private async Task<TResponse> PostAsync<TRequest, TResponse>(
         string url,
@@ -123,13 +133,17 @@ public class RemoteHandService(
     )
     {
         var absoluteUrl = $"{options.Value.BaseUrl}{url}";
-        var requestJson = JsonSerializer.Serialize(request);
+        var requestJson = JsonSerializer.Serialize(request, JsonSerializerOptions);
         var requestContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+        logger.LogInformation("Send POST request to {Url} with body {Body}", absoluteUrl, requestJson);
+
         var response = await httpClient.PostAsync(absoluteUrl, requestContent, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonSerializer.Deserialize<TResponse>(responseJson)!;
+
+        return JsonSerializer.Deserialize<TResponse>(responseJson, JsonSerializerOptions)!;
     }
 
     private List<HandStateCard> ParseCards(string cards)
@@ -152,6 +166,7 @@ public class RemoteHandServiceOptions
 
 internal sealed record GetHandResponse
 {
+    [JsonPropertyName("handUid")]
     public required Guid HandUid { get; init; }
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
@@ -201,6 +216,7 @@ internal sealed record CreateHandParticipantRequest
 
 internal sealed record CreateHandResponse
 {
+    [JsonPropertyName("handUid")]
     public required Guid HandUid { get; init; }
 }
 
