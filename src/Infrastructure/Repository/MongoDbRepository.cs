@@ -59,8 +59,8 @@ public class MongoDbRepository : IRepository
     {
         var documents = events.Select(e => new EventDocument
         {
-            TableUid = tableUid,
             Type = e.GetType().AssemblyQualifiedName!,
+            TableUid = tableUid,
             OccurredAt = e.OccuredAt,
             Data = e.ToBsonDocument(e.GetType())
         });
@@ -85,12 +85,9 @@ internal sealed class EventDocument
     [BsonId]
     public ObjectId Id { get; init; }
 
-    public required TableUid TableUid { get; init; }
-
     public required string Type { get; init; }
-
+    public required TableUid TableUid { get; init; }
     public required DateTime OccurredAt { get; init; }
-
     public required BsonDocument Data { get; init; }
 }
 
@@ -98,12 +95,32 @@ internal static class BsonSerializerConfig
 {
     public static void Register()
     {
+        BsonSerializer.TryRegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
+        BsonSerializer.TryRegisterSerializer(new TableUidSerializer());
+        BsonSerializer.TryRegisterSerializer(new HandUidSerializer());
         BsonSerializer.TryRegisterSerializer(new NicknameSerializer());
         BsonSerializer.TryRegisterSerializer(new SeatSerializer());
         BsonSerializer.TryRegisterSerializer(new ChipsSerializer());
         BsonSerializer.TryRegisterSerializer(new MoneySerializer());
-        BsonSerializer.TryRegisterSerializer(new HandUidSerializer());
     }
+}
+
+internal sealed class TableUidSerializer : SerializerBase<TableUid>
+{
+    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, TableUid value)
+        => context.Writer.WriteGuid(value);
+
+    public override TableUid Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        => context.Reader.ReadGuid();
+}
+
+internal sealed class HandUidSerializer : SerializerBase<HandUid>
+{
+    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, HandUid value)
+        => context.Writer.WriteGuid(value);
+
+    public override HandUid Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+        => context.Reader.ReadGuid();
 }
 
 internal sealed class NicknameSerializer : SerializerBase<Nickname>
@@ -182,13 +199,4 @@ internal sealed class MoneySerializer : SerializerBase<Money>
 
         return new Money(amount, currency);
     }
-}
-
-internal sealed class HandUidSerializer : SerializerBase<HandUid>
-{
-    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, HandUid value)
-        => context.Writer.WriteGuid(value);
-
-    public override HandUid Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
-        => context.Reader.ReadGuid();
 }

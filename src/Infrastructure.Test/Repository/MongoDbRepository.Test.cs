@@ -27,9 +27,9 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
             HandUid = Guid.NewGuid(),
             OccuredAt = GetNow()
         };
+        await repository.AddEventsAsync(tableUid, [@event]);
 
         // Act
-        await repository.AddEventsAsync(tableUid, [@event]);
         var events = await repository.GetEventsAsync(tableUid);
 
         // Assert
@@ -43,6 +43,19 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
     {
         // Arrange
         var repository = CreateRepository();
+
+        var tableUid = new TableUid(Guid.NewGuid());
+        var @event = new TestEvent
+        {
+            Game = Game.NoLimitHoldem,
+            Nickname = new Nickname("alice"),
+            Seat = new Seat(2),
+            Chips = new Chips(1000),
+            Money = new Money(12.34m, Currency.Usd),
+            HandUid = Guid.NewGuid(),
+            OccuredAt = GetNow()
+        };
+        await repository.AddEventsAsync(tableUid, [@event]);
 
         // Act & Assert
         var exc = await Assert.ThrowsAsync<InvalidOperationException>(

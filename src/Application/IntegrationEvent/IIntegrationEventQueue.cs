@@ -7,7 +7,7 @@ public interface IIntegrationEventQueue
         IntegrationEventChannel channel,
         CancellationToken cancellationToken = default
     );
-    Task<IIntegrationEvent> DequeueAsync(
+    Task<IIntegrationEvent?> DequeueAsync(
         IntegrationEventChannel channel,
         CancellationToken cancellationToken = default
     );

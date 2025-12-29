@@ -9,6 +9,8 @@ public sealed class IntegrationEventConsumer(
     IntegrationEventChannel channel
 ) : BackgroundService
 {
+    private const int Delay = 500;
+
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("IntegrationEventConsumer started for channel {Channel}", channel);
@@ -18,6 +20,11 @@ public sealed class IntegrationEventConsumer(
             try
             {
                 var integrationEvent = await queue.DequeueAsync(channel, cancellationToken);
+                if (integrationEvent is null)
+                {
+                    await Task.Delay(Delay, cancellationToken);
+                    continue;
+                }
 
                 using var scope = scopeFactory.CreateScope();
                 var dispatcher = scope.ServiceProvider.GetRequiredService<IIntegrationEventDispatcher>();
@@ -35,10 +42,7 @@ public sealed class IntegrationEventConsumer(
                     "Error while consuming integration event on channel {Channel}",
                     channel
                 );
-
-                // IMPORTANT:
-                // do NOT crash the process
-                await Task.Delay(500, cancellationToken);
+                await Task.Delay(Delay, cancellationToken);
             }
         }
 

@@ -27,7 +27,7 @@ public class InMemoryIntegrationEventQueue : IIntegrationEventQueue
         return Task.CompletedTask;
     }
 
-    public async Task<IIntegrationEvent> DequeueAsync(
+    public async Task<IIntegrationEvent?> DequeueAsync(
         IntegrationEventChannel channel,
         CancellationToken cancellationToken = default
     )
@@ -36,13 +36,12 @@ public class InMemoryIntegrationEventQueue : IIntegrationEventQueue
 
         await channelQueue.Signal.WaitAsync(cancellationToken);
 
-        if (!channelQueue.Queue.TryDequeue(out var integrationEvent))
+        if (channelQueue.Queue.TryDequeue(out var integrationEvent))
         {
-            // This should be extremely rare, but keeps correctness
-            throw new InvalidOperationException($"Signaled dequeue for channel {channel} but no event was available");
+            return integrationEvent;
         }
 
-        return integrationEvent;
+        return null;
     }
 
     private ChannelQueue GetChannelQueue(IntegrationEventChannel channel)

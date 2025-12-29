@@ -32,7 +32,7 @@ public class RabbitMqIntegrationEventQueueTest(RabbitMqFixture fixture) : IClass
     }
 
     [Fact]
-    public async Task DequeueAsync_WhenNotEnqueued_ShouldThrowInvalidOperationException()
+    public async Task DequeueAsync_WhenNotEnqueued_ShouldReturnNull()
     {
         // Arrange
         var integrationEventQueue = CreateIntegrationEventQueue();
@@ -47,10 +47,10 @@ public class RabbitMqIntegrationEventQueueTest(RabbitMqFixture fixture) : IClass
         await integrationEventQueue.EnqueueAsync(integrationEvent, IntegrationEventChannel.Hand); // Different channel
 
         // Act & Assert
-        var exc = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await integrationEventQueue.DequeueAsync(IntegrationEventChannel.Cash)
-        );
-        Assert.Equal("Queue Cash is empty", exc.Message);
+        var dequeuedEvent = await integrationEventQueue.DequeueAsync(IntegrationEventChannel.Cash);
+
+        // Assert
+        Assert.Null(dequeuedEvent);
     }
 
     private IIntegrationEventQueue CreateIntegrationEventQueue()

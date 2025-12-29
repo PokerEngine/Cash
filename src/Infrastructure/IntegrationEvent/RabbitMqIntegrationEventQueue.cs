@@ -78,7 +78,7 @@ public class RabbitMqIntegrationEventQueue : IIntegrationEventQueue, IAsyncDispo
         );
     }
 
-    public async Task<IIntegrationEvent> DequeueAsync(
+    public async Task<IIntegrationEvent?> DequeueAsync(
         IntegrationEventChannel channel,
         CancellationToken cancellationToken = default
     )
@@ -98,7 +98,7 @@ public class RabbitMqIntegrationEventQueue : IIntegrationEventQueue, IAsyncDispo
 
         if (result is null)
         {
-            throw new InvalidOperationException($"Queue {queueName} is empty");
+            return null;
         }
 
         try
