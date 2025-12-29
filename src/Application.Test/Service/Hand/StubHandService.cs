@@ -1,28 +1,27 @@
 using Application.Service.Hand;
 using Domain.ValueObject;
+using System.Collections.Concurrent;
 
 namespace Application.Test.Service.Hand;
 
 public class StubHandService : IHandService
 {
-    private Dictionary<HandUid, List<Participant>> _hands = new();
+    private readonly ConcurrentDictionary<HandUid, HandState> _mapping = new();
 
-    public async Task<HandState> GetAsync(HandUid handUid, CancellationToken cancellationToken = default)
+    public Task<HandState> GetAsync(
+        HandUid handUid,
+        CancellationToken cancellationToken = default
+    )
     {
-        await Task.CompletedTask;
-
-        if (_hands.TryGetValue(handUid, out var participants))
+        if (!_mapping.TryGetValue(handUid, out var state))
         {
-            return new HandState(
-                HandUid: handUid,
-                Participants: participants
-            );
+            throw new InvalidOperationException("The hand is not found");
         }
 
-        throw new InvalidOperationException("The hand is not found");
+        return Task.FromResult(state);
     }
 
-    public async Task<HandState> CreateAsync(
+    public Task<HandUid> CreateAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -35,32 +34,46 @@ public class StubHandService : IHandService
         CancellationToken cancellationToken = default
     )
     {
-        await Task.CompletedTask;
+        var state = new HandState
+        {
+            HandUid = new HandUid(Guid.NewGuid()),
+            Players = participants.Select(p => new HandStatePlayer
+            {
+                Nickname = p.Nickname,
+                Seat = p.Seat,
+                Stack = p.Stack,
+                HoleCards = [],
+                IsFolded = false
+            }).ToList(),
+            BoardCards = [],
+            Pot = new HandStatePot
+            {
+                DeadAmount = new Chips(0),
+                Contributions = []
+            },
+            Bets = []
+        };
+        _mapping.TryAdd(state.HandUid, state);
 
-        var handUid = new HandUid(Guid.NewGuid());
-        _hands[handUid] = participants.ToList();
-
-        return new HandState(
-            HandUid: handUid,
-            Participants: _hands[handUid]
-        );
+        return Task.FromResult(state.HandUid);
     }
 
-    public async Task<HandState> StartAsync(
+    public Task StartAsync(
         HandUid handUid,
         CancellationToken cancellationToken = default
     )
     {
-        return await GetAsync(handUid, cancellationToken);
+        return Task.CompletedTask;
     }
 
-    public async Task<HandState> CommitDecisionAsync(
+    public Task CommitDecisionAsync(
         HandUid handUid,
         Nickname nickname,
-        Decision decision,
+        DecisionType type,
+        Chips amount,
         CancellationToken cancellationToken = default
     )
     {
-        return await GetAsync(handUid, cancellationToken);
+        return Task.CompletedTask;
     }
 }

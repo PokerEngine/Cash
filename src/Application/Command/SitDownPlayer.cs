@@ -41,7 +41,7 @@ public class SitDownPlayerHandler(
         {
             table.RotateButton();
 
-            var handState = await handService.CreateAsync(
+            var handUid = await handService.CreateAsync(
                 tableUid: table.Uid,
                 game: table.Game,
                 maxSeat: table.MaxSeat,
@@ -53,7 +53,7 @@ public class SitDownPlayerHandler(
                 participants: table.GetParticipants()
             );
 
-            table.StartHand(handState.HandUid);
+            table.StartHand(handUid);
         }
 
         var events = table.PullEvents();

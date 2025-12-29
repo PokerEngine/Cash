@@ -48,8 +48,19 @@ public static class Bootstrapper
         // Register connection registry
         builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
 
-        // Register services
-        builder.Services.AddSingleton<IHandService, InMemoryHandService>();
+        // Register hand service
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddSingleton<IHandService, InMemoryHandService>();
+        }
+        else
+        {
+            builder.Services.Configure<RemoteHandServiceOptions>(
+                builder.Configuration.GetSection(RemoteHandServiceOptions.SectionName)
+            );
+            builder.Services.AddHttpClient<IHandService>();
+            builder.Services.AddSingleton<IHandService, RemoteHandService>();
+        }
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);
@@ -90,7 +101,7 @@ public static class Bootstrapper
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
 
-        // Add websocket controllers
+        // Register websocket controller
         builder.Services.AddScoped<TableWsController>();
 
         return builder;

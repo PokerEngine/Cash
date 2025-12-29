@@ -21,7 +21,7 @@ public class InMemoryHandService : IHandService
         return Task.FromResult(state);
     }
 
-    public Task<HandState> CreateAsync(
+    public Task<HandUid> CreateAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -34,30 +34,46 @@ public class InMemoryHandService : IHandService
         CancellationToken cancellationToken = default
     )
     {
-        var state = new HandState(
-            HandUid: new HandUid(Guid.NewGuid()),
-            Participants: participants.ToList()
-        );
+        var state = new HandState
+        {
+            HandUid = new HandUid(Guid.NewGuid()),
+            Players = participants.Select(p => new HandStatePlayer
+            {
+                Nickname = p.Nickname,
+                Seat = p.Seat,
+                Stack = p.Stack,
+                HoleCards = [],
+                IsFolded = false
+            }).ToList(),
+            BoardCards = [],
+            Pot = new HandStatePot
+            {
+                DeadAmount = new Chips(0),
+                Contributions = []
+            },
+            Bets = []
+        };
         _mapping.TryAdd(state.HandUid, state);
 
-        return GetAsync(state.HandUid, cancellationToken);
+        return Task.FromResult(state.HandUid);
     }
 
-    public async Task<HandState> StartAsync(
+    public Task StartAsync(
         HandUid handUid,
         CancellationToken cancellationToken = default
     )
     {
-        return await GetAsync(handUid, cancellationToken);
+        return Task.CompletedTask;
     }
 
-    public async Task<HandState> CommitDecisionAsync(
+    public Task CommitDecisionAsync(
         HandUid handUid,
         Nickname nickname,
-        Decision decision,
+        DecisionType type,
+        Chips amount,
         CancellationToken cancellationToken = default
     )
     {
-        return await GetAsync(handUid, cancellationToken);
+        return Task.CompletedTask;
     }
 }
