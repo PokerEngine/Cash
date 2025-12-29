@@ -30,7 +30,7 @@ public class StubHandService : IHandService
         Seat? smallBlindSeat,
         Seat bigBlindSeat,
         Seat buttonSeat,
-        IEnumerable<Participant> participants,
+        List<HandParticipant> participants,
         CancellationToken cancellationToken = default
     )
     {

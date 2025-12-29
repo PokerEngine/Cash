@@ -50,7 +50,7 @@ public class SitDownPlayerHandler(
                 smallBlindSeat: table.SmallBlindSeat,
                 bigBlindSeat: (Seat)table.BigBlindSeat!,
                 buttonSeat: (Seat)table.ButtonSeat!,
-                participants: table.GetParticipants()
+                participants: table.ActivePlayers.Select(GetParticipant).ToList()
             );
 
             table.StartHand(handUid);
@@ -70,6 +70,16 @@ public class SitDownPlayerHandler(
             Nickname = command.Nickname,
             Seat = command.Seat,
             Stack = command.Stack
+        };
+    }
+
+    private HandParticipant GetParticipant(Player player)
+    {
+        return new HandParticipant
+        {
+            Nickname = player.Nickname,
+            Seat = player.Seat,
+            Stack = player.Stack
         };
     }
 }

@@ -54,7 +54,7 @@ public class RemoteHandService(
         Seat? smallBlindSeat,
         Seat bigBlindSeat,
         Seat buttonSeat,
-        IEnumerable<Participant> participants,
+        List<HandParticipant> participants,
         CancellationToken cancellationToken = default
     )
     {

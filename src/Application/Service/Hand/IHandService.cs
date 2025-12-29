@@ -18,7 +18,7 @@ public interface IHandService
         Seat? smallBlindSeat,
         Seat bigBlindSeat,
         Seat buttonSeat,
-        IEnumerable<Participant> participants,
+        List<HandParticipant> participants,
         CancellationToken cancellationToken = default
     );
 
@@ -34,6 +34,13 @@ public interface IHandService
         Chips amount,
         CancellationToken cancellationToken = default
     );
+}
+
+public record struct HandParticipant
+{
+    public required Nickname Nickname { get; init; }
+    public required Seat Seat { get; init; }
+    public required Chips Stack { get; init; }
 }
 
 public record struct HandState

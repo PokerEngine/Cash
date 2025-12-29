@@ -2,6 +2,8 @@ using Application.Command;
 using Application.Query;
 using Application.Test.Event;
 using Application.Test.Repository;
+using Application.Test.Service.Hand;
+using Domain.Entity;
 
 namespace Application.Test.Query;
 
@@ -14,6 +16,7 @@ public class GetTableByUidTest
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
+        await SitDownPlayerAsync(repository, eventDispatcher, tableUid, "alice", 2, 1000);
 
         var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
@@ -24,8 +27,20 @@ public class GetTableByUidTest
         var response = await handler.HandleAsync(query);
 
         // Assert
-        Assert.Equal(query.Uid, response.Uid);
-        Assert.Empty(response.Participants);
+        var table = Table.FromEvents(query.Uid, await repository.GetEventsAsync(query.Uid));
+        Assert.Equal((Guid)table.Uid, response.Uid);
+        Assert.Equal(table.Game.ToString(), response.Game);
+        Assert.Equal((int)table.MaxSeat, response.MaxSeat);
+        Assert.Equal((int)table.SmallBlind, response.SmallBlind);
+        Assert.Equal((int)table.BigBlind, response.BigBlind);
+        Assert.Equal(table.ChipCost.Amount, response.ChipCostAmount);
+        Assert.Equal(table.ChipCost.Currency.ToString(), response.ChipCostCurrency);
+
+        Assert.Single(response.Players);
+        Assert.Equal("alice", response.Players[0].Nickname);
+        Assert.Equal(2, response.Players[0].Seat);
+        Assert.Equal(1000, response.Players[0].Stack);
+        Assert.False(response.Players[0].IsSittingOut);
     }
 
     [Fact]
@@ -63,5 +78,29 @@ public class GetTableByUidTest
         };
         var response = await handler.HandleAsync(command);
         return response.Uid;
+    }
+
+    private async Task SitDownPlayerAsync(
+        StubRepository repository,
+        StubEventDispatcher eventDispatcher,
+        Guid tableUid,
+        string nickname,
+        int seat,
+        int stack
+    )
+    {
+        var handler = new SitDownPlayerHandler(
+            repository: repository,
+            eventDispatcher: eventDispatcher,
+            handService: new StubHandService()
+        );
+        var command = new SitDownPlayerCommand
+        {
+            TableUid = tableUid,
+            Nickname = nickname,
+            Seat = seat,
+            Stack = stack
+        };
+        await handler.HandleAsync(command);
     }
 }

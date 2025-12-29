@@ -22,7 +22,8 @@ public class Table
     private readonly Player?[] _players;
 
     public IEnumerable<Player> Players => _players.OfType<Player>();
-    private IEnumerable<Player> ActivePlayers => Players.Where(p => p.IsActive);
+    public IEnumerable<Player> ActivePlayers => Players.Where(p => p.IsActive);
+
     private List<IEvent> _events;
 
     private Table(
@@ -331,15 +332,6 @@ public class Table
     public bool HasEnoughPlayersForHand()
     {
         return ActivePlayers.Count() >= MinPlayersForHand;
-    }
-
-    public IEnumerable<Participant> GetParticipants()
-    {
-        return ActivePlayers.Select(p => new Participant(
-            Nickname: p.Nickname,
-            Seat: p.Seat,
-            Stack: p.Stack
-        ));
     }
 
     private Seat GetNextButtonSeat(Seat? previousButtonSeat, Seat? previousSmallBlindSeat)
