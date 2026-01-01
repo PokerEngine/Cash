@@ -96,7 +96,7 @@ public class GetTableByUidTest
         );
         var command = new SitDownPlayerCommand
         {
-            TableUid = tableUid,
+            Uid = tableUid,
             Nickname = nickname,
             Seat = seat,
             Stack = stack

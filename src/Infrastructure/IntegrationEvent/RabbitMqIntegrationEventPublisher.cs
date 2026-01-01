@@ -13,15 +13,18 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
     private readonly RabbitMqIntegrationEventPublisherOptions _options;
+    private readonly ILogger<RabbitMqIntegrationEventPublisher> _logger;
     private readonly IConnection _connection;
     private readonly IChannel _channel;
 
     public RabbitMqIntegrationEventPublisher(
         IOptions<RabbitMqConnectionOptions> connectionOptions,
-        IOptions<RabbitMqIntegrationEventPublisherOptions> options
+        IOptions<RabbitMqIntegrationEventPublisherOptions> options,
+        ILogger<RabbitMqIntegrationEventPublisher> logger
     )
     {
         _options = options.Value;
+        _logger = logger;
 
         var factory = new ConnectionFactory
         {
@@ -49,6 +52,13 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
         CancellationToken cancellationToken = default
     )
     {
+        _logger.LogInformation(
+            "Publishing {IntegrationEvent} to {Exchange} / {RoutingKey}",
+            integrationEvent,
+            _options.ExchangeName,
+            routingKey
+        );
+
         var body = Encoding.UTF8.GetBytes(Serialize(integrationEvent));
         var type = RabbitMqIntegrationEventTypeResolver.GetName(integrationEvent);
         var timestamp = new DateTimeOffset(DateTime.SpecifyKind(integrationEvent.OccuredAt, DateTimeKind.Utc));

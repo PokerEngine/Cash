@@ -8,11 +8,11 @@ public class TableIsCreatedEventHandler(
     IIntegrationEventPublisher integrationEventPublisher
 ) : IEventHandler<TableIsCreatedEvent>
 {
-    public async Task HandleAsync(TableIsCreatedEvent @event, TableUid tableUid)
+    public async Task HandleAsync(TableIsCreatedEvent @event, EventContext context)
     {
         var integrationEvent = new TableIsCreatedIntegrationEvent
         {
-            TableUid = tableUid,
+            TableUid = context.TableUid,
             Game = @event.Game.ToString(),
             MaxSeat = @event.MaxSeat,
             SmallBlind = @event.SmallBlind,

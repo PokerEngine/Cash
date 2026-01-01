@@ -21,7 +21,7 @@ public class RabbitMqIntegrationEventConsumer(
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("RabbitMqIntegrationEventConsumer started");
+        logger.LogInformation("IntegrationEventConsumer started");
 
         var factory = new ConnectionFactory
         {
@@ -59,6 +59,8 @@ public class RabbitMqIntegrationEventConsumer(
         {
             try
             {
+                logger.LogInformation("Consuming {Args} from {Sender}", args, sender);
+
                 var integrationEvent = Deserialize(args);
                 using var scope = scopeFactory.CreateScope();
                 var dispatcher = scope.ServiceProvider.GetRequiredService<IIntegrationEventDispatcher>();
@@ -72,7 +74,7 @@ public class RabbitMqIntegrationEventConsumer(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to process integration event {Type}", args.BasicProperties.Type);
+                logger.LogError(ex, "Failed to process {Type}", args.BasicProperties.Type);
 
                 await channel.BasicNackAsync(
                     deliveryTag: args.DeliveryTag,

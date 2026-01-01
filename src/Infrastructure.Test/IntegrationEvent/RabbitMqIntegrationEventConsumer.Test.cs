@@ -64,7 +64,6 @@ public class RabbitMqIntegrationEventConsumerTest(
         }
 
         // Assert
-
         Assert.Single(dispatcher.Dispatched);
         var consumedEvent = Assert.IsType<TestConsumedIntegrationEvent>(dispatcher.Dispatched[0]);
         Assert.Equal(integrationEvent, consumedEvent);

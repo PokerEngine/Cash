@@ -22,7 +22,7 @@ public class SitDownPlayerTest
 
         var command = new SitDownPlayerCommand
         {
-            TableUid = tableUid,
+            Uid = tableUid,
             Nickname = "Alice",
             Seat = 2,
             Stack = 1000
@@ -33,12 +33,10 @@ public class SitDownPlayerTest
         var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.TableUid, response.TableUid);
+        Assert.Equal(command.Uid, response.Uid);
         Assert.Equal(command.Nickname, response.Nickname);
-        Assert.Equal(command.Seat, response.Seat);
-        Assert.Equal(command.Stack, response.Stack);
 
-        var table = Table.FromEvents(response.TableUid, await repository.GetEventsAsync(response.TableUid));
+        var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.False(table.IsHandInProgress());
 
         var player = table.Players.First();
@@ -46,7 +44,7 @@ public class SitDownPlayerTest
         Assert.Equal(new Seat(2), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
 
-        var events = await eventDispatcher.GetDispatchedEvents(response.TableUid);
+        var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
         Assert.Single(events);
         Assert.IsType<PlayerSatDownEvent>(events[0]);
     }
@@ -71,7 +69,7 @@ public class SitDownPlayerTest
 
         var command = new SitDownPlayerCommand
         {
-            TableUid = tableUid,
+            Uid = tableUid,
             Nickname = "Bob",
             Seat = 4,
             Stack = 1000
@@ -82,12 +80,10 @@ public class SitDownPlayerTest
         var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.TableUid, response.TableUid);
+        Assert.Equal(command.Uid, response.Uid);
         Assert.Equal(command.Nickname, response.Nickname);
-        Assert.Equal(command.Seat, response.Seat);
-        Assert.Equal(command.Stack, response.Stack);
 
-        var table = Table.FromEvents(response.TableUid, await repository.GetEventsAsync(response.TableUid));
+        var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.True(table.IsHandInProgress());
         Assert.Equal(new Seat(2), table.ButtonSeat);
         Assert.Equal(new Seat(2), table.SmallBlindSeat);
@@ -104,7 +100,7 @@ public class SitDownPlayerTest
 
         var command = new SitDownPlayerCommand
         {
-            TableUid = new TableUid(Guid.NewGuid()),
+            Uid = new TableUid(Guid.NewGuid()),
             Nickname = "Alice",
             Seat = 2,
             Stack = 1000
@@ -120,7 +116,7 @@ public class SitDownPlayerTest
         // Assert
         Assert.Equal("The table is not found", exc.Message);
 
-        var events = await eventDispatcher.GetDispatchedEvents(command.TableUid);
+        var events = await eventDispatcher.GetDispatchedEvents(command.Uid);
         Assert.Empty(events);
     }
 
@@ -153,7 +149,7 @@ public class SitDownPlayerTest
         var handler = new SitDownPlayerHandler(repository, eventDispatcher, handService);
         var command = new SitDownPlayerCommand
         {
-            TableUid = tableUid,
+            Uid = tableUid,
             Nickname = nickname,
             Seat = seat,
             Stack = stack

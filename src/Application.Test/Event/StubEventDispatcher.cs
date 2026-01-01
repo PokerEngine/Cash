@@ -9,9 +9,9 @@ public class StubEventDispatcher : IEventDispatcher
 {
     private readonly ConcurrentDictionary<TableUid, List<IEvent>> _mapping = new();
 
-    public Task DispatchAsync(IEvent @event, TableUid tableUid)
+    public Task DispatchAsync(IEvent @event, EventContext context)
     {
-        var items = _mapping.GetOrAdd(tableUid, _ => new List<IEvent>());
+        var items = _mapping.GetOrAdd(context.TableUid, _ => new List<IEvent>());
         lock (items)
             items.Add(@event);
 

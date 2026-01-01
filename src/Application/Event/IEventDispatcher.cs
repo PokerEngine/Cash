@@ -5,5 +5,5 @@ namespace Application.Event;
 
 public interface IEventDispatcher
 {
-    Task DispatchAsync(IEvent @event, TableUid tableUid);
+    Task DispatchAsync(IEvent @event, EventContext context);
 }

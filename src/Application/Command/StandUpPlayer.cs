@@ -6,13 +6,13 @@ namespace Application.Command;
 
 public record struct StandUpPlayerCommand : ICommand
 {
-    public required Guid TableUid { get; init; }
+    public required Guid Uid { get; init; }
     public required string Nickname { get; init; }
 }
 
 public record struct StandUpPlayerResponse : ICommandResponse
 {
-    public required Guid TableUid { get; init; }
+    public required Guid Uid { get; init; }
     public required string Nickname { get; init; }
 }
 
@@ -24,8 +24,8 @@ public class StandUpPlayerHandler(
     public async Task<StandUpPlayerResponse> HandleAsync(StandUpPlayerCommand command)
     {
         var table = Table.FromEvents(
-            uid: command.TableUid,
-            events: await repository.GetEventsAsync(command.TableUid)
+            uid: command.Uid,
+            events: await repository.GetEventsAsync(command.Uid)
         );
 
         table.StandUp(command.Nickname);
@@ -33,14 +33,19 @@ public class StandUpPlayerHandler(
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
 
+        var context = new EventContext
+        {
+            TableUid = table.Uid
+        };
+
         foreach (var @event in events)
         {
-            await eventDispatcher.DispatchAsync(@event, table.Uid);
+            await eventDispatcher.DispatchAsync(@event, context);
         }
 
         return new StandUpPlayerResponse
         {
-            TableUid = table.Uid,
+            Uid = table.Uid,
             Nickname = command.Nickname
         };
     }

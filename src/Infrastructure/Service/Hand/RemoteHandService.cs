@@ -3,7 +3,6 @@ using Domain.ValueObject;
 using Microsoft.Extensions.Options;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Infrastructure.Service.Hand;
 
@@ -25,7 +24,7 @@ public class RemoteHandService(
 
         return new HandState
         {
-            HandUid = response.HandUid,
+            HandUid = response.Uid,
             Players = response.State.Players.Select(p => new HandStatePlayer
             {
                 Nickname = p.Nickname,
@@ -84,7 +83,7 @@ public class RemoteHandService(
         };
         var response = await PostAsync<CreateHandRequest, CreateHandResponse>(url, request, cancellationToken);
 
-        return response.HandUid;
+        return response.Uid;
     }
 
     public async Task StartAsync(
@@ -166,8 +165,7 @@ public class RemoteHandServiceOptions
 
 internal sealed record GetHandResponse
 {
-    [JsonPropertyName("handUid")]
-    public required Guid HandUid { get; init; }
+    public required Guid Uid { get; init; }
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required int SmallBlind { get; init; }
@@ -216,8 +214,7 @@ internal sealed record CreateHandParticipantRequest
 
 internal sealed record CreateHandResponse
 {
-    [JsonPropertyName("handUid")]
-    public required Guid HandUid { get; init; }
+    public required Guid Uid { get; init; }
 }
 
 internal sealed record CommitDecisionRequest

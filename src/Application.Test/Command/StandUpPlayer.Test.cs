@@ -29,7 +29,7 @@ public class StandUpPlayerTest
 
         var command = new StandUpPlayerCommand
         {
-            TableUid = tableUid,
+            Uid = tableUid,
             Nickname = "Alice"
         };
         var handler = new StandUpPlayerHandler(repository, eventDispatcher);
@@ -38,13 +38,13 @@ public class StandUpPlayerTest
         var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.TableUid, response.TableUid);
+        Assert.Equal(command.Uid, response.Uid);
         Assert.Equal(command.Nickname, response.Nickname);
 
-        var table = Table.FromEvents(response.TableUid, await repository.GetEventsAsync(response.TableUid));
+        var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.Empty(table.Players);
 
-        var events = await eventDispatcher.GetDispatchedEvents(response.TableUid);
+        var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
         Assert.Single(events);
         Assert.IsType<PlayerStoodUpEvent>(events[0]);
     }
@@ -58,7 +58,7 @@ public class StandUpPlayerTest
 
         var command = new StandUpPlayerCommand
         {
-            TableUid = new TableUid(Guid.NewGuid()),
+            Uid = new TableUid(Guid.NewGuid()),
             Nickname = "Alice"
         };
         var handler = new StandUpPlayerHandler(repository, eventDispatcher);
@@ -72,7 +72,7 @@ public class StandUpPlayerTest
         // Assert
         Assert.Equal("The table is not found", exc.Message);
 
-        var events = await eventDispatcher.GetDispatchedEvents(command.TableUid);
+        var events = await eventDispatcher.GetDispatchedEvents(command.Uid);
         Assert.Empty(events);
     }
 
@@ -108,7 +108,7 @@ public class StandUpPlayerTest
         );
         var command = new SitDownPlayerCommand
         {
-            TableUid = tableUid,
+            Uid = tableUid,
             Nickname = nickname,
             Seat = seat,
             Stack = stack

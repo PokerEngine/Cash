@@ -48,9 +48,14 @@ public class CreateTableHandler(
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
 
+        var context = new EventContext
+        {
+            TableUid = table.Uid
+        };
+
         foreach (var @event in events)
         {
-            await eventDispatcher.DispatchAsync(@event, table.Uid);
+            await eventDispatcher.DispatchAsync(@event, context);
         }
 
         return new CreateTableResponse

@@ -8,11 +8,11 @@ public class PlayerStoodUpEventHandler(
     IIntegrationEventPublisher integrationEventPublisher
 ) : IEventHandler<PlayerStoodUpEvent>
 {
-    public async Task HandleAsync(PlayerStoodUpEvent @event, TableUid tableUid)
+    public async Task HandleAsync(PlayerStoodUpEvent @event, EventContext context)
     {
         var integrationEvent = new PlayerStoodUpIntegrationEvent
         {
-            TableUid = tableUid,
+            TableUid = context.TableUid,
             NickName = @event.Nickname,
             OccuredAt = @event.OccuredAt
         };

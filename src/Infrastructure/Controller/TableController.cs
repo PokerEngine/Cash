@@ -43,7 +43,7 @@ public class TableController(
     {
         var command = new SitDownPlayerCommand
         {
-            TableUid = uid,
+            Uid = uid,
             Nickname = nickname,
             Seat = request.Seat,
             Stack = request.Stack
@@ -60,7 +60,7 @@ public class TableController(
     {
         var command = new StandUpPlayerCommand
         {
-            TableUid = uid,
+            Uid = uid,
             Nickname = nickname
         };
         var response = await commandDispatcher.DispatchAsync<StandUpPlayerCommand, StandUpPlayerResponse>(command);

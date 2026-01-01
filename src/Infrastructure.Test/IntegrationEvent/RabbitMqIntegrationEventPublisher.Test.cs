@@ -1,5 +1,6 @@
 using Application.IntegrationEvent;
 using Infrastructure.IntegrationEvent;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -53,25 +54,25 @@ public class RabbitMqIntegrationEventPublisherTest(
         // Act
         await publisher.PublishAsync(integrationEvent, new IntegrationEventRoutingKey(RoutingKey));
 
-        // Assert
         var timeout = DateTime.UtcNow.AddSeconds(5);
         while (received == null && DateTime.UtcNow < timeout)
         {
             await Task.Delay(50);
         }
 
+        // Assert
         Assert.NotNull(received);
 
         var body = Encoding.UTF8.GetString(received.Body.Span);
-        var receivedEvent =
+        var publishedEvent =
             JsonSerializer.Deserialize<TestPublishedIntegrationEvent>(body, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             }
         );
 
-        Assert.NotNull(receivedEvent);
-        Assert.Equal(integrationEvent, receivedEvent);
+        Assert.NotNull(publishedEvent);
+        Assert.Equal(integrationEvent, publishedEvent);
         Assert.Equal("application/json", received.BasicProperties.ContentType);
         Assert.Equal(nameof(TestPublishedIntegrationEvent), received.BasicProperties.Type);
         Assert.Equal(
@@ -135,7 +136,12 @@ public class RabbitMqIntegrationEventPublisherTest(
                 AutoDelete = false
             }
         );
-        return new RabbitMqIntegrationEventPublisher(connectionOptions, publisherOptions);
+        var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.SetMinimumLevel(LogLevel.Information).AddConsole();
+        });
+        var logger = loggerFactory.CreateLogger<RabbitMqIntegrationEventPublisher>();
+        return new RabbitMqIntegrationEventPublisher(connectionOptions, publisherOptions, logger);
     }
 
     private static DateTime GetNow()

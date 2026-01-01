@@ -8,11 +8,11 @@ public class PlayerSatDownEventHandler(
     IIntegrationEventPublisher integrationEventPublisher
 ) : IEventHandler<PlayerSatDownEvent>
 {
-    public async Task HandleAsync(PlayerSatDownEvent @event, TableUid tableUid)
+    public async Task HandleAsync(PlayerSatDownEvent @event, EventContext context)
     {
         var integrationEvent = new PlayerSatDownIntegrationEvent
         {
-            TableUid = tableUid,
+            TableUid = context.TableUid,
             NickName = @event.Nickname,
             Seat = @event.Seat,
             Stack = @event.Stack,

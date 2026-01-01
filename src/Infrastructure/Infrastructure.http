@@ -18,15 +18,23 @@ Content-Type: application/json
     client.global.set("tableUid", response.body.uid);
 %}
 
-### Connect to WebSocket and listen for events
+### Connect Alice to events
 WEBSOCKET {{Infrastructure_HostWsAddress}}/ws/table/{{tableUid}}/events/alice
 > {%
     client.ws.onMessage = function(event) {
-        console.log("Event received:", event.data);
+        console.log("Alice received event", event.data);
     }
 %}
 
-### Sit down at the table
+### Connect Bobby to events
+WEBSOCKET {{Infrastructure_HostWsAddress}}/ws/table/{{tableUid}}/events/bobby
+> {%
+    client.ws.onMessage = function(event) {
+        console.log("Bobby received event", event.data);
+    }
+%}
+
+### Sit down Alice at the table
 PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/alice
 Accept: application/json
 Content-Type: application/json
@@ -36,8 +44,25 @@ Content-Type: application/json
   "stack": 1000
 }
 
-### Stand up from the table
+### Sit down Bobby at the table
+PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/bobby
+Accept: application/json
+Content-Type: application/json
+
+{
+  "seat": 2,
+  "stack": 900
+}
+
+### Stand up Alice from the table
 PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/alice
+Accept: application/json
+Content-Type: application/json
+
+{}
+
+### Stand up Bobby from the table
+PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/bobby
 Accept: application/json
 Content-Type: application/json
 

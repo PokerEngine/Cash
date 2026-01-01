@@ -9,11 +9,11 @@ public class EventDispatcher(
     ILogger<EventDispatcher> logger
 ) : IEventDispatcher
 {
-    public async Task DispatchAsync(IEvent @event, TableUid tableUid)
+    public async Task DispatchAsync(IEvent @event, EventContext context)
     {
         var eventType = @event.GetType();
 
-        logger.LogInformation("Dispatching {Event} of the table {TableUid}", @event, tableUid);
+        logger.LogInformation("Dispatching {Event} in {Context}", @event, context);
 
         var handlerType = typeof(IEventHandler<>).MakeGenericType(eventType);
         var handler = serviceProvider.GetService(handlerType);
@@ -29,7 +29,7 @@ public class EventDispatcher(
 
         await (Task)method.Invoke(
             handler,
-            new object[] { @event, tableUid }
+            new object[] { @event, context }
         )!;
     }
 }
