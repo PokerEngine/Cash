@@ -28,11 +28,11 @@ public class RabbitMqIntegrationEventConsumerTest(
         var dispatcher = new TestIntegrationEventDispatcher();
         var consumer = CreateIntegrationEventConsumer(dispatcher);
 
-        var integrationEvent = new TestIntegrationEvent
+        var integrationEvent = new TestConsumedIntegrationEvent
         {
             TableUid = Guid.NewGuid(),
-            Name = "Test Event",
-            Number = 100500,
+            Name = "Test Integration Event Consumer",
+            Number = 500100,
             OccuredAt = GetNow()
         };
 
@@ -44,7 +44,7 @@ public class RabbitMqIntegrationEventConsumerTest(
         var props = new BasicProperties
         {
             ContentType = "application/json",
-            Type = typeof(TestIntegrationEvent).AssemblyQualifiedName,
+            Type = nameof(TestConsumedIntegrationEvent),
             Timestamp = new AmqpTimestamp(timestamp.ToUnixTimeSeconds())
         };
 
@@ -66,24 +66,25 @@ public class RabbitMqIntegrationEventConsumerTest(
         // Assert
 
         Assert.Single(dispatcher.Dispatched);
-        var dispatchedEvent = Assert.IsType<TestIntegrationEvent>(dispatcher.Dispatched[0]);
-        Assert.Equal(integrationEvent, dispatchedEvent);
+        var consumedEvent = Assert.IsType<TestConsumedIntegrationEvent>(dispatcher.Dispatched[0]);
+        Assert.Equal(integrationEvent, consumedEvent);
 
         await consumer.StopAsync(CancellationToken.None);
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenDispatchedWithError_ShouldDequeue()
+    public async Task ExecuteAsync_WhenNotResolvedType_ShouldDequeue()
     {
         // Arrange
         var dispatcher = new TestFailingIntegrationEventDispatcher();
         var consumer = CreateIntegrationEventConsumer(dispatcher);
 
         var body = Encoding.UTF8.GetBytes("{}");
-
         var props = new BasicProperties
         {
-            Type = typeof(TestIntegrationEvent).AssemblyQualifiedName
+            ContentType = "application/json",
+            Type = "TestUnknownIntegrationEvent",
+            Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds())
         };
 
         // Act
@@ -182,6 +183,14 @@ public class RabbitMqIntegrationEventConsumerTest(
             now.Kind
         );
     }
+}
+
+internal record TestConsumedIntegrationEvent : IIntegrationEvent
+{
+    public Guid TableUid { get; init; }
+    public required string Name { get; init; }
+    public required int Number { get; init; }
+    public required DateTime OccuredAt { get; init; }
 }
 
 internal class TestIntegrationEventDispatcher : IIntegrationEventDispatcher

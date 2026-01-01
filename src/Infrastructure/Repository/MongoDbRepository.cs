@@ -42,7 +42,7 @@ public class MongoDbRepository : IRepository
 
         foreach (var document in documents)
         {
-            var type = Type.GetType(document.Type, throwOnError: true)!;
+            var type = MongoDbEventTypeResolver.GetType(document.Type);
             var @event = (IEvent)BsonSerializer.Deserialize(document.Data, type);
             events.Add(@event);
         }
@@ -59,7 +59,7 @@ public class MongoDbRepository : IRepository
     {
         var documents = events.Select(e => new EventDocument
         {
-            Type = e.GetType().AssemblyQualifiedName!,
+            Type = MongoDbEventTypeResolver.GetName(e),
             TableUid = tableUid,
             OccurredAt = e.OccuredAt,
             Data = e.ToBsonDocument(e.GetType())

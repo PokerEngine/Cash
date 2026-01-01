@@ -27,10 +27,10 @@ public class RabbitMqIntegrationEventPublisherTest(
         // Arrange
         var publisher = CreateIntegrationEventPublisher();
 
-        var integrationEvent = new TestIntegrationEvent
+        var integrationEvent = new TestPublishedIntegrationEvent
         {
             TableUid = Guid.NewGuid(),
-            Name = "Test Event",
+            Name = "Test Integration Event Publisher",
             Number = 100500,
             OccuredAt = GetNow()
         };
@@ -64,7 +64,7 @@ public class RabbitMqIntegrationEventPublisherTest(
 
         var body = Encoding.UTF8.GetString(received.Body.Span);
         var receivedEvent =
-            JsonSerializer.Deserialize<TestIntegrationEvent>(body, new JsonSerializerOptions
+            JsonSerializer.Deserialize<TestPublishedIntegrationEvent>(body, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             }
@@ -73,7 +73,7 @@ public class RabbitMqIntegrationEventPublisherTest(
         Assert.NotNull(receivedEvent);
         Assert.Equal(integrationEvent, receivedEvent);
         Assert.Equal("application/json", received.BasicProperties.ContentType);
-        Assert.Equal(typeof(TestIntegrationEvent).AssemblyQualifiedName, received.BasicProperties.Type);
+        Assert.Equal(nameof(TestPublishedIntegrationEvent), received.BasicProperties.Type);
         Assert.Equal(
             integrationEvent.OccuredAt,
             DateTimeOffset.FromUnixTimeSeconds(received.BasicProperties.Timestamp.UnixTime).UtcDateTime
@@ -154,7 +154,7 @@ public class RabbitMqIntegrationEventPublisherTest(
     }
 }
 
-internal record TestIntegrationEvent : IIntegrationEvent
+internal record TestPublishedIntegrationEvent : IIntegrationEvent
 {
     public Guid TableUid { get; init; }
     public required string Name { get; init; }

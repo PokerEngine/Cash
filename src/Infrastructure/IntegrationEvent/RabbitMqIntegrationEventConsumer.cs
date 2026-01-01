@@ -86,9 +86,9 @@ public class RabbitMqIntegrationEventConsumer(
 
     private IIntegrationEvent Deserialize(BasicDeliverEventArgs args)
     {
-        var eventType = Type.GetType(args.BasicProperties.Type!, throwOnError: true)!;
+        var type = RabbitMqIntegrationEventTypeResolver.GetType(args.BasicProperties.Type!);
         var json = Encoding.UTF8.GetString(args.Body.Span);
-        return (IIntegrationEvent)JsonSerializer.Deserialize(json, eventType, JsonSerializerOptions)!;
+        return (IIntegrationEvent)JsonSerializer.Deserialize(json, type, JsonSerializerOptions)!;
     }
 
     private async Task DeclareTopologyAsync(IChannel channel)
