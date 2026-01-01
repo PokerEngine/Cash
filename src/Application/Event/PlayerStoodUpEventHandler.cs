@@ -17,6 +17,6 @@ public class PlayerStoodUpEventHandler(
             OccuredAt = @event.OccuredAt
         };
 
-        await integrationEventPublisher.PublishAsync(integrationEvent, IntegrationEventChannel.Cash);
+        await integrationEventPublisher.PublishAsync(integrationEvent, "cash.player-stood-up");
     }
 }

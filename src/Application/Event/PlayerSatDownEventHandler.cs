@@ -19,6 +19,6 @@ public class PlayerSatDownEventHandler(
             OccuredAt = @event.OccuredAt
         };
 
-        await integrationEventPublisher.PublishAsync(integrationEvent, IntegrationEventChannel.Cash);
+        await integrationEventPublisher.PublishAsync(integrationEvent, "cash.player-sat-down");
     }
 }

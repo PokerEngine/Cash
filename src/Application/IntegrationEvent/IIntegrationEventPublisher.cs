@@ -4,7 +4,7 @@ public interface IIntegrationEventPublisher
 {
     Task PublishAsync(
         IIntegrationEvent integrationEvent,
-        IntegrationEventChannel channel,
+        IntegrationEventRoutingKey routingKey,
         CancellationToken cancellationToken = default
     );
 }

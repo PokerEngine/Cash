@@ -9,10 +9,9 @@ public class IntegrationEventDispatcher(
 {
     public async Task DispatchAsync(IIntegrationEvent integrationEvent)
     {
+        logger.LogInformation("Dispatching {IntegrationEvent}", integrationEvent);
+
         var integrationEventType = integrationEvent.GetType();
-
-        logger.LogInformation("Dispatching {IntegrationEventName}", integrationEventType.Name);
-
         var handlerType = typeof(IIntegrationEventHandler<>).MakeGenericType(integrationEventType);
         var handler = serviceProvider.GetService(handlerType);
 

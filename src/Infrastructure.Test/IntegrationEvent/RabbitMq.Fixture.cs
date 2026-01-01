@@ -26,9 +26,9 @@ public sealed class RabbitMqFixture : IAsyncLifetime
         await Container.DisposeAsync();
     }
 
-    public RabbitMqIntegrationEventQueueOptions CreateOptions()
+    public RabbitMqConnectionOptions CreateOptions()
     {
-        return new RabbitMqIntegrationEventQueueOptions
+        return new RabbitMqConnectionOptions
         {
             Host = Container.Hostname,
             Port = Container.GetMappedPublicPort(Port),

@@ -1,4 +1,5 @@
 @Infrastructure_HostAddress = http://0.0.0.0:5260
+@Infrastructure_HostWsAddress = ws://0.0.0.0:5260
 
 ### Create a new table
 POST {{Infrastructure_HostAddress}}/api/table
@@ -15,6 +16,14 @@ Content-Type: application/json
 }
 > {%
     client.global.set("tableUid", response.body.uid);
+%}
+
+### Connect to WebSocket and listen for events
+WEBSOCKET {{Infrastructure_HostWsAddress}}/ws/table/{{tableUid}}/events/alice
+> {%
+    client.ws.onMessage = function(event) {
+        console.log("Event received:", event.data);
+    }
 %}
 
 ### Sit down at the table

@@ -4,11 +4,11 @@ public interface IIntegrationEventQueue
 {
     Task EnqueueAsync(
         IIntegrationEvent integrationEvent,
-        IntegrationEventChannel channel,
+        IntegrationEventRoutingKey routingKey,
         CancellationToken cancellationToken = default
     );
     Task<IIntegrationEvent?> DequeueAsync(
-        IntegrationEventChannel channel,
+        IntegrationEventRoutingKey routingKey,
         CancellationToken cancellationToken = default
     );
 }

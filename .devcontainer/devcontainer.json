@@ -4,7 +4,7 @@
     "service": "cash",
     "workspaceFolder": "/usr/local/cash",
     "postCreateCommand": "git config --global --add safe.directory /usr/local/cash",
-    "forwardPorts": [5260, 7053, 27017],
+    "forwardPorts": [5260, 7053, 27017, 5672],
     "runArgs": [
         "-v",
         "/var/run/docker.sock:/var/run/docker.sock"

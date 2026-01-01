@@ -13,7 +13,7 @@ public class EventDispatcher(
     {
         var eventType = @event.GetType();
 
-        logger.LogInformation("Dispatching {EventName} of the table {TableUid}", eventType.Name, tableUid);
+        logger.LogInformation("Dispatching {Event} of the table {TableUid}", @event, tableUid);
 
         var handlerType = typeof(IEventHandler<>).MakeGenericType(eventType);
         var handler = serviceProvider.GetService(handlerType);

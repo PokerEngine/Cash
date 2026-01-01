@@ -14,6 +14,7 @@ using Infrastructure.IntegrationEvent;
 using Infrastructure.Query;
 using Infrastructure.Repository;
 using Infrastructure.Service.Hand;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
 
@@ -31,19 +32,6 @@ public static class Bootstrapper
             builder.Configuration.GetSection(MongoDbRepositoryOptions.SectionName)
         );
         builder.Services.AddSingleton<IRepository, MongoDbRepository>();
-
-        // Register event queue
-        if (builder.Environment.IsDevelopment())
-        {
-            builder.Services.AddSingleton<IIntegrationEventQueue, InMemoryIntegrationEventQueue>();
-        }
-        else
-        {
-            builder.Services.Configure<RabbitMqIntegrationEventQueueOptions>(
-                builder.Configuration.GetSection(RabbitMqIntegrationEventQueueOptions.SectionName)
-            );
-            builder.Services.AddSingleton<IIntegrationEventQueue, RabbitMqIntegrationEventQueue>();
-        }
 
         // Register connection registry
         builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
@@ -79,7 +67,6 @@ public static class Bootstrapper
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 
         // Register integration events
-        builder.Services.AddScoped<IIntegrationEventPublisher, IntegrationEventPublisher>();
         RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
@@ -89,12 +76,23 @@ public static class Bootstrapper
         RegisterIntegrationEventHandler<PlayerSatInIntegrationEvent, PlayerSatInHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerStoodUpIntegrationEvent, PlayerStoodUpHandler>(builder.Services);
         builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
+
+        builder.Services.Configure<RabbitMqConnectionOptions>(
+            builder.Configuration.GetSection(RabbitMqConnectionOptions.SectionName)
+        );
+        builder.Services.Configure<RabbitMqIntegrationEventPublisherOptions>(
+            builder.Configuration.GetSection(RabbitMqIntegrationEventPublisherOptions.SectionName)
+        );
+        builder.Services.Configure<RabbitMqIntegrationEventConsumerOptions>(
+            builder.Configuration.GetSection(RabbitMqIntegrationEventConsumerOptions.SectionName)
+        );
+        builder.Services.AddScoped<IIntegrationEventPublisher, RabbitMqIntegrationEventPublisher>();
         builder.Services.AddHostedService(provider =>
-            new IntegrationEventConsumer(
+            new RabbitMqIntegrationEventConsumer(
                 scopeFactory: provider.GetRequiredService<IServiceScopeFactory>(),
-                queue: provider.GetRequiredService<IIntegrationEventQueue>(),
-                logger: provider.GetRequiredService<ILogger<IntegrationEventConsumer>>(),
-                channel: IntegrationEventChannel.Cash
+                options: provider.GetRequiredService<IOptions<RabbitMqIntegrationEventConsumerOptions>>(),
+                connectionOptions: provider.GetRequiredService<IOptions<RabbitMqConnectionOptions>>(),
+                logger: provider.GetRequiredService<ILogger<RabbitMqIntegrationEventConsumer>>()
             )
         );
 
