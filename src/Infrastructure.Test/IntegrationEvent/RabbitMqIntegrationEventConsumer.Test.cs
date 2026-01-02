@@ -17,9 +17,8 @@ public class RabbitMqIntegrationEventConsumerTest(
     private IConnection _connection = default!;
     private IChannel _channel = default!;
 
-    private const string ExchangeType = "topic";
-    private const string ExchangeName = "test.integration-event-consumer-exchange";
-    private const string QueueName = "test.integration-event-consumer-queue";
+    private readonly string ExchangeName = $"test.integration-event-consumer-exchange.{Guid.NewGuid()}";
+    private readonly string QueueName = $"test.integration-event-consumer-queue.{Guid.NewGuid()}";
     private const string RoutingKey = "test.integration-event-consumer-routing-key";
 
     [Fact]
@@ -107,22 +106,45 @@ public class RabbitMqIntegrationEventConsumerTest(
 
     public async Task InitializeAsync()
     {
-        var options = fixture.CreateOptions();
+        var consumerOptions = CreateOptions();
+        var connectionOptions = fixture.CreateOptions();
         var factory = new ConnectionFactory
         {
-            HostName = options.Host,
-            Port = options.Port,
-            UserName = options.Username,
-            Password = options.Password,
-            VirtualHost = options.VirtualHost
+            HostName = connectionOptions.Host,
+            Port = connectionOptions.Port,
+            UserName = connectionOptions.Username,
+            Password = connectionOptions.Password,
+            VirtualHost = connectionOptions.VirtualHost
         };
 
         _connection = await factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
 
-        await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType, durable: true);
-        await _channel.QueueDeclareAsync(QueueName, durable: false, exclusive: false, autoDelete: true);
-        await _channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey);
+        foreach (var binding in consumerOptions.Bindings)
+        {
+            await _channel.ExchangeDeclareAsync(
+                exchange: binding.ExchangeName,
+                type: binding.ExchangeType,
+                durable: consumerOptions.Durable,
+                autoDelete: consumerOptions.AutoDelete
+            );
+        }
+
+        await _channel.QueueDeclareAsync(
+            queue: consumerOptions.QueueName,
+            durable: consumerOptions.Durable,
+            exclusive: consumerOptions.Exclusive,
+            autoDelete: consumerOptions.AutoDelete
+        );
+
+        foreach (var binding in consumerOptions.Bindings)
+        {
+            await _channel.QueueBindAsync(
+                queue: consumerOptions.QueueName,
+                exchange: binding.ExchangeName,
+                routingKey: binding.RoutingKey
+            );
+        }
     }
 
     public async Task DisposeAsync()
@@ -140,25 +162,7 @@ public class RabbitMqIntegrationEventConsumerTest(
 
         var provider = services.BuildServiceProvider();
 
-        var consumerOptions = Options.Create(
-            new RabbitMqIntegrationEventConsumerOptions
-            {
-                QueueName = QueueName,
-                Durable = false,
-                Exclusive = false,
-                AutoDelete = true,
-                PrefetchCount = 1,
-                Bindings =
-                [
-                    new ()
-                    {
-                        ExchangeName = ExchangeName,
-                        ExchangeType = ExchangeType,
-                        RoutingKey = RoutingKey
-                    }
-                ]
-            });
-
+        var consumerOptions = Options.Create(CreateOptions());
         var connectionOptions = Options.Create(fixture.CreateOptions());
 
         return new RabbitMqIntegrationEventConsumer(
@@ -167,6 +171,22 @@ public class RabbitMqIntegrationEventConsumerTest(
             connectionOptions,
             provider.GetRequiredService<ILogger<RabbitMqIntegrationEventConsumer>>()
         );
+    }
+
+    private RabbitMqIntegrationEventConsumerOptions CreateOptions()
+    {
+        return new RabbitMqIntegrationEventConsumerOptions
+        {
+            QueueName = QueueName,
+            Durable = false,
+            Exclusive = false,
+            AutoDelete = true,
+            PrefetchCount = 1,
+            Bindings =
+            [
+                new() { ExchangeName = ExchangeName, ExchangeType = "topic", RoutingKey = RoutingKey }
+            ]
+        };
     }
 
     private static DateTime GetNow()
