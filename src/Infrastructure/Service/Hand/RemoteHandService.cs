@@ -12,6 +12,7 @@ public class RemoteHandService(
     ILogger<RemoteHandService> logger
 ) : IHandService
 {
+    private const string TableType = "Cash";
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -67,6 +68,8 @@ public class RemoteHandService(
         var url = "/api/hand";
         var request = new CreateHandRequest
         {
+            TableUid = tableUid,
+            TableType = TableType,
             Game = game.ToString(),
             MaxSeat = maxSeat,
             SmallBlind = smallBlind,
@@ -120,7 +123,13 @@ public class RemoteHandService(
         logger.LogInformation("Send GET request to {Url}", absoluteUrl);
 
         var response = await httpClient.GetAsync(absoluteUrl, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            logger.LogError("Request failed with status {StatusCode}. Response: {Body}", response.StatusCode, body);
+
+            response.EnsureSuccessStatusCode();
+        }
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
         return JsonSerializer.Deserialize<TResponse>(responseJson, JsonSerializerOptions)!;
@@ -138,7 +147,13 @@ public class RemoteHandService(
         logger.LogInformation("Send POST request to {Url} with body {Body}", absoluteUrl, requestJson);
 
         var response = await httpClient.PostAsync(absoluteUrl, requestContent, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            logger.LogError("Request failed with status {StatusCode}. Response: {Body}", response.StatusCode, body);
+
+            response.EnsureSuccessStatusCode();
+        }
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -195,6 +210,8 @@ internal sealed record GetHandStatePlayerResponse
 
 internal sealed record CreateHandRequest
 {
+    public required Guid TableUid { get; init; }
+    public required string TableType { get; init; }
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required int SmallBlind { get; init; }

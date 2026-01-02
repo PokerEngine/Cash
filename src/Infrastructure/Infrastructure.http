@@ -7,12 +7,12 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "game": "NoLimitHoldem",
-  "maxSeat": 6,
-  "smallBlind": 5,
-  "bigBlind": 10,
-  "chipCostAmount": 1,
-  "chipCostCurrency": "Usd"
+    "game": "NoLimitHoldem",
+    "maxSeat": 6,
+    "smallBlind": 5,
+    "bigBlind": 10,
+    "chipCostAmount": 1,
+    "chipCostCurrency": "Usd"
 }
 > {%
     client.global.set("tableUid", response.body.uid);
@@ -40,8 +40,8 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "seat": 1,
-  "stack": 1000
+    "seat": 1,
+    "stack": 1000
 }
 
 ### Sit down Bobby at the table
@@ -50,8 +50,8 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "seat": 2,
-  "stack": 900
+    "seat": 2,
+    "stack": 900
 }
 
 ### Stand up Alice from the table

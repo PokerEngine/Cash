@@ -5,7 +5,7 @@ namespace Application.IntegrationEvent;
 public record struct PlayerSatInIntegrationEvent : IIntegrationEvent
 {
     public required Guid TableUid { get; init; }
-    public required string NickName { get; init; }
+    public required string Nickname { get; init; }
     public required DateTime OccuredAt { get; init; }
 }
 

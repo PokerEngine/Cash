@@ -54,6 +54,7 @@ public static class Bootstrapper
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);
         RegisterCommandHandler<SitDownPlayerCommand, SitDownPlayerHandler, SitDownPlayerResponse>(builder.Services);
         RegisterCommandHandler<StandUpPlayerCommand, StandUpPlayerHandler, StandUpPlayerResponse>(builder.Services);
+        RegisterCommandHandler<CommitDecisionCommand, CommitDecisionHandler, CommitDecisionResponse>(builder.Services);
         builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 
         // Register queries
@@ -67,14 +68,14 @@ public static class Bootstrapper
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 
         // Register integration events
-        RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<DecisionIsCommittedIntegrationEvent, DecisionIsCommittedHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerSatDownIntegrationEvent, PlayerSatDownHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerSatOutIntegrationEvent, PlayerSatOutHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerSatInIntegrationEvent, PlayerSatInHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerStoodUpIntegrationEvent, PlayerStoodUpHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<DecisionIsCommittedIntegrationEvent, DecisionIsCommittedHandler>(builder.Services);
         builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
 
         builder.Services.Configure<RabbitMqConnectionOptions>(

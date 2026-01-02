@@ -38,6 +38,7 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
         _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
         _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
 
+        _logger.LogInformation("Declaring exchange {ExchangeName} ({ExchangeType})", _options.ExchangeName, _options.ExchangeType);
         _channel.ExchangeDeclareAsync(
             exchange: _options.ExchangeName,
             type: _options.ExchangeType,
@@ -53,7 +54,7 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
     )
     {
         _logger.LogInformation(
-            "Publishing {IntegrationEvent} to {Exchange} / {RoutingKey}",
+            "Publishing {IntegrationEvent} to exchange {Exchange} / {RoutingKey}",
             integrationEvent,
             _options.ExchangeName,
             routingKey

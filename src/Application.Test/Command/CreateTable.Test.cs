@@ -30,13 +30,6 @@ public class CreateTableTest
         var response = await handler.HandleAsync(command);
 
         // Assert
-        Assert.Equal(command.Game, response.Game);
-        Assert.Equal(command.MaxSeat, response.MaxSeat);
-        Assert.Equal(command.SmallBlind, response.SmallBlind);
-        Assert.Equal(command.BigBlind, response.BigBlind);
-        Assert.Equal(command.ChipCostAmount, response.ChipCostAmount);
-        Assert.Equal(command.ChipCostCurrency, response.ChipCostCurrency);
-
         var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.Equal(new TableUid(response.Uid), table.Uid);
         Assert.Equal(Game.NoLimitHoldem, table.Game);

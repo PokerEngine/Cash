@@ -13,7 +13,7 @@ public class PlayerSatDownEventHandler(
         var integrationEvent = new PlayerSatDownIntegrationEvent
         {
             TableUid = context.TableUid,
-            NickName = @event.Nickname,
+            Nickname = @event.Nickname,
             Seat = @event.Seat,
             Stack = @event.Stack,
             OccuredAt = @event.OccuredAt

@@ -16,7 +16,7 @@ public class GetTableByUidTest
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
-        await SitDownPlayerAsync(repository, eventDispatcher, tableUid, "alice", 2, 1000);
+        await SitDownPlayerAsync(repository, eventDispatcher, tableUid, "Alice", 2, 1000);
 
         var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
@@ -37,7 +37,7 @@ public class GetTableByUidTest
         Assert.Equal(table.ChipCost.Currency.ToString(), response.ChipCostCurrency);
 
         Assert.Single(response.Players);
-        Assert.Equal("alice", response.Players[0].Nickname);
+        Assert.Equal("Alice", response.Players[0].Nickname);
         Assert.Equal(2, response.Players[0].Seat);
         Assert.Equal(1000, response.Players[0].Stack);
         Assert.False(response.Players[0].IsSittingOut);

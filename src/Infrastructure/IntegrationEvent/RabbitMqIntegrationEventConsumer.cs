@@ -59,7 +59,7 @@ public class RabbitMqIntegrationEventConsumer(
         {
             try
             {
-                logger.LogInformation("Consuming {Args} from {Sender}", args, sender);
+                logger.LogInformation("Consuming {Type}", args.BasicProperties.Type);
 
                 var integrationEvent = Deserialize(args);
                 using var scope = scopeFactory.CreateScope();
@@ -95,6 +95,22 @@ public class RabbitMqIntegrationEventConsumer(
 
     private async Task DeclareTopologyAsync(IChannel channel)
     {
+        foreach (var binding in options.Value.Bindings)
+        {
+            logger.LogInformation(
+                "Declaring exchange {ExchangeName} ({ExchangeType})",
+                binding.ExchangeName,
+                binding.ExchangeType
+            );
+            await channel.ExchangeDeclareAsync(
+                exchange: binding.ExchangeName,
+                type: binding.ExchangeType,
+                durable: options.Value.Durable,
+                autoDelete: options.Value.AutoDelete
+            );
+        }
+
+        logger.LogInformation("Declaring queue {QueueName}", options.Value.QueueName);
         await channel.QueueDeclareAsync(
             queue: options.Value.QueueName,
             durable: options.Value.Durable,
@@ -104,6 +120,12 @@ public class RabbitMqIntegrationEventConsumer(
 
         foreach (var binding in options.Value.Bindings)
         {
+            logger.LogInformation(
+                "Binding queue {QueueName} with exchange {ExchangeName} / {RoutingKey}",
+                options.Value.QueueName,
+                binding.ExchangeName,
+                binding.RoutingKey
+            );
             await channel.QueueBindAsync(
                 queue: options.Value.QueueName,
                 exchange: binding.ExchangeName,
@@ -129,5 +151,6 @@ public class RabbitMqIntegrationEventConsumerOptions
 public class RabbitMqIntegrationEventConsumerBindingOptions
 {
     public required string ExchangeName { get; init; }
+    public required string ExchangeType { get; init; }
     public required string RoutingKey { get; init; }
 }

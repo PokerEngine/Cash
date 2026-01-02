@@ -20,7 +20,7 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
         var @event = new TestEvent
         {
             Game = Game.NoLimitHoldem,
-            Nickname = new Nickname("alice"),
+            Nickname = new Nickname("Alice"),
             Seat = new Seat(2),
             Chips = new Chips(1000),
             Money = new Money(12.34m, Currency.Usd),
@@ -48,7 +48,7 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
         var @event = new TestEvent
         {
             Game = Game.NoLimitHoldem,
-            Nickname = new Nickname("alice"),
+            Nickname = new Nickname("Alice"),
             Seat = new Seat(2),
             Chips = new Chips(1000),
             Money = new Money(12.34m, Currency.Usd),

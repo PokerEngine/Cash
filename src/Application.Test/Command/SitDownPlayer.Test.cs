@@ -70,7 +70,7 @@ public class SitDownPlayerTest
         var command = new SitDownPlayerCommand
         {
             Uid = tableUid,
-            Nickname = "Bob",
+            Nickname = "Bobby",
             Seat = 4,
             Stack = 1000
         };

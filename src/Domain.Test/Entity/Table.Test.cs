@@ -76,7 +76,7 @@ public class TableTest
             },
             new PlayerSatDownEvent
             {
-                Nickname = new Nickname("Bob"),
+                Nickname = new Nickname("Bobby"),
                 Seat = new Seat(4),
                 Stack = new Chips(1000),
                 OccuredAt = DateTime.Now
@@ -135,7 +135,7 @@ public class TableTest
             },
             new PlayerStoodUpEvent
             {
-                Nickname = new Nickname("Bob"),
+                Nickname = new Nickname("Bobby"),
                 OccuredAt = DateTime.Now
             }
         };
@@ -203,7 +203,7 @@ public class TableTest
 
         // Act
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
@@ -211,7 +211,7 @@ public class TableTest
         // Assert
         Assert.Equal(2, table.Players.Count());
         var player = table.Players.First(x => x.Seat == new Seat(2));
-        Assert.Equal(new Nickname("Bob"), player.Nickname);
+        Assert.Equal(new Nickname("Bobby"), player.Nickname);
         Assert.Equal(new Seat(2), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
         Assert.False(player.IsWaitingForBigBlind);
@@ -230,7 +230,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
@@ -264,7 +264,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
@@ -332,7 +332,7 @@ public class TableTest
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
             table.SitDown(
-                nickname: new Nickname("Bob"),
+                nickname: new Nickname("Bobby"),
                 seat: new Seat(1),
                 stack: new Chips(1000)
             );
@@ -529,7 +529,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
@@ -559,7 +559,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
@@ -594,7 +594,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
@@ -678,7 +678,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -708,11 +708,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU/SB, Bob is BB
+        table.RotateButton(); // Alice is BU/SB, Bobby is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -745,11 +745,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.RotateButton();  // Alice is SB/BU, Bob is BB
+        table.RotateButton();  // Alice is SB/BU, Bobby is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -785,11 +785,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is SB/BU, Bob is BB
+        table.RotateButton(); // Alice is SB/BU, Bobby is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -825,7 +825,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -834,17 +834,17 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
         table.StandUp(
-            nickname: new Nickname("Bob")
+            nickname: new Nickname("Bobby")
         );
         table.FinishHand(
             handUid: table.GetHandUid()
         );
-        table.RotateButton(); // Alice is BB, Bob's seat is dead button, Charlie is SB
+        table.RotateButton(); // Alice is BB, Bobby's seat is dead button, Charlie is SB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -872,7 +872,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -902,7 +902,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -911,7 +911,7 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -939,7 +939,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -948,7 +948,7 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -984,7 +984,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -993,7 +993,7 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1029,7 +1029,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1038,7 +1038,7 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1074,7 +1074,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1083,7 +1083,7 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1114,7 +1114,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1123,12 +1123,12 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
         table.StandUp(
-            nickname: new Nickname("Bob")
+            nickname: new Nickname("Bobby")
         );
         table.FinishHand(
             handUid: table.GetHandUid()
@@ -1154,7 +1154,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1163,7 +1163,7 @@ public class TableTest
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1194,7 +1194,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1208,17 +1208,17 @@ public class TableTest
             seat: new Seat(8),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
         table.StandUp(
-            nickname: new Nickname("Bob")
+            nickname: new Nickname("Bobby")
         );
         table.FinishHand(
             handUid: table.GetHandUid()
         );
-        table.RotateButton(); // Alice is CO, Bob's seat is the dead button, Charlie is SB, Diana is BB
+        table.RotateButton(); // Alice is CO, Bobby's seat is the dead button, Charlie is SB, Diana is BB
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1246,7 +1246,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1260,7 +1260,7 @@ public class TableTest
             seat: new Seat(8),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1291,7 +1291,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1305,12 +1305,12 @@ public class TableTest
             seat: new Seat(8),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
         table.StandUp(
-            nickname: new Nickname("Bob")
+            nickname: new Nickname("Bobby")
         );
         table.FinishHand(
             handUid: table.GetHandUid()
@@ -1336,7 +1336,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1350,7 +1350,7 @@ public class TableTest
             seat: new Seat(8),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1381,7 +1381,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1395,7 +1395,7 @@ public class TableTest
             seat: new Seat(8),
             stack: new Chips(1000)
         );
-        table.RotateButton(); // Alice is BU, Bob is SB, Charlie is BB, Diana is CO
+        table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
         table.StartHand(
             handUid: new HandUid(Guid.NewGuid())
         );
@@ -1426,12 +1426,12 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
         table.SitOut(
-            nickname: new Nickname("Bob")
+            nickname: new Nickname("Bobby")
         );
         table.PullEvents();
 
@@ -1457,7 +1457,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1489,7 +1489,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
@@ -1523,7 +1523,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
@@ -1553,7 +1553,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
@@ -1614,7 +1614,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
@@ -1649,7 +1649,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
@@ -1679,7 +1679,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.SitDown(
-            nickname: new Nickname("Bob"),
+            nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );

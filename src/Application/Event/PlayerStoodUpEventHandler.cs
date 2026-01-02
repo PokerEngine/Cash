@@ -13,7 +13,7 @@ public class PlayerStoodUpEventHandler(
         var integrationEvent = new PlayerStoodUpIntegrationEvent
         {
             TableUid = context.TableUid,
-            NickName = @event.Nickname,
+            Nickname = @event.Nickname,
             OccuredAt = @event.OccuredAt
         };
 

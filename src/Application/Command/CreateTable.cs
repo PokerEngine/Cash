@@ -18,12 +18,6 @@ public record struct CreateTableCommand : ICommand
 public record struct CreateTableResponse : ICommandResponse
 {
     public required Guid Uid { get; init; }
-    public required string Game { get; init; }
-    public required int MaxSeat { get; init; }
-    public required int SmallBlind { get; init; }
-    public required int BigBlind { get; init; }
-    public required decimal ChipCostAmount { get; init; }
-    public required string ChipCostCurrency { get; init; }
 }
 
 public class CreateTableHandler(
@@ -60,13 +54,7 @@ public class CreateTableHandler(
 
         return new CreateTableResponse
         {
-            Uid = table.Uid,
-            Game = table.Game.ToString(),
-            MaxSeat = table.MaxSeat,
-            SmallBlind = table.SmallBlind,
-            BigBlind = table.BigBlind,
-            ChipCostAmount = table.ChipCost.Amount,
-            ChipCostCurrency = table.ChipCost.Currency.ToString()
+            Uid = table.Uid
         };
     }
 }

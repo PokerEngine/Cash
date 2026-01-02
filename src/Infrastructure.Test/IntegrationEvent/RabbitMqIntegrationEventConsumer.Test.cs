@@ -17,6 +17,7 @@ public class RabbitMqIntegrationEventConsumerTest(
     private IConnection _connection = default!;
     private IChannel _channel = default!;
 
+    private const string ExchangeType = "topic";
     private const string ExchangeName = "test.integration-event-consumer-exchange";
     private const string QueueName = "test.integration-event-consumer-queue";
     private const string RoutingKey = "test.integration-event-consumer-routing-key";
@@ -98,7 +99,6 @@ public class RabbitMqIntegrationEventConsumerTest(
         await Task.Delay(500);
 
         // Assert
-
         var result = await _channel.BasicGetAsync(QueueName, autoAck: true);
         Assert.Null(result); // Message should NOT be requeued → queue remains empty
 
@@ -120,7 +120,7 @@ public class RabbitMqIntegrationEventConsumerTest(
         _connection = await factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
 
-        await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, durable: true);
+        await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType, durable: true);
         await _channel.QueueDeclareAsync(QueueName, durable: false, exclusive: false, autoDelete: true);
         await _channel.QueueBindAsync(QueueName, ExchangeName, RoutingKey);
     }
@@ -153,6 +153,7 @@ public class RabbitMqIntegrationEventConsumerTest(
                     new ()
                     {
                         ExchangeName = ExchangeName,
+                        ExchangeType = ExchangeType,
                         RoutingKey = RoutingKey
                     }
                 ]
