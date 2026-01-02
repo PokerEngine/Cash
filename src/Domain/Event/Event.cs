@@ -48,13 +48,13 @@ public record struct ButtonIsRotatedEvent : IEvent
     public required DateTime OccuredAt { get; init; }
 }
 
-public record struct HandIsStartedEvent : IEvent
+public record struct CurrentHandIsSetEvent : IEvent
 {
     public required HandUid HandUid { get; init; }
     public required DateTime OccuredAt { get; init; }
 }
 
-public record struct HandIsFinishedEvent : IEvent
+public record struct CurrentHandIsClearedEvent : IEvent
 {
     public required HandUid HandUid { get; init; }
     public required DateTime OccuredAt { get; init; }

@@ -51,7 +51,7 @@ public class SitDownPlayerHandler(
                 participants: table.ActivePlayers.Select(GetParticipant).ToList()
             );
 
-            table.StartHand(handUid);
+            table.SetCurrentHand(handUid);
         }
 
         var events = table.PullEvents();

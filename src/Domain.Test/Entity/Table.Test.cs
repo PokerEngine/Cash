@@ -85,7 +85,7 @@ public class TableTest
             {
                 OccuredAt = DateTime.Now
             },
-            new HandIsStartedEvent
+            new CurrentHandIsSetEvent
             {
                 HandUid = handUid1,
                 OccuredAt = DateTime.Now
@@ -114,7 +114,7 @@ public class TableTest
                 Nickname = new Nickname("Diana"),
                 OccuredAt = DateTime.Now
             },
-            new HandIsFinishedEvent
+            new CurrentHandIsClearedEvent
             {
                 HandUid = handUid1,
                 OccuredAt = DateTime.Now
@@ -123,7 +123,7 @@ public class TableTest
             {
                 OccuredAt = DateTime.Now
             },
-            new HandIsStartedEvent
+            new CurrentHandIsSetEvent
             {
                 HandUid = handUid2,
                 OccuredAt = DateTime.Now
@@ -153,7 +153,7 @@ public class TableTest
         Assert.Equal(new Seat(4), table.ButtonSeat);
         Assert.Equal(new Seat(4), table.SmallBlindSeat);
         Assert.Equal(new Seat(2), table.BigBlindSeat);
-        Assert.Equal(handUid2, table.GetHandUid());
+        Assert.Equal(handUid2, table.GetCurrentHandUid());
         Assert.Equal(3, table.Players.Count());
         Assert.Empty(table.PullEvents());
     }
@@ -269,7 +269,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.StartHand(new HandUid(Guid.NewGuid()));
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
 
         // Act
         table.SitDown(
@@ -607,9 +607,7 @@ public class TableTest
             nickname: new Nickname("Alice")
         );
         table.RotateButton();
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
 
         // Act
         table.SitIn(
@@ -713,12 +711,8 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU/SB, Bobby is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.ClearCurrentHand(table.GetCurrentHandUid());
         table.PullEvents();
 
         // Act
@@ -750,17 +744,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton();  // Alice is SB/BU, Bobby is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.SitDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
             stack: new Chips(1000)
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -790,17 +780,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is SB/BU, Bobby is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.SitDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -835,22 +821,14 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Bobby")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
         table.RotateButton(); // Alice is BB, Bobby's seat is dead button, Charlie is SB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -912,12 +890,8 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -949,17 +923,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.SitDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(3),
             stack: new Chips(1000)
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -994,17 +964,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.SitDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(5),
             stack: new Chips(1000)
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1039,17 +1005,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.SitDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(7),
             stack: new Chips(1000)
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1084,15 +1046,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Alice")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1124,15 +1082,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Bobby")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1164,15 +1118,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Charlie")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1209,22 +1159,14 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Bobby")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
         table.RotateButton(); // Alice is CO, Bobby's seat is the dead button, Charlie is SB, Diana is BB
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1261,15 +1203,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Alice")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1306,15 +1244,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Bobby")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1351,15 +1285,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Charlie")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1396,15 +1326,11 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.StandUp(
             nickname: new Nickname("Diana")
         );
-        table.FinishHand(
-            handUid: table.GetHandUid()
-        );
+        table.ClearCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1462,9 +1388,7 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.PullEvents();
 
         // Act
@@ -1479,7 +1403,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartHand_Valid_ShouldStartHand()
+    public void SetCurrentHand_Valid_ShouldSetCurrentHand()
     {
         // Arrange
         var table = CreateTable();
@@ -1498,52 +1422,22 @@ public class TableTest
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
-        table.StartHand(
+        table.SetCurrentHand(
             handUid: handUid
         );
 
         // Assert
-        Assert.Equal(handUid, table.GetHandUid());
+        Assert.Equal(handUid, table.GetCurrentHandUid());
         Assert.True(table.IsHandInProgress());
 
         var events = table.PullEvents();
         Assert.Single(events);
-        var @event = Assert.IsType<HandIsStartedEvent>(events[0]);
+        var @event = Assert.IsType<CurrentHandIsSetEvent>(events[0]);
         Assert.Equal(handUid, @event.HandUid);
     }
 
     [Fact]
-    public void StartHand_ButtonIsNotRotated_ShouldThrowInvalidOperationException()
-    {
-        // Arrange
-        var table = CreateTable();
-        table.SitDown(
-            nickname: new Nickname("Alice"),
-            seat: new Seat(2),
-            stack: new Chips(1000)
-        );
-        table.SitDown(
-            nickname: new Nickname("Bobby"),
-            seat: new Seat(1),
-            stack: new Chips(1000)
-        );
-        table.PullEvents();
-
-        // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
-        {
-            table.StartHand(
-                handUid: new HandUid(Guid.NewGuid())
-            );
-        });
-
-        // Assert
-        Assert.Equal("The button must be rotated before starting a hand", exc.Message);
-        Assert.Empty(table.PullEvents());
-    }
-
-    [Fact]
-    public void StartHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
+    public void SetCurrentHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
@@ -1558,52 +1452,22 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.PullEvents();
 
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.StartHand(
-                handUid: new HandUid(Guid.NewGuid())
-            );
+            table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         });
 
         // Assert
-        Assert.Equal("The previous hand has not been finished yet", exc.Message);
+        Assert.Equal("The previous hand has not been cleared yet", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
     [Fact]
-    public void StartHand_NotEnoughPlayers_ShouldThrowInvalidOperationException()
-    {
-        // Arrange
-        var handUid = new HandUid(Guid.NewGuid());
-        var table = CreateTable();
-        table.SitDown(
-            nickname: new Nickname("Alice"),
-            seat: new Seat(2),
-            stack: new Chips(1000)
-        );
-        table.PullEvents();
-
-        // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
-        {
-            table.StartHand(
-                handUid: handUid
-            );
-        });
-
-        // Assert
-        Assert.Equal("Not enough players to start a hand", exc.Message);
-        Assert.Empty(table.PullEvents());
-    }
-
-    [Fact]
-    public void FinishHand_Valid_ShouldFinishHand()
+    public void ClearCurrentHand_Valid_ShouldClearCurrentHand()
     {
         // Arrange
         var handUid = new HandUid(Guid.NewGuid());
@@ -1619,13 +1483,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.StartHand(
+        table.SetCurrentHand(
             handUid: handUid
         );
         table.PullEvents();
 
         // Act
-        table.FinishHand(
+        table.ClearCurrentHand(
             handUid: handUid
         );
 
@@ -1634,12 +1498,12 @@ public class TableTest
 
         var events = table.PullEvents();
         Assert.Single(events);
-        var @event = Assert.IsType<HandIsFinishedEvent>(events[0]);
+        var @event = Assert.IsType<CurrentHandIsClearedEvent>(events[0]);
         Assert.Equal(handUid, @event.HandUid);
     }
 
     [Fact]
-    public void FinishHand_NotStarted_ShouldThrowInvalidOperationException()
+    public void ClearCurrentHand_NotStarted_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
@@ -1658,18 +1522,18 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.FinishHand(
+            table.ClearCurrentHand(
                 handUid: new HandUid(Guid.NewGuid())
             );
         });
 
         // Assert
-        Assert.Equal("The hand has not been started yet", exc.Message);
+        Assert.Equal("The current hand has not been set yet", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
     [Fact]
-    public void FinishHand_DifferentUid_ShouldThrowInvalidOperationException()
+    public void ClearCurrentHand_DifferentUid_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
@@ -1684,15 +1548,13 @@ public class TableTest
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.StartHand(
-            handUid: new HandUid(Guid.NewGuid())
-        );
+        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
         table.PullEvents();
 
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.FinishHand(
+            table.ClearCurrentHand(
                 handUid: new HandUid(Guid.NewGuid())
             );
         });

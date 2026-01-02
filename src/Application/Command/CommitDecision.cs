@@ -32,7 +32,7 @@ public class CommitDecisionHandler(
 
         var type = (DecisionType)Enum.Parse(typeof(DecisionType), command.Type);
         await handService.CommitDecisionAsync(
-            handUid: table.GetHandUid(),
+            handUid: table.GetCurrentHandUid(),
             nickname: command.Nickname,
             type: type,
             amount: command.Amount

@@ -17,7 +17,7 @@ public class Table
     public Seat? SmallBlindSeat { get; private set; }
     public Seat? BigBlindSeat { get; private set; }
     public Seat? ButtonSeat { get; private set; }
-    private HandUid? HandUid { get; set; }
+    private HandUid? CurrentHandUid { get; set; }
 
     private readonly Player?[] _players;
 
@@ -120,11 +120,11 @@ public class Table
                 case ButtonIsRotatedEvent:
                     table.RotateButton();
                     break;
-                case HandIsStartedEvent e:
-                    table.StartHand(e.HandUid);
+                case CurrentHandIsSetEvent e:
+                    table.SetCurrentHand(e.HandUid);
                     break;
-                case HandIsFinishedEvent e:
-                    table.FinishHand(e.HandUid);
+                case CurrentHandIsClearedEvent e:
+                    table.ClearCurrentHand(e.HandUid);
                     break;
 
                     // TODO: handle other events when they are added
@@ -265,26 +265,16 @@ public class Table
         AddEvent(@event);
     }
 
-    public void StartHand(HandUid handUid)
+    public void SetCurrentHand(HandUid handUid)
     {
         if (IsHandInProgress())
         {
-            throw new InvalidOperationException("The previous hand has not been finished yet");
+            throw new InvalidOperationException("The previous hand has not been cleared yet");
         }
 
-        if (!HasEnoughPlayersForHand())
-        {
-            throw new InvalidOperationException("Not enough players to start a hand");
-        }
+        CurrentHandUid = handUid;
 
-        if (ButtonSeat == null || BigBlindSeat == null)
-        {
-            throw new InvalidOperationException("The button must be rotated before starting a hand");
-        }
-
-        HandUid = handUid;
-
-        var @event = new HandIsStartedEvent
+        var @event = new CurrentHandIsSetEvent
         {
             HandUid = handUid,
             OccuredAt = DateTime.Now
@@ -292,21 +282,21 @@ public class Table
         AddEvent(@event);
     }
 
-    public void FinishHand(HandUid handUid)
+    public void ClearCurrentHand(HandUid handUid)
     {
         if (!IsHandInProgress())
         {
-            throw new InvalidOperationException("The hand has not been started yet");
+            throw new InvalidOperationException("The current hand has not been set yet");
         }
 
-        if (handUid != HandUid)
+        if (handUid != CurrentHandUid)
         {
             throw new InvalidOperationException("The hand does not match the current one");
         }
 
-        HandUid = null;
+        CurrentHandUid = null;
 
-        var @event = new HandIsFinishedEvent
+        var @event = new CurrentHandIsClearedEvent
         {
             HandUid = handUid,
             OccuredAt = DateTime.Now
@@ -314,19 +304,19 @@ public class Table
         AddEvent(@event);
     }
 
-    public HandUid GetHandUid()
+    public HandUid GetCurrentHandUid()
     {
         if (!IsHandInProgress())
         {
-            throw new InvalidOperationException("The hand has not been started yet");
+            throw new InvalidOperationException("The current hand has not been set yet");
         }
 
-        return (HandUid)HandUid!;
+        return (HandUid)CurrentHandUid!;
     }
 
     public bool IsHandInProgress()
     {
-        return HandUid is not null;
+        return CurrentHandUid is not null;
     }
 
     public bool HasEnoughPlayersForHand()
