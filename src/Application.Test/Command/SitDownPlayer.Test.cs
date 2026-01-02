@@ -1,7 +1,6 @@
 using Application.Command;
 using Application.Test.Event;
 using Application.Test.Repository;
-using Application.Test.Service.Hand;
 using Domain.Entity;
 using Domain.Event;
 using Domain.ValueObject;
@@ -11,12 +10,11 @@ namespace Application.Test.Command;
 public class SitDownPlayerTest
 {
     [Fact]
-    public async Task HandleAsync_1stPlayer_ShouldSitDownAndWait()
+    public async Task HandleAsync_Valid_ShouldSitDown()
     {
         // Arrange
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
-        var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
         await eventDispatcher.ClearDispatchedEvents(tableUid);
 
@@ -27,7 +25,7 @@ public class SitDownPlayerTest
             Seat = 2,
             Stack = 1000
         };
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher, handService);
+        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -50,53 +48,11 @@ public class SitDownPlayerTest
     }
 
     [Fact]
-    public async Task HandleAsync_2ndPlayer_ShouldSitDownAndStartHand()
-    {
-        // Arrange
-        var repository = new StubRepository();
-        var eventDispatcher = new StubEventDispatcher();
-        var handService = new StubHandService();
-        var tableUid = await CreateTableAsync(repository, eventDispatcher);
-        await SitDownPlayerAsync(
-            repository: repository,
-            eventDispatcher: eventDispatcher,
-            handService: handService,
-            tableUid: tableUid,
-            nickname: "Alice",
-            seat: 2,
-            stack: 1000
-        );
-
-        var command = new SitDownPlayerCommand
-        {
-            Uid = tableUid,
-            Nickname = "Bobby",
-            Seat = 4,
-            Stack = 1000
-        };
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher, handService);
-
-        // Act
-        var response = await handler.HandleAsync(command);
-
-        // Assert
-        Assert.Equal(command.Uid, response.Uid);
-        Assert.Equal(command.Nickname, response.Nickname);
-
-        var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
-        Assert.True(table.IsHandInProgress());
-        Assert.Equal(new Seat(2), table.ButtonSeat);
-        Assert.Equal(new Seat(2), table.SmallBlindSeat);
-        Assert.Equal(new Seat(4), table.BigBlindSeat);
-    }
-
-    [Fact]
     public async Task HandleAsync_NotExists_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
-        var handService = new StubHandService();
 
         var command = new SitDownPlayerCommand
         {
@@ -105,7 +61,7 @@ public class SitDownPlayerTest
             Seat = 2,
             Stack = 1000
         };
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher, handService);
+        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
 
         // Act
         var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -139,14 +95,13 @@ public class SitDownPlayerTest
     private async Task SitDownPlayerAsync(
         StubRepository repository,
         StubEventDispatcher eventDispatcher,
-        StubHandService handService,
         Guid tableUid,
         string nickname,
         int seat,
         int stack
     )
     {
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher, handService);
+        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
         var command = new SitDownPlayerCommand
         {
             Uid = tableUid,

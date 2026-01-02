@@ -1,8 +1,6 @@
 using Application.Event;
 using Application.Repository;
-using Application.Service.Hand;
 using Domain.Entity;
-using Domain.ValueObject;
 
 namespace Application.Command;
 
@@ -22,8 +20,7 @@ public record struct SitDownPlayerResponse : ICommandResponse
 
 public class SitDownPlayerHandler(
     IRepository repository,
-    IEventDispatcher eventDispatcher,
-    IHandService handService
+    IEventDispatcher eventDispatcher
 ) : ICommandHandler<SitDownPlayerCommand, SitDownPlayerResponse>
 {
     public async Task<SitDownPlayerResponse> HandleAsync(SitDownPlayerCommand command)
@@ -34,25 +31,6 @@ public class SitDownPlayerHandler(
         );
 
         table.SitDown(command.Nickname, command.Seat, command.Stack);
-
-        if (table.HasEnoughPlayersForHand() && !table.IsHandInProgress())
-        {
-            table.RotateButton();
-
-            var handUid = await handService.CreateAsync(
-                tableUid: table.Uid,
-                game: table.Game,
-                maxSeat: table.MaxSeat,
-                smallBlind: table.SmallBlind,
-                bigBlind: table.BigBlind,
-                smallBlindSeat: table.SmallBlindSeat,
-                bigBlindSeat: (Seat)table.BigBlindSeat!,
-                buttonSeat: (Seat)table.ButtonSeat!,
-                participants: table.ActivePlayers.Select(GetParticipant).ToList()
-            );
-
-            table.SetCurrentHand(handUid);
-        }
 
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
@@ -71,16 +49,6 @@ public class SitDownPlayerHandler(
         {
             Uid = table.Uid,
             Nickname = command.Nickname,
-        };
-    }
-
-    private HandParticipant GetParticipant(Player player)
-    {
-        return new HandParticipant
-        {
-            Nickname = player.Nickname,
-            Seat = player.Seat,
-            Stack = player.Stack
         };
     }
 }

@@ -1,7 +1,6 @@
 using Application.Command;
 using Application.Test.Event;
 using Application.Test.Repository;
-using Application.Test.Service.Hand;
 using Domain.Entity;
 using Domain.Event;
 using Domain.ValueObject;
@@ -103,8 +102,7 @@ public class StandUpPlayerTest
     {
         var handler = new SitDownPlayerHandler(
             repository: repository,
-            eventDispatcher: eventDispatcher,
-            handService: new StubHandService()
+            eventDispatcher: eventDispatcher
         );
         var command = new SitDownPlayerCommand
         {

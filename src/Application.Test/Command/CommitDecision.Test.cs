@@ -1,7 +1,10 @@
 using Application.Command;
+using Application.Service.Hand;
 using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Service.Hand;
+using Domain.Entity;
+using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
@@ -18,7 +21,6 @@ public class CommitDecisionTest
         await SitDownPlayerAsync(
             repository: repository,
             eventDispatcher: eventDispatcher,
-            handService: handService,
             tableUid: tableUid,
             nickname: "Alice",
             seat: 2,
@@ -27,12 +29,12 @@ public class CommitDecisionTest
         await SitDownPlayerAsync(
             repository: repository,
             eventDispatcher: eventDispatcher,
-            handService: handService,
             tableUid: tableUid,
             nickname: "Bobby",
             seat: 4,
             stack: 1000
         );
+        await StartHandAsync(repository, handService, tableUid);
 
         var command = new CommitDecisionCommand
         {
@@ -72,14 +74,13 @@ public class CommitDecisionTest
     private async Task SitDownPlayerAsync(
         StubRepository repository,
         StubEventDispatcher eventDispatcher,
-        StubHandService handService,
         Guid tableUid,
         string nickname,
         int seat,
         int stack
     )
     {
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher, handService);
+        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
         var command = new SitDownPlayerCommand
         {
             Uid = tableUid,
@@ -88,5 +89,42 @@ public class CommitDecisionTest
             Stack = stack
         };
         await handler.HandleAsync(command);
+    }
+
+    private async Task StartHandAsync(
+        StubRepository repository,
+        StubHandService handService,
+        Guid tableUid
+    )
+    {
+        var table = Table.FromEvents(tableUid, await repository.GetEventsAsync(tableUid));
+        table.RotateButton();
+
+        var handUid = await handService.CreateAsync(
+            tableUid: table.Uid,
+            game: table.Game,
+            maxSeat: table.MaxSeat,
+            smallBlind: table.SmallBlind,
+            bigBlind: table.BigBlind,
+            smallBlindSeat: table.SmallBlindSeat,
+            bigBlindSeat: (Seat)table.BigBlindSeat!,
+            buttonSeat: (Seat)table.ButtonSeat!,
+            participants: table.ActivePlayers.Select(GetParticipant).ToList()
+        );
+        table.SetCurrentHand(handUid);
+
+        await handService.StartAsync(handUid);
+
+        await repository.AddEventsAsync(tableUid, table.PullEvents());
+    }
+
+    private HandParticipant GetParticipant(Player player)
+    {
+        return new HandParticipant
+        {
+            Nickname = player.Nickname,
+            Seat = player.Seat,
+            Stack = player.Stack
+        };
     }
 }
