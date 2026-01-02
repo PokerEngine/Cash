@@ -14,7 +14,7 @@ public class PlayerStoodUpEventHandler(
         {
             TableUid = context.TableUid,
             Nickname = @event.Nickname,
-            OccuredAt = @event.OccuredAt
+            OccurredAt = @event.OccurredAt
         };
 
         await integrationEventPublisher.PublishAsync(integrationEvent, "cash.player-stood-up");

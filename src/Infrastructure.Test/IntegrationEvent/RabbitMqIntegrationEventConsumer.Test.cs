@@ -34,14 +34,14 @@ public class RabbitMqIntegrationEventConsumerTest(
             TableUid = Guid.NewGuid(),
             Name = "Test Integration Event Consumer",
             Number = 500100,
-            OccuredAt = GetNow()
+            OccurredAt = GetNow()
         };
 
         var body = JsonSerializer.SerializeToUtf8Bytes(
             integrationEvent,
             new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
-        var timestamp = new DateTimeOffset(DateTime.SpecifyKind(integrationEvent.OccuredAt, DateTimeKind.Utc));
+        var timestamp = new DateTimeOffset(DateTime.SpecifyKind(integrationEvent.OccurredAt, DateTimeKind.Utc));
         var props = new BasicProperties
         {
             ContentType = "application/json",
@@ -190,7 +190,7 @@ internal record TestConsumedIntegrationEvent : IIntegrationEvent
     public Guid TableUid { get; init; }
     public required string Name { get; init; }
     public required int Number { get; init; }
-    public required DateTime OccuredAt { get; init; }
+    public required DateTime OccurredAt { get; init; }
 }
 
 internal class TestIntegrationEventDispatcher : IIntegrationEventDispatcher

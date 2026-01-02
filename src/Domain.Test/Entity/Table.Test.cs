@@ -65,78 +65,78 @@ public class TableTest
                 SmallBlind = new Chips(5),
                 BigBlind = new Chips(10),
                 ChipCost = new Money(1, Currency.Usd),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatDownEvent
             {
                 Nickname = new Nickname("Alice"),
                 Seat = new Seat(2),
                 Stack = new Chips(1000),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatDownEvent
             {
                 Nickname = new Nickname("Bobby"),
                 Seat = new Seat(4),
                 Stack = new Chips(1000),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new ButtonIsRotatedEvent
             {
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new CurrentHandIsSetEvent
             {
                 HandUid = handUid1,
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatDownEvent
             {
                 Nickname = new Nickname("Charlie"),
                 Seat = new Seat(3),
                 Stack = new Chips(1000),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatOutEvent
             {
                 Nickname = new Nickname("Charlie"),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatDownEvent
             {
                 Nickname = new Nickname("Diana"),
                 Seat = new Seat(5),
                 Stack = new Chips(1000),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatOutEvent
             {
                 Nickname = new Nickname("Diana"),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new CurrentHandIsClearedEvent
             {
                 HandUid = handUid1,
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new ButtonIsRotatedEvent
             {
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new CurrentHandIsSetEvent
             {
                 HandUid = handUid2,
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerSatInEvent
             {
                 Nickname = new Nickname("Diana"),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             },
             new PlayerStoodUpEvent
             {
                 Nickname = new Nickname("Bobby"),
-                OccuredAt = DateTime.Now
+                OccurredAt = DateTime.Now
             }
         };
 

@@ -6,7 +6,7 @@ public record struct HandIsFinishedIntegrationEvent : IIntegrationEvent
 {
     public required Guid TableUid { get; init; }
     public required Guid HandUid { get; init; }
-    public required DateTime OccuredAt { get; init; }
+    public required DateTime OccurredAt { get; init; }
 }
 
 public class HandIsFinishedHandler(

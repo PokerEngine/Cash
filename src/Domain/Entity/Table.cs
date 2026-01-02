@@ -75,7 +75,7 @@ public class Table
             BigBlind = bigBlind,
             ChipCost = chipCost,
             MaxSeat = maxSeat,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         table.AddEvent(@event);
 
@@ -170,7 +170,7 @@ public class Table
             Nickname = nickname,
             Seat = seat,
             Stack = stack,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
@@ -188,7 +188,7 @@ public class Table
         var @event = new PlayerStoodUpEvent
         {
             Nickname = nickname,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
@@ -206,7 +206,7 @@ public class Table
         var @event = new PlayerSatOutEvent
         {
             Nickname = nickname,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
@@ -227,7 +227,7 @@ public class Table
         var @event = new PlayerSatInEvent
         {
             Nickname = nickname,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
@@ -260,7 +260,7 @@ public class Table
 
         var @event = new ButtonIsRotatedEvent
         {
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
@@ -277,7 +277,7 @@ public class Table
         var @event = new CurrentHandIsSetEvent
         {
             HandUid = handUid,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
@@ -299,7 +299,7 @@ public class Table
         var @event = new CurrentHandIsClearedEvent
         {
             HandUid = handUid,
-            OccuredAt = DateTime.Now
+            OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }

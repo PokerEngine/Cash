@@ -9,5 +9,5 @@ public record struct TableIsCreatedIntegrationEvent : IIntegrationEvent
     public required int BigBlind { get; init; }
     public required decimal ChipCostAmount { get; init; }
     public required string ChipCostCurrency { get; init; }
-    public required DateTime OccuredAt { get; init; }
+    public required DateTime OccurredAt { get; init; }
 }

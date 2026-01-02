@@ -16,7 +16,7 @@ public class PlayerSatDownEventHandler(
             Nickname = @event.Nickname,
             Seat = @event.Seat,
             Stack = @event.Stack,
-            OccuredAt = @event.OccuredAt
+            OccurredAt = @event.OccurredAt
         };
 
         await integrationEventPublisher.PublishAsync(integrationEvent, "cash.player-sat-down");

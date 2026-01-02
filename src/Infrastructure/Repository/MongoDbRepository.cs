@@ -61,7 +61,7 @@ public class MongoDbRepository : IRepository
         {
             Type = MongoDbEventTypeResolver.GetName(e),
             TableUid = tableUid,
-            OccurredAt = e.OccuredAt,
+            OccurredAt = e.OccurredAt,
             Data = e.ToBsonDocument(e.GetType())
         });
 

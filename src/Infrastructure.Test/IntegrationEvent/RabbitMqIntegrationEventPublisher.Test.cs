@@ -33,7 +33,7 @@ public class RabbitMqIntegrationEventPublisherTest(
             TableUid = Guid.NewGuid(),
             Name = "Test Integration Event Publisher",
             Number = 100500,
-            OccuredAt = GetNow()
+            OccurredAt = GetNow()
         };
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -76,7 +76,7 @@ public class RabbitMqIntegrationEventPublisherTest(
         Assert.Equal("application/json", received.BasicProperties.ContentType);
         Assert.Equal(nameof(TestPublishedIntegrationEvent), received.BasicProperties.Type);
         Assert.Equal(
-            integrationEvent.OccuredAt,
+            integrationEvent.OccurredAt,
             DateTimeOffset.FromUnixTimeSeconds(received.BasicProperties.Timestamp.UnixTime).UtcDateTime
         );
     }
@@ -165,5 +165,5 @@ internal record TestPublishedIntegrationEvent : IIntegrationEvent
     public Guid TableUid { get; init; }
     public required string Name { get; init; }
     public required int Number { get; init; }
-    public required DateTime OccuredAt { get; init; }
+    public required DateTime OccurredAt { get; init; }
 }

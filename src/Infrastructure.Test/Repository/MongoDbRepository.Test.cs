@@ -25,7 +25,7 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
             Chips = new Chips(1000),
             Money = new Money(12.34m, Currency.Usd),
             HandUid = Guid.NewGuid(),
-            OccuredAt = GetNow()
+            OccurredAt = GetNow()
         };
         await repository.AddEventsAsync(tableUid, [@event]);
 
@@ -53,7 +53,7 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
             Chips = new Chips(1000),
             Money = new Money(12.34m, Currency.Usd),
             HandUid = Guid.NewGuid(),
-            OccuredAt = GetNow()
+            OccurredAt = GetNow()
         };
         await repository.AddEventsAsync(tableUid, [@event]);
 
@@ -98,5 +98,5 @@ internal record TestEvent : IEvent
     public required Chips Chips { get; init; }
     public required Money Money { get; init; }
     public required HandUid HandUid { get; init; }
-    public required DateTime OccuredAt { get; init; }
+    public required DateTime OccurredAt { get; init; }
 }

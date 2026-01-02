@@ -19,7 +19,7 @@ public class TableIsCreatedEventHandler(
             BigBlind = @event.BigBlind,
             ChipCostAmount = @event.ChipCost.Amount,
             ChipCostCurrency = @event.ChipCost.Currency.ToString(),
-            OccuredAt = @event.OccuredAt
+            OccurredAt = @event.OccurredAt
         };
 
         await integrationEventPublisher.PublishAsync(integrationEvent, "cash.table-is-created");

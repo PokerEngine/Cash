@@ -8,7 +8,7 @@ public record struct PlayerSatDownIntegrationEvent : IIntegrationEvent
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
     public required int Stack { get; init; }
-    public required DateTime OccuredAt { get; init; }
+    public required DateTime OccurredAt { get; init; }
 }
 
 public class PlayerSatDownHandler(
