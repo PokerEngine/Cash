@@ -21,8 +21,10 @@ public class RabbitMqIntegrationEventConsumerTest(
     private readonly string QueueName = $"test.integration-event-consumer-queue.{Guid.NewGuid()}";
     private const string RoutingKey = "test.integration-event-consumer-routing-key";
 
-    [Fact]
-    public async Task ExecuteAsync_WhenDispatchedSuccessfully_ShouldDequeue()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ExecuteAsync_WhenDispatchedSuccessfully_ShouldDequeue(bool withCorrelationId)
     {
         // Arrange
         var dispatcher = new TestIntegrationEventDispatcher();
@@ -30,10 +32,20 @@ public class RabbitMqIntegrationEventConsumerTest(
 
         var integrationEvent = new TestConsumedIntegrationEvent
         {
+            Uid = Guid.NewGuid(),
+            CorrelationUid = withCorrelationId ? Guid.NewGuid() : null,
+            OccurredAt = GetNow(),
             TableUid = Guid.NewGuid(),
             Name = "Test Integration Event Consumer",
             Number = 500100,
-            OccurredAt = GetNow()
+            Participants = [
+                new()
+                {
+                    Nickname = "Nickname",
+                    Seat = 1,
+                    Stack = 1000
+                }
+            ]
         };
 
         var body = JsonSerializer.SerializeToUtf8Bytes(
@@ -44,7 +56,10 @@ public class RabbitMqIntegrationEventConsumerTest(
         var props = new BasicProperties
         {
             ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent,
             Type = nameof(TestConsumedIntegrationEvent),
+            MessageId = integrationEvent.Uid.ToString(),
+            CorrelationId = integrationEvent.CorrelationUid.ToString(),
             Timestamp = new AmqpTimestamp(timestamp.ToUnixTimeSeconds())
         };
 
@@ -207,10 +222,52 @@ public class RabbitMqIntegrationEventConsumerTest(
 
 internal record TestConsumedIntegrationEvent : IIntegrationEvent
 {
+    public required Guid Uid { get; init; }
+    public Guid? CorrelationUid { get; init; }
+    public required DateTime OccurredAt { get; init; }
+
     public Guid TableUid { get; init; }
+
     public required string Name { get; init; }
     public required int Number { get; init; }
-    public required DateTime OccurredAt { get; init; }
+    public required List<IntegrationEventParticipant> Participants { get; init; }
+
+    public virtual bool Equals(TestConsumedIntegrationEvent? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        return Uid.Equals(other.Uid)
+               && CorrelationUid.Equals(other.CorrelationUid)
+               && OccurredAt.Equals(other.OccurredAt)
+               && TableUid.Equals(other.TableUid)
+               && Name.Equals(other.Name)
+               && Number.Equals(other.Number)
+               && Participants.SequenceEqual(other.Participants);
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+
+        hash.Add(Uid);
+        hash.Add(CorrelationUid);
+        hash.Add(OccurredAt);
+
+        hash.Add(TableUid);
+
+        hash.Add(Name);
+        hash.Add(Number);
+
+        foreach (var participant in Participants)
+        {
+            hash.Add(participant);
+        }
+
+        return hash.ToHashCode();
+    }
 }
 
 internal class TestIntegrationEventDispatcher : IIntegrationEventDispatcher

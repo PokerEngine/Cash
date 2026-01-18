@@ -1,6 +1,5 @@
 using Application.IntegrationEvent;
 using Domain.Event;
-using Domain.ValueObject;
 
 namespace Application.Event;
 
@@ -12,6 +11,7 @@ public class TableIsCreatedEventHandler(
     {
         var integrationEvent = new TableIsCreatedIntegrationEvent
         {
+            Uid = Guid.NewGuid(),
             TableUid = context.TableUid,
             Game = @event.Game.ToString(),
             MaxSeat = @event.MaxSeat,

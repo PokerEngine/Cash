@@ -12,7 +12,12 @@ public record struct IntegrationEventParticipant
 
 public record struct HandIsCreatedIntegrationEvent : IIntegrationEvent
 {
+    public required Guid Uid { init; get; }
+    public Guid? CorrelationUid { init; get; }
+    public required DateTime OccurredAt { get; init; }
+
     public required Guid TableUid { get; init; }
+
     public required Guid HandUid { get; init; }
     public required string Game { get; init; }
     public required int SmallBlind { get; init; }
@@ -22,7 +27,6 @@ public record struct HandIsCreatedIntegrationEvent : IIntegrationEvent
     public required int BigBlindSeat { get; init; }
     public required int ButtonSeat { get; init; }
     public required List<IntegrationEventParticipant> Participants { get; init; }
-    public required DateTime OccurredAt { get; init; }
 }
 
 public class HandIsCreatedHandler(

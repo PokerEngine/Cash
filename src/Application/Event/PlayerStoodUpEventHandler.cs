@@ -1,6 +1,5 @@
 using Application.IntegrationEvent;
 using Domain.Event;
-using Domain.ValueObject;
 
 namespace Application.Event;
 
@@ -12,6 +11,7 @@ public class PlayerStoodUpEventHandler(
     {
         var integrationEvent = new PlayerStoodUpIntegrationEvent
         {
+            Uid = Guid.NewGuid(),
             TableUid = context.TableUid,
             Nickname = @event.Nickname,
             OccurredAt = @event.OccurredAt

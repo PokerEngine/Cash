@@ -60,6 +60,8 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
             routingKey
         );
 
+        var messageId = integrationEvent.Uid.ToString();
+        var correlationId = integrationEvent.CorrelationUid.ToString();
         var body = Encoding.UTF8.GetBytes(Serialize(integrationEvent));
         var type = RabbitMqIntegrationEventTypeResolver.GetName(integrationEvent);
         var timestamp = new DateTimeOffset(DateTime.SpecifyKind(integrationEvent.OccurredAt, DateTimeKind.Utc));
@@ -69,6 +71,8 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
             ContentType = "application/json",
             DeliveryMode = DeliveryModes.Persistent,
             Type = type,
+            MessageId = messageId,
+            CorrelationId = correlationId,
             Timestamp = new AmqpTimestamp(timestamp.ToUnixTimeSeconds())
         };
 

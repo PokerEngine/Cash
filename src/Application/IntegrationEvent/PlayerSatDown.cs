@@ -8,11 +8,15 @@ namespace Application.IntegrationEvent;
 
 public record struct PlayerSatDownIntegrationEvent : IIntegrationEvent
 {
+    public required Guid Uid { init; get; }
+    public Guid? CorrelationUid { init; get; }
+    public required DateTime OccurredAt { get; init; }
+
     public required Guid TableUid { get; init; }
+
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
     public required int Stack { get; init; }
-    public required DateTime OccurredAt { get; init; }
 }
 
 public class PlayerSatDownHandler(

@@ -22,18 +22,30 @@ public class RabbitMqIntegrationEventPublisherTest(
     private const string QueueName = "test.integration-event-publisher-queue";
     private const string RoutingKey = "test.integration-event-publisher-routing-key";
 
-    [Fact]
-    public async Task PublishAsync_WhenConnected_ShouldPublishIntegrationEvent()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task PublishAsync_WhenConnected_ShouldPublishIntegrationEvent(bool withCorrelationId)
     {
         // Arrange
         var publisher = CreateIntegrationEventPublisher();
 
         var integrationEvent = new TestPublishedIntegrationEvent
         {
+            Uid = Guid.NewGuid(),
+            CorrelationUid = withCorrelationId ? Guid.NewGuid() : null,
+            OccurredAt = GetNow(),
             TableUid = Guid.NewGuid(),
             Name = "Test Integration Event Publisher",
             Number = 100500,
-            OccurredAt = GetNow()
+            Participants = [
+                new()
+                {
+                    Nickname = "Nickname",
+                    Seat = 1,
+                    Stack = 1000
+                }
+            ]
         };
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -162,8 +174,50 @@ public class RabbitMqIntegrationEventPublisherTest(
 
 internal record TestPublishedIntegrationEvent : IIntegrationEvent
 {
+    public required Guid Uid { get; init; }
+    public Guid? CorrelationUid { get; init; }
+    public required DateTime OccurredAt { get; init; }
+
     public Guid TableUid { get; init; }
+
     public required string Name { get; init; }
     public required int Number { get; init; }
-    public required DateTime OccurredAt { get; init; }
+    public required List<IntegrationEventParticipant> Participants { get; init; }
+
+    public virtual bool Equals(TestPublishedIntegrationEvent? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        return Uid.Equals(other.Uid)
+               && CorrelationUid.Equals(other.CorrelationUid)
+               && OccurredAt.Equals(other.OccurredAt)
+               && TableUid.Equals(other.TableUid)
+               && Name.Equals(other.Name)
+               && Number.Equals(other.Number)
+               && Participants.SequenceEqual(other.Participants);
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+
+        hash.Add(Uid);
+        hash.Add(CorrelationUid);
+        hash.Add(OccurredAt);
+
+        hash.Add(TableUid);
+
+        hash.Add(Name);
+        hash.Add(Number);
+
+        foreach (var participant in Participants)
+        {
+            hash.Add(participant);
+        }
+
+        return hash.ToHashCode();
+    }
 }
