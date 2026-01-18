@@ -34,28 +34,25 @@ public class StubHandService : IHandService
         CancellationToken cancellationToken = default
     )
     {
+        var handUid = new HandUid(Guid.NewGuid());
         var state = new HandState
         {
-            HandUid = new HandUid(Guid.NewGuid()),
-            Players = participants.Select(p => new HandStatePlayer
+            Table = new HandStateTable
             {
-                Nickname = p.Nickname,
-                Seat = p.Seat,
-                Stack = p.Stack,
-                HoleCards = [],
-                IsFolded = false
-            }).ToList(),
-            BoardCards = [],
+                Players = participants.Select(CreatePlayer).ToList(),
+                BoardCards = ""
+            },
             Pot = new HandStatePot
             {
-                DeadAmount = new Chips(0),
-                Contributions = []
-            },
-            Bets = []
+                Ante = 0,
+                CommittedBets = [],
+                UncommittedBets = [],
+                Awards = []
+            }
         };
-        _mapping.TryAdd(state.HandUid, state);
+        _mapping.TryAdd(handUid, state);
 
-        return Task.FromResult(state.HandUid);
+        return Task.FromResult(handUid);
     }
 
     public Task StartAsync(
@@ -75,5 +72,17 @@ public class StubHandService : IHandService
     )
     {
         return Task.CompletedTask;
+    }
+
+    private HandStatePlayer CreatePlayer(HandParticipant participant)
+    {
+        return new HandStatePlayer
+        {
+            Nickname = participant.Nickname,
+            Seat = participant.Seat,
+            Stack = participant.Stack,
+            HoleCards = "",
+            IsFolded = false
+        };
     }
 }

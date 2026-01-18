@@ -25,30 +25,8 @@ public class RemoteHandService(
 
         return new HandState
         {
-            HandUid = response.Uid,
-            Players = response.State.Players.Select(p => new HandStatePlayer
-            {
-                Nickname = p.Nickname,
-                Seat = p.Seat,
-                Stack = p.Stack,
-                HoleCards = ParseCards(p.HoleCards),
-                IsFolded = false
-            }).ToList(),
-            BoardCards = ParseCards(response.State.BoardCards),
-            Pot = new HandStatePot
-            {
-                DeadAmount = new Chips(0),
-                Contributions = response.State.PreviousSidePot.Select(kv => new HandStateBet
-                {
-                    Nickname = kv.Key,
-                    Amount = kv.Value
-                }).ToList(),
-            },
-            Bets = response.State.CurrentSidePot.Select(kv => new HandStateBet
-            {
-                Nickname = kv.Key,
-                Amount = kv.Value
-            }).ToList(),
+            Table = DeserializeTable(response.State.Table),
+            Pot = DeserializePot(response.State.Pot)
         };
     }
 
@@ -77,12 +55,7 @@ public class RemoteHandService(
             SmallBlindSeat = smallBlindSeat,
             BigBlindSeat = bigBlindSeat,
             ButtonSeat = buttonSeat,
-            Participants = participants.Select(p => new CreateHandParticipantRequest
-            {
-                Nickname = p.Nickname,
-                Seat = p.Seat,
-                Stack = p.Stack
-            }).ToList()
+            Participants = participants.Select(SerializeParticipant).ToList()
         };
         var response = await PostAsync<CreateHandRequest, CreateHandResponse>(url, request, cancellationToken);
 
@@ -160,14 +133,64 @@ public class RemoteHandService(
         return JsonSerializer.Deserialize<TResponse>(responseJson, JsonSerializerOptions)!;
     }
 
-    private List<HandStateCard> ParseCards(string cards)
+    private CreateHandRequestParticipant SerializeParticipant(HandParticipant participant)
     {
-        var result = new List<HandStateCard>();
-        for (int i = 0; i < cards.Length; i += 2)
+        return new CreateHandRequestParticipant
         {
-            result.Add(new HandStateCard(cards.Substring(i, 2)));
-        }
-        return result;
+            Nickname = participant.Nickname,
+            Seat = participant.Seat,
+            Stack = participant.Stack
+        };
+    }
+
+    private HandStateTable DeserializeTable(GetHandResponseStateTable table)
+    {
+        return new HandStateTable
+        {
+            Players = table.Players.Select(DeserializePlayer).ToList(),
+            BoardCards = table.BoardCards
+        };
+    }
+
+    private HandStatePlayer DeserializePlayer(GetHandResponseStatePlayer player)
+    {
+        return new HandStatePlayer
+        {
+            Nickname = player.Nickname,
+            Seat = player.Seat,
+            Stack = player.Stack,
+            HoleCards = player.HoleCards,
+            IsFolded = player.IsFolded
+        };
+    }
+
+    private HandStatePot DeserializePot(GetHandResponseStatePot pot)
+    {
+        return new HandStatePot
+        {
+            Ante = pot.Ante,
+            CommittedBets = pot.CommittedBets.Select(DeserializeBet).ToList(),
+            UncommittedBets = pot.UncommittedBets.Select(DeserializeBet).ToList(),
+            Awards = pot.Awards.Select(DeserializeAward).ToList()
+        };
+    }
+
+    private HandStateBet DeserializeBet(GetHandResponseStateBet bet)
+    {
+        return new HandStateBet
+        {
+            Nickname = bet.Nickname,
+            Amount = bet.Amount
+        };
+    }
+
+    private HandStateAward DeserializeAward(GetHandResponseStateAward award)
+    {
+        return new HandStateAward
+        {
+            Nicknames = award.Nicknames.Select(n => new Nickname(n)).ToList(),
+            Amount = award.Amount
+        };
     }
 }
 
@@ -188,24 +211,48 @@ internal sealed record GetHandResponse
     public required int SmallBlindSeat { get; init; }
     public required int BigBlindSeat { get; init; }
     public required int ButtonSeat { get; init; }
-    public required GetHandStateResponse State { get; init; }
+    public required GetHandResponseState State { get; init; }
 }
 
-internal sealed record GetHandStateResponse
+internal sealed record GetHandResponseState
 {
-    public required IReadOnlyList<GetHandStatePlayerResponse> Players { get; init; }
-    public required string BoardCards { get; init; }
-    public required IReadOnlyDictionary<string, int> PreviousSidePot { get; init; }
-    public required IReadOnlyDictionary<string, int> CurrentSidePot { get; init; }
+    public required GetHandResponseStateTable Table { get; init; }
+    public required GetHandResponseStatePot Pot { get; init; }
 }
 
-internal sealed record GetHandStatePlayerResponse
+internal sealed record GetHandResponseStateTable
+{
+    public required List<GetHandResponseStatePlayer> Players { get; init; }
+    public required string BoardCards { get; init; }
+}
+
+internal sealed record GetHandResponseStatePlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
     public required int Stack { get; init; }
     public required string HoleCards { get; init; }
     public required bool IsFolded { get; init; }
+}
+
+internal sealed record GetHandResponseStatePot
+{
+    public required int Ante { get; init; }
+    public required List<GetHandResponseStateBet> CommittedBets { get; init; }
+    public required List<GetHandResponseStateBet> UncommittedBets { get; init; }
+    public required List<GetHandResponseStateAward> Awards { get; init; }
+}
+
+internal sealed record GetHandResponseStateBet
+{
+    public required string Nickname { get; init; }
+    public required int Amount { get; init; }
+}
+
+internal sealed record GetHandResponseStateAward
+{
+    public required List<string> Nicknames { get; init; }
+    public required int Amount { get; init; }
 }
 
 internal sealed record CreateHandRequest
@@ -219,10 +266,10 @@ internal sealed record CreateHandRequest
     public required int? SmallBlindSeat { get; init; }
     public required int BigBlindSeat { get; init; }
     public required int ButtonSeat { get; init; }
-    public required IReadOnlyList<CreateHandParticipantRequest> Participants { get; init; }
+    public required List<CreateHandRequestParticipant> Participants { get; init; }
 }
 
-internal sealed record CreateHandParticipantRequest
+internal sealed record CreateHandRequestParticipant
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }

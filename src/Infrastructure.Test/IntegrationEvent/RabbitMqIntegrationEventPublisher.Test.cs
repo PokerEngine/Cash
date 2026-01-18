@@ -36,7 +36,7 @@ public class RabbitMqIntegrationEventPublisherTest(
             CorrelationUid = withCorrelationId ? Guid.NewGuid() : null,
             OccurredAt = GetNow(),
             TableUid = Guid.NewGuid(),
-            Name = "Test Integration Event Publisher",
+            Name = "Test Published Integration Event",
             Number = 100500,
             Participants = [
                 new()
@@ -178,7 +178,7 @@ internal record TestPublishedIntegrationEvent : IIntegrationEvent
     public Guid? CorrelationUid { get; init; }
     public required DateTime OccurredAt { get; init; }
 
-    public Guid TableUid { get; init; }
+    public required Guid TableUid { get; init; }
 
     public required string Name { get; init; }
     public required int Number { get; init; }

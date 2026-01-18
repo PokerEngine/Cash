@@ -45,37 +45,42 @@ public record struct HandParticipant
 
 public record struct HandState
 {
-    public required HandUid HandUid { get; init; }
-    public required IReadOnlyList<HandStatePlayer> Players { get; init; }
-    public required IReadOnlyList<HandStateCard> BoardCards { get; init; }
+    public required HandStateTable Table { get; init; }
     public required HandStatePot Pot { get; init; }
-    public required IReadOnlyList<HandStateBet> Bets { get; init; }
 }
 
-public record struct HandStatePlayer
+public readonly struct HandStateTable
+{
+    public required List<HandStatePlayer> Players { get; init; }
+    public required string BoardCards { get; init; }
+}
+
+public readonly struct HandStatePlayer
 {
     public required Nickname Nickname { get; init; }
     public required Seat Seat { get; init; }
     public required Chips Stack { get; init; }
-    public required IReadOnlyList<HandStateCard> HoleCards { get; init; }
+    public required string HoleCards { get; init; }
     public required bool IsFolded { get; init; }
 }
 
-public record struct HandStateCard(string Value)
+public readonly struct HandStatePot
 {
-    public static implicit operator HandStateCard(string value) => new(value);
-    public static implicit operator string(HandStateCard card) => card.ToString();
+    public required Chips Ante { get; init; }
+    public required List<HandStateBet> CommittedBets { get; init; }
+    public required List<HandStateBet> UncommittedBets { get; init; }
+    public required List<HandStateAward> Awards { get; init; }
 }
 
-public record struct HandStatePot
-{
-    public required Chips DeadAmount { get; init; }
-    public required IReadOnlyList<HandStateBet> Contributions { get; init; }
-}
-
-public record struct HandStateBet
+public readonly struct HandStateBet
 {
     public required Nickname Nickname { get; init; }
+    public required Chips Amount { get; init; }
+}
+
+public readonly struct HandStateAward
+{
+    public required List<Nickname> Nicknames { get; init; }
     public required Chips Amount { get; init; }
 }
 
@@ -83,6 +88,6 @@ public enum DecisionType
 {
     Fold,
     Check,
-    CallTo,
+    Call,
     RaiseTo
 }
