@@ -35,7 +35,7 @@ WEBSOCKET {{Infrastructure_HostWsAddress}}/ws/table/{{tableUid}}/events/bobby
 %}
 
 ### Sit down Alice at the table
-PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/alice
+POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/alice
 Accept: application/json
 Content-Type: application/json
 
@@ -45,7 +45,7 @@ Content-Type: application/json
 }
 
 ### Sit down Bobby at the table
-PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/bobby
+POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/bobby
 Accept: application/json
 Content-Type: application/json
 
@@ -55,14 +55,14 @@ Content-Type: application/json
 }
 
 ### Stand up Alice from the table
-PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/alice
+POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/alice
 Accept: application/json
 Content-Type: application/json
 
 {}
 
 ### Stand up Bobby from the table
-PUT {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/bobby
+POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/bobby
 Accept: application/json
 Content-Type: application/json
 

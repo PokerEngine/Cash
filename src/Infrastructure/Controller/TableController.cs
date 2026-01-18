@@ -33,7 +33,7 @@ public class TableController(
         return CreatedAtAction(nameof(GetTableByUid), new { uid = response.Uid }, response);
     }
 
-    [HttpPut("{uid:guid}/sit-down/{nickname}")]
+    [HttpPost("{uid:guid}/sit-down/{nickname}")]
     [ProducesResponseType(typeof(SitDownPlayerResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -52,7 +52,7 @@ public class TableController(
         return Ok(response);
     }
 
-    [HttpPut("{uid:guid}/stand-up/{nickname}")]
+    [HttpPost("{uid:guid}/stand-up/{nickname}")]
     [ProducesResponseType(typeof(StandUpPlayerResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
