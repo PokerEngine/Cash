@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public record struct DecisionIsCommittedIntegrationEvent : IIntegrationEvent
+public struct BlindIsPostedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -14,16 +14,15 @@ public record struct DecisionIsCommittedIntegrationEvent : IIntegrationEvent
 
     public required Guid HandUid { get; init; }
     public required string Nickname { get; init; }
-    public required string DecisionType { get; init; }
-    public required int DecisionAmount { get; init; }
+    public required int Amount { get; init; }
 }
 
-public class DecisionIsCommittedHandler(
+public class BlindIsPostedHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository
-) : IIntegrationEventHandler<DecisionIsCommittedIntegrationEvent>
+) : IIntegrationEventHandler<BlindIsPostedIntegrationEvent>
 {
-    public async Task HandleAsync(DecisionIsCommittedIntegrationEvent integrationEvent)
+    public async Task HandleAsync(BlindIsPostedIntegrationEvent integrationEvent)
     {
         var events = await repository.GetEventsAsync(integrationEvent.TableUid);
         var table = Table.FromEvents(integrationEvent.TableUid, events);

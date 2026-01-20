@@ -1,5 +1,4 @@
 using Application.Connection;
-using Application.Repository;
 
 namespace Application.IntegrationEvent;
 

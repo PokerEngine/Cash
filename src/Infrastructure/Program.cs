@@ -75,7 +75,15 @@ public static class Bootstrapper
         RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
         RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<BlindIsPostedIntegrationEvent, BlindIsPostedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HoleCardsAreDealtIntegrationEvent, HoleCardsAreDealtHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HoleCardsAreShownIntegrationEvent, HoleCardsAreShownHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HoleCardsAreMuckedIntegrationEvent, HoleCardsAreMuckedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<BoardCardsAreDealtIntegrationEvent, BoardCardsAreDealtHandler>(builder.Services);
+        RegisterIntegrationEventHandler<DecisionIsRequestedIntegrationEvent, DecisionIsRequestedHandler>(builder.Services);
         RegisterIntegrationEventHandler<DecisionIsCommittedIntegrationEvent, DecisionIsCommittedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<RefundIsCommittedIntegrationEvent, RefundIsCommittedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<AwardIsCommittedIntegrationEvent, AwardIsCommittedHandler>(builder.Services);
         builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
 
         builder.Services.Configure<RabbitMqConnectionOptions>(

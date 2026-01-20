@@ -32,11 +32,8 @@ public class PlayerSatDownHandler(
             integrationEvent: integrationEvent
         );
 
-        var table = Table.FromEvents(
-            uid: integrationEvent.TableUid,
-            events: await repository.GetEventsAsync(integrationEvent.TableUid)
-        );
-
+        var events = await repository.GetEventsAsync(integrationEvent.TableUid);
+        var table = Table.FromEvents(integrationEvent.TableUid, events);
         if (table.HasEnoughPlayersForHand() && !table.IsHandInProgress())
         {
             await StartHandAsync(table);
@@ -45,26 +42,23 @@ public class PlayerSatDownHandler(
 
     private async Task StartHandAsync(Table table)
     {
-        if (table.HasEnoughPlayersForHand() && !table.IsHandInProgress())
-        {
-            table.RotateButton();
+        table.RotateButton();
 
-            var handUid = await handService.CreateAsync(
-                tableUid: table.Uid,
-                game: table.Game,
-                maxSeat: table.MaxSeat,
-                smallBlind: table.SmallBlind,
-                bigBlind: table.BigBlind,
-                smallBlindSeat: table.SmallBlindSeat,
-                bigBlindSeat: (Seat)table.BigBlindSeat!,
-                buttonSeat: (Seat)table.ButtonSeat!,
-                participants: table.ActivePlayers.Select(GetParticipant).ToList()
-            );
+        var handUid = await handService.CreateAsync(
+            tableUid: table.Uid,
+            game: table.Game,
+            maxSeat: table.MaxSeat,
+            smallBlind: table.SmallBlind,
+            bigBlind: table.BigBlind,
+            smallBlindSeat: table.SmallBlindSeat,
+            bigBlindSeat: (Seat)table.BigBlindSeat!,
+            buttonSeat: (Seat)table.ButtonSeat!,
+            participants: table.ActivePlayers.Select(GetParticipant).ToList()
+        );
 
-            table.SetCurrentHand(handUid);
+        table.SetCurrentHand(handUid);
 
-            await handService.StartAsync(handUid);
-        }
+        await handService.StartAsync(handUid);
     }
 
     private HandParticipant GetParticipant(Player player)
