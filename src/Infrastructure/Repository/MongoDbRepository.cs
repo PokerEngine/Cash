@@ -57,6 +57,11 @@ public class MongoDbRepository : IRepository
 
     public async Task AddEventsAsync(TableUid tableUid, List<IEvent> events)
     {
+        if (events.Count == 0)
+        {
+            return;
+        }
+
         var documents = events.Select(e => new EventDocument
         {
             Type = MongoDbEventTypeResolver.GetName(e),

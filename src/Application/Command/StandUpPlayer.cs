@@ -4,13 +4,13 @@ using Domain.Entity;
 
 namespace Application.Command;
 
-public record struct StandUpPlayerCommand : ICommand
+public record StandUpPlayerCommand : ICommand
 {
     public required Guid Uid { get; init; }
     public required string Nickname { get; init; }
 }
 
-public record struct StandUpPlayerResponse : ICommandResponse
+public record StandUpPlayerResponse : ICommandResponse
 {
     public required Guid Uid { get; init; }
     public required string Nickname { get; init; }

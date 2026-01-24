@@ -39,6 +39,9 @@ public class HandIsFinishedHandler(
         {
             await StartHandAsync(table);
         }
+
+        events = table.PullEvents();
+        await repository.AddEventsAsync(table.Uid, events);
     }
 
     private async Task StartHandAsync(Table table)

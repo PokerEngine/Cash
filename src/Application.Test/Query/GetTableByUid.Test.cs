@@ -2,6 +2,7 @@ using Application.Command;
 using Application.Query;
 using Application.Test.Event;
 using Application.Test.Repository;
+using Application.Test.Service.Hand;
 using Domain.Entity;
 
 namespace Application.Test.Query;
@@ -14,12 +15,14 @@ public class GetTableByUidTest
         // Arrange
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
+        var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
         await SitDownPlayerAsync(repository, eventDispatcher, tableUid, "Alice", 2, 1000);
 
         var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
-            repository: repository
+            repository: repository,
+            handService: handService
         );
 
         // Act
@@ -40,6 +43,8 @@ public class GetTableByUidTest
         Assert.Equal(2, response.Players[0].Seat);
         Assert.Equal(1000, response.Players[0].Stack);
         Assert.False(response.Players[0].IsSittingOut);
+
+        Assert.Null(response.HandState);
     }
 
     [Fact]
@@ -47,10 +52,12 @@ public class GetTableByUidTest
     {
         // Arrange
         var repository = new StubRepository();
+        var handService = new StubHandService();
 
         var query = new GetTableByUidQuery { Uid = Guid.NewGuid() };
         var handler = new GetTableByUidHandler(
-            repository: repository
+            repository: repository,
+            handService: handService
         );
 
         // Act

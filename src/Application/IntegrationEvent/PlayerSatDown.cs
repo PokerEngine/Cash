@@ -38,6 +38,9 @@ public class PlayerSatDownHandler(
         {
             await StartHandAsync(table);
         }
+
+        events = table.PullEvents();
+        await repository.AddEventsAsync(table.Uid, events);
     }
 
     private async Task StartHandAsync(Table table)

@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.Command;
 
-public record struct SitDownPlayerCommand : ICommand
+public record SitDownPlayerCommand : ICommand
 {
     public required Guid Uid { get; init; }
     public required string Nickname { get; init; }
@@ -12,7 +12,7 @@ public record struct SitDownPlayerCommand : ICommand
     public required int Stack { get; init; }
 }
 
-public record struct SitDownPlayerResponse : ICommandResponse
+public record SitDownPlayerResponse : ICommandResponse
 {
     public required Guid Uid { get; init; }
     public required string Nickname { get; init; }

@@ -13,6 +13,8 @@ public struct HoleCardsAreShownIntegrationEvent : IIntegrationEvent
     public required Guid HandUid { get; init; }
     public required string Nickname { get; init; }
     public required string Cards { get; init; }
+    public required string Type { get; init; }
+    public required int Weight { get; init; }
 }
 
 public class HoleCardsAreShownHandler(
