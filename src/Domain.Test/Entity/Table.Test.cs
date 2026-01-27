@@ -90,6 +90,24 @@ public class TableTest
                 HandUid = handUid1,
                 OccurredAt = DateTime.Now
             },
+            new PlayerChipsDebitedEvent
+            {
+                Nickname = new Nickname("Alice"),
+                Amount = new Chips(5),
+                OccurredAt = DateTime.Now
+            },
+            new PlayerChipsDebitedEvent
+            {
+                Nickname = new Nickname("Bobby"),
+                Amount = new Chips(10),
+                OccurredAt = DateTime.Now
+            },
+            new PlayerChipsDebitedEvent
+            {
+                Nickname = new Nickname("Alice"),
+                Amount = new Chips(20),
+                OccurredAt = DateTime.Now
+            },
             new PlayerSatDownEvent
             {
                 Nickname = new Nickname("Charlie"),
@@ -112,6 +130,12 @@ public class TableTest
             new PlayerSatOutEvent
             {
                 Nickname = new Nickname("Diana"),
+                OccurredAt = DateTime.Now
+            },
+            new PlayerChipsCreditedEvent
+            {
+                Nickname = new Nickname("Alice"),
+                Amount = new Chips(35),
                 OccurredAt = DateTime.Now
             },
             new CurrentHandFinishedEvent
@@ -155,6 +179,8 @@ public class TableTest
         Assert.Equal(new Seat(2), table.BigBlindSeat);
         Assert.Equal(handUid2, table.GetCurrentHandUid());
         Assert.Equal(3, table.Players.Count());
+        var alice = table.Players.First(p => p.Nickname == new Nickname("Alice"));
+        Assert.Equal(new Chips(1010), alice.Stack);
         Assert.Empty(table.PullEvents());
     }
 
@@ -631,6 +657,89 @@ public class TableTest
         // Assert
         Assert.Equal("A player with the given nickname is not found at the table", exc.Message);
         Assert.Empty(table.PullEvents());
+    }
+
+    [Fact]
+    public void DebitPlayerChips_WhenEnoughStack_ShouldDebitPlayerChips()
+    {
+        // Arrange
+        var table = CreateTable();
+        table.SitPlayerDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(1),
+            stack: new Chips(1000)
+        );
+        table.PullEvents();
+
+        // Act
+        table.DebitPlayerChips(new Nickname("Alice"), new Chips(5));
+
+        // Assert
+        var player = table.Players.First(p => p.Nickname == new Nickname("Alice"));
+        Assert.Equal(new Chips(995), player.Stack);
+    }
+
+    [Fact]
+    public void DebitPlayerChips_WhenNotEnoughStack_ShouldThrowInvalidOperationException()
+    {
+        // Arrange
+        var table = CreateTable();
+        table.SitPlayerDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(1),
+            stack: new Chips(1000)
+        );
+        table.PullEvents();
+
+        // Act
+        var exc = Assert.Throws<InvalidOperationException>(() =>
+        {
+            table.DebitPlayerChips(new Nickname("Alice"), new Chips(1001));
+        });
+
+        // Assert
+        Assert.Equal("The player has no enough stack", exc.Message);
+        Assert.Empty(table.PullEvents());
+    }
+
+    [Fact]
+    public void CreditPlayerChips_WhenNotAllIn_ShouldCreditPlayerChips()
+    {
+        // Arrange
+        var table = CreateTable();
+        table.SitPlayerDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(1),
+            stack: new Chips(1000)
+        );
+        table.PullEvents();
+
+        // Act
+        table.CreditPlayerChips(new Nickname("Alice"), new Chips(100));
+
+        // Assert
+        var player = table.Players.First(p => p.Nickname == new Nickname("Alice"));
+        Assert.Equal(new Chips(1100), player.Stack);
+    }
+
+    [Fact]
+    public void CreditPlayerChips_WhenAllIn_ShouldCreditPlayerChips()
+    {
+        // Arrange
+        var table = CreateTable();
+        table.SitPlayerDown(
+            nickname: new Nickname("Alice"),
+            seat: new Seat(1),
+            stack: new Chips(0)
+        );
+        table.PullEvents();
+
+        // Act
+        table.CreditPlayerChips(new Nickname("Alice"), new Chips(100));
+
+        // Assert
+        var player = table.Players.First(p => p.Nickname == new Nickname("Alice"));
+        Assert.Equal(new Chips(100), player.Stack);
     }
 
     [Fact]

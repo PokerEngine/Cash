@@ -48,6 +48,22 @@ public sealed record PlayerSatInEvent : IEvent
     public required Nickname Nickname { get; init; }
 }
 
+public sealed record PlayerChipsDebitedEvent : IEvent
+{
+    public required DateTime OccurredAt { get; init; }
+
+    public required Nickname Nickname { get; init; }
+    public required Chips Amount { get; init; }
+}
+
+public sealed record PlayerChipsCreditedEvent : IEvent
+{
+    public required DateTime OccurredAt { get; init; }
+
+    public required Nickname Nickname { get; init; }
+    public required Chips Amount { get; init; }
+}
+
 public sealed record ButtonRotatedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }

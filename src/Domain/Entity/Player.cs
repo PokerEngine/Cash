@@ -82,6 +82,21 @@ public class Player : IEquatable<Player>
         IsWaitingForBigBlind = isWaitingForBigBlind;
     }
 
+    public void DebitChips(Chips amount)
+    {
+        if (amount > Stack)
+        {
+            throw new InvalidOperationException("The player has no enough stack");
+        }
+
+        Stack -= amount;
+    }
+
+    public void CreditChips(Chips amount)
+    {
+        Stack += amount;
+    }
+
     public void StopWaitingForBigBlind()
     {
         if (!IsWaitingForBigBlind)

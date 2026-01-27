@@ -117,6 +117,12 @@ public class Table
                 case PlayerSatInEvent e:
                     table.SitPlayerIn(e.Nickname);
                     break;
+                case PlayerChipsDebitedEvent e:
+                    table.DebitPlayerChips(e.Nickname, e.Amount);
+                    break;
+                case PlayerChipsCreditedEvent e:
+                    table.CreditPlayerChips(e.Nickname, e.Amount);
+                    break;
                 case ButtonRotatedEvent:
                     table.RotateButton();
                     break;
@@ -223,6 +229,44 @@ public class Table
         var @event = new PlayerSatInEvent
         {
             Nickname = nickname,
+            OccurredAt = DateTime.Now
+        };
+        AddEvent(@event);
+    }
+
+    public void DebitPlayerChips(Nickname nickname, Chips amount)
+    {
+        var player = GetPlayerByNickname(nickname);
+        if (player is null)
+        {
+            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+        }
+
+        player.DebitChips(amount);
+
+        var @event = new PlayerChipsDebitedEvent
+        {
+            Nickname = nickname,
+            Amount = amount,
+            OccurredAt = DateTime.Now
+        };
+        AddEvent(@event);
+    }
+
+    public void CreditPlayerChips(Nickname nickname, Chips amount)
+    {
+        var player = GetPlayerByNickname(nickname);
+        if (player is null)
+        {
+            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+        }
+
+        player.CreditChips(amount);
+
+        var @event = new PlayerChipsCreditedEvent
+        {
+            Nickname = nickname,
+            Amount = amount,
             OccurredAt = DateTime.Now
         };
         AddEvent(@event);
