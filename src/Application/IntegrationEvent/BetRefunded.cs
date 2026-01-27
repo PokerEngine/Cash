@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public struct AwardIsCommittedIntegrationEvent : IIntegrationEvent
+public struct BetRefundedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -13,20 +13,20 @@ public struct AwardIsCommittedIntegrationEvent : IIntegrationEvent
     public required Guid TableUid { get; init; }
 
     public required Guid HandUid { get; init; }
-    public required List<string> Nicknames { get; init; }
+    public required string Nickname { get; init; }
     public required int Amount { get; init; }
 }
 
-public class AwardIsCommittedHandler(
+public class BetRefundedHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository
-) : IIntegrationEventHandler<AwardIsCommittedIntegrationEvent>
+) : IIntegrationEventHandler<BetRefundedIntegrationEvent>
 {
-    public async Task HandleAsync(AwardIsCommittedIntegrationEvent integrationEvent)
+    public async Task HandleAsync(BetRefundedIntegrationEvent integrationEvent)
     {
         var events = await repository.GetEventsAsync(integrationEvent.TableUid);
         var table = Table.FromEvents(integrationEvent.TableUid, events);
-        // TODO: apply putting chips into players' stacks and taking the rake
+        // TODO: apply putting chips back into player's stack
 
         await connectionRegistry.SendIntegrationEventToTableAsync(
             tableUid: integrationEvent.TableUid,

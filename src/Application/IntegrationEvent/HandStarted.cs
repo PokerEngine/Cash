@@ -9,7 +9,7 @@ public record struct IntegrationEventParticipant
     public required int Stack { get; init; }
 }
 
-public record struct HandIsCreatedIntegrationEvent : IIntegrationEvent
+public record struct HandStartedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -28,11 +28,11 @@ public record struct HandIsCreatedIntegrationEvent : IIntegrationEvent
     public required List<IntegrationEventParticipant> Participants { get; init; }
 }
 
-public class HandIsCreatedHandler(
+public class HandStartedHandler(
     IConnectionRegistry connectionRegistry
-) : IIntegrationEventHandler<HandIsCreatedIntegrationEvent>
+) : IIntegrationEventHandler<HandStartedIntegrationEvent>
 {
-    public async Task HandleAsync(HandIsCreatedIntegrationEvent integrationEvent)
+    public async Task HandleAsync(HandStartedIntegrationEvent integrationEvent)
     {
         await connectionRegistry.SendIntegrationEventToTableAsync(
             tableUid: integrationEvent.TableUid,

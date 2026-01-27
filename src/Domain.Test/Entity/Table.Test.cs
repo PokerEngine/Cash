@@ -39,7 +39,7 @@ public class TableTest
 
         var events = table.PullEvents();
         Assert.Single(events);
-        var @event = Assert.IsType<TableIsCreatedEvent>(events[0]);
+        var @event = Assert.IsType<TableCreatedEvent>(events[0]);
         Assert.Equal(Game.NoLimitHoldem, @event.Game);
         Assert.Equal(new Chips(5), @event.SmallBlind);
         Assert.Equal(new Chips(10), @event.BigBlind);
@@ -58,7 +58,7 @@ public class TableTest
         var handUid2 = new HandUid(Guid.NewGuid());
         var events = new List<IEvent>
         {
-            new TableIsCreatedEvent
+            new TableCreatedEvent
             {
                 Game = Game.NoLimitHoldem,
                 MaxSeat = new Seat(maxSeat),
@@ -81,11 +81,11 @@ public class TableTest
                 Stack = new Chips(1000),
                 OccurredAt = DateTime.Now
             },
-            new ButtonIsRotatedEvent
+            new ButtonRotatedEvent
             {
                 OccurredAt = DateTime.Now
             },
-            new CurrentHandIsSetEvent
+            new CurrentHandStartedEvent
             {
                 HandUid = handUid1,
                 OccurredAt = DateTime.Now
@@ -114,16 +114,16 @@ public class TableTest
                 Nickname = new Nickname("Diana"),
                 OccurredAt = DateTime.Now
             },
-            new CurrentHandIsClearedEvent
+            new CurrentHandFinishedEvent
             {
                 HandUid = handUid1,
                 OccurredAt = DateTime.Now
             },
-            new ButtonIsRotatedEvent
+            new ButtonRotatedEvent
             {
                 OccurredAt = DateTime.Now
             },
-            new CurrentHandIsSetEvent
+            new CurrentHandStartedEvent
             {
                 HandUid = handUid2,
                 OccurredAt = DateTime.Now
@@ -159,14 +159,14 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_1stPlayer_ShouldSitDownAndNotWaitForBigBlind()
+    public void SitPlayerDown_1stPlayer_ShouldSitPlayerDownAndNotWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
         table.PullEvents();
 
         // Act
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -191,18 +191,18 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_2ndPlayer_ShouldSitDownAndNotWaitForBigBlind()
+    public void SitPlayerDown_2ndPlayer_ShouldSitPlayerDownAndNotWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
 
         // Act
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
@@ -220,23 +220,23 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_3rdPlayerInitial_ShouldSitDownAndNotWaitForBigBlind()
+    public void SitPlayerDown_3rdPlayerInitial_ShouldSitPlayerDownAndNotWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
 
         // Act
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
             stack: new Chips(1000)
@@ -254,25 +254,25 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_3rdPlayerStandard_ShouldSitDownAndWaitForBigBlind()
+    public void SitPlayerDown_3rdPlayerStandard_ShouldSitPlayerDownAndWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
 
         // Act
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
             stack: new Chips(1000)
@@ -290,11 +290,11 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_IsSittingDown_ShouldThrowInvalidOperationException()
+    public void SitPlayerDown_IsSittingDown_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -304,7 +304,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitDown(
+            table.SitPlayerDown(
                 nickname: new Nickname("Alice"),
                 seat: new Seat(2),
                 stack: new Chips(1000)
@@ -317,11 +317,11 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_SeatIsOccupied_ShouldThrowInvalidOperationException()
+    public void SitPlayerDown_SeatIsOccupied_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -331,7 +331,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitDown(
+            table.SitPlayerDown(
                 nickname: new Nickname("Bobby"),
                 seat: new Seat(1),
                 stack: new Chips(1000)
@@ -344,7 +344,7 @@ public class TableTest
     }
 
     [Fact]
-    public void SitDown_SeatIsOutOfRange_ShouldThrowInvalidOperationException()
+    public void SitPlayerDown_SeatIsOutOfRange_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable(maxSeat: 6);
@@ -353,7 +353,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitDown(
+            table.SitPlayerDown(
                 nickname: new Nickname("Alice"),
                 seat: new Seat(7),
                 stack: new Chips(1000)
@@ -366,11 +366,11 @@ public class TableTest
     }
 
     [Fact]
-    public void StandUp_IsSittingDown_ShouldStandUp()
+    public void StandPlayerUp_IsSittingDown_ShouldStandPlayerUp()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -378,9 +378,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        table.StandUp(
-            nickname: new Nickname("Alice")
-        );
+        table.StandPlayerUp(new Nickname("Alice"));
 
         // Assert
         Assert.Empty(table.Players);
@@ -392,7 +390,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StandUp_IsNotSittingDown_ShouldThrowInvalidOperationException()
+    public void StandPlayerUp_IsNotSittingDown_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
@@ -401,9 +399,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.StandUp(
-                nickname: new Nickname("Alice")
-            );
+            table.StandPlayerUp(new Nickname("Alice"));
         });
 
         // Assert
@@ -412,11 +408,11 @@ public class TableTest
     }
 
     [Fact]
-    public void SitOut_IsNotSittingOut_ShouldSitOut()
+    public void SitPlayerOut_IsNotSittingOut_ShouldSitPlayerOut()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -424,9 +420,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        table.SitOut(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerOut(new Nickname("Alice"));
 
         // Assert
         var player = table.Players.First();
@@ -440,26 +434,22 @@ public class TableTest
     }
 
     [Fact]
-    public void SitOut_IsSittingOut_ShouldThrowInvalidOperationException()
+    public void SitPlayerOut_IsSittingOut_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitOut(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerOut(new Nickname("Alice"));
         table.PullEvents();
 
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitOut(
-                nickname: new Nickname("Alice")
-            );
+            table.SitPlayerOut(new Nickname("Alice"));
         });
 
         // Assert
@@ -468,7 +458,7 @@ public class TableTest
     }
 
     [Fact]
-    public void SitOut_IsNotSittingDown_ShouldThrowInvalidOperationException()
+    public void SitPlayerOut_IsNotSittingDown_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
@@ -477,9 +467,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitOut(
-                nickname: new Nickname("Alice")
-            );
+            table.SitPlayerOut(new Nickname("Alice"));
         });
 
         // Assert
@@ -488,24 +476,20 @@ public class TableTest
     }
 
     [Fact]
-    public void SitIn_1stPlayer_ShouldSitInAndNotWaitForBigBlind()
+    public void SitPlayerIn_1stPlayer_ShouldSitPlayerInAndNotWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitOut(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerOut(new Nickname("Alice"));
         table.PullEvents();
 
         // Act
-        table.SitIn(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerIn(new Nickname("Alice"));
 
         // Assert
         var player = table.Players.First();
@@ -519,28 +503,24 @@ public class TableTest
     }
 
     [Fact]
-    public void SitIn_2ndPlayer_ShouldSitInAndNotWaitForBigBlind()
+    public void SitPlayerIn_2ndPlayer_ShouldSitPlayerInAndNotWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitOut(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerOut(new Nickname("Alice"));
 
         // Act
-        table.SitIn(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerIn(new Nickname("Alice"));
 
         // Assert
         var player = table.Players.First();
@@ -549,33 +529,29 @@ public class TableTest
     }
 
     [Fact]
-    public void SitIn_3rdPlayerInitial_ShouldSitInAndNotWaitForBigBlind()
+    public void SitPlayerIn_3rdPlayerInitial_ShouldSitPlayerInAndNotWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
             stack: new Chips(1000)
         );
-        table.SitOut(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerOut(new Nickname("Alice"));
 
         // Act
-        table.SitIn(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerIn(new Nickname("Alice"));
 
         // Assert
         var player = table.Players.First();
@@ -584,35 +560,31 @@ public class TableTest
     }
 
     [Fact]
-    public void SitIn_3rdPlayerStandard_ShouldSitInAndWaitForBigBlind()
+    public void SitPlayerIn_3rdPlayerStandard_ShouldSitPlayerInAndWaitForBigBlind()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
             stack: new Chips(1000)
         );
-        table.SitOut(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerOut(new Nickname("Alice"));
         table.RotateButton();
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
 
         // Act
-        table.SitIn(
-            nickname: new Nickname("Alice")
-        );
+        table.SitPlayerIn(new Nickname("Alice"));
 
         // Assert
         var player = table.Players.First();
@@ -621,11 +593,11 @@ public class TableTest
     }
 
     [Fact]
-    public void SitIn_IsNotSittingOut_ShouldThrowInvalidOperationException()
+    public void SitPlayerIn_IsNotSittingOut_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -635,9 +607,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitIn(
-                nickname: new Nickname("Alice")
-            );
+            table.SitPlayerIn(new Nickname("Alice"));
         });
 
         // Assert
@@ -646,7 +616,7 @@ public class TableTest
     }
 
     [Fact]
-    public void SitIn_IsNotSittingDown_ShouldThrowInvalidOperationException()
+    public void SitPlayerIn_IsNotSittingDown_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
@@ -655,9 +625,7 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SitIn(
-                nickname: new Nickname("Alice")
-            );
+            table.SitPlayerIn(new Nickname("Alice"));
         });
 
         // Assert
@@ -670,12 +638,12 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
@@ -692,7 +660,7 @@ public class TableTest
 
         var events = table.PullEvents();
         Assert.Single(events);
-        Assert.IsType<ButtonIsRotatedEvent>(events[0]);
+        Assert.IsType<ButtonRotatedEvent>(events[0]);
     }
 
     [Fact]
@@ -700,19 +668,19 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU/SB, Bobby is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
         table.PullEvents();
 
         // Act
@@ -725,7 +693,7 @@ public class TableTest
 
         var events = table.PullEvents();
         Assert.Single(events);
-        Assert.IsType<ButtonIsRotatedEvent>(events[0]);
+        Assert.IsType<ButtonRotatedEvent>(events[0]);
     }
 
     [Fact]
@@ -733,24 +701,24 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
         table.RotateButton();  // Alice is SB/BU, Bobby is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.SitDown(
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(3),
             stack: new Chips(1000)
         );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -769,24 +737,24 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is SB/BU, Bobby is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.SitDown(
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -805,30 +773,28 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Bobby")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Bobby"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
         table.RotateButton(); // Alice is BB, Bobby's seat is dead button, Charlie is SB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -844,17 +810,17 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
@@ -874,24 +840,24 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -907,29 +873,29 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.SitDown(
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(3),
             stack: new Chips(1000)
         );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -948,29 +914,29 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.SitDown(
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(5),
             stack: new Chips(1000)
         );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -989,29 +955,29 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.SitDown(
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(7),
             stack: new Chips(1000)
         );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1030,27 +996,25 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Alice")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Alice"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1066,27 +1030,25 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Bobby")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Bobby"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1102,27 +1064,25 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Charlie")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Charlie"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1138,35 +1098,33 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(8),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Bobby")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Bobby"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
         table.RotateButton(); // Alice is CO, Bobby's seat is the dead button, Charlie is SB, Diana is BB
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1182,32 +1140,30 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(8),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Alice")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Alice"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1223,32 +1179,30 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(8),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Bobby")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Bobby"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1264,32 +1218,30 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(8),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
-            nickname: new Nickname("Charlie")
-        );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(new Nickname("Charlie"));
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1305,32 +1257,32 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Charlie"),
             seat: new Seat(6),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Diana"),
             seat: new Seat(8),
             stack: new Chips(1000)
         );
         table.RotateButton(); // Alice is BU, Bobby is SB, Charlie is BB, Diana is CO
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
-        table.StandUp(
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StandPlayerUp(
             nickname: new Nickname("Diana")
         );
-        table.ClearCurrentHand(table.GetCurrentHandUid());
+        table.FinishCurrentHand(table.GetCurrentHandUid());
 
         // Act
         table.RotateButton();
@@ -1346,19 +1298,17 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
-        table.SitOut(
-            nickname: new Nickname("Bobby")
-        );
+        table.SitPlayerOut(new Nickname("Bobby"));
         table.PullEvents();
 
         // Act
@@ -1377,18 +1327,18 @@ public class TableTest
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
         table.PullEvents();
 
         // Act
@@ -1403,16 +1353,16 @@ public class TableTest
     }
 
     [Fact]
-    public void SetCurrentHand_Valid_ShouldSetCurrentHand()
+    public void StartCurrentHand_Valid_ShouldStartCurrentHand()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(4),
             stack: new Chips(1000)
@@ -1422,7 +1372,7 @@ public class TableTest
 
         // Act
         var handUid = new HandUid(Guid.NewGuid());
-        table.SetCurrentHand(
+        table.StartCurrentHand(
             handUid: handUid
         );
 
@@ -1432,64 +1382,64 @@ public class TableTest
 
         var events = table.PullEvents();
         Assert.Single(events);
-        var @event = Assert.IsType<CurrentHandIsSetEvent>(events[0]);
+        var @event = Assert.IsType<CurrentHandStartedEvent>(events[0]);
         Assert.Equal(handUid, @event.HandUid);
     }
 
     [Fact]
-    public void SetCurrentHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
+    public void StartCurrentHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
         table.PullEvents();
 
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+            table.StartCurrentHand(new HandUid(Guid.NewGuid()));
         });
 
         // Assert
-        Assert.Equal("The previous hand has not been cleared yet", exc.Message);
+        Assert.Equal("The previous hand has not been finished yet", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
     [Fact]
-    public void ClearCurrentHand_Valid_ShouldClearCurrentHand()
+    public void FinishCurrentHand_Valid_ShouldFinishCurrentHand()
     {
         // Arrange
         var handUid = new HandUid(Guid.NewGuid());
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.SetCurrentHand(
+        table.StartCurrentHand(
             handUid: handUid
         );
         table.PullEvents();
 
         // Act
-        table.ClearCurrentHand(
+        table.FinishCurrentHand(
             handUid: handUid
         );
 
@@ -1498,21 +1448,21 @@ public class TableTest
 
         var events = table.PullEvents();
         Assert.Single(events);
-        var @event = Assert.IsType<CurrentHandIsClearedEvent>(events[0]);
+        var @event = Assert.IsType<CurrentHandFinishedEvent>(events[0]);
         Assert.Equal(handUid, @event.HandUid);
     }
 
     [Fact]
-    public void ClearCurrentHand_NotStarted_ShouldThrowInvalidOperationException()
+    public void FinishCurrentHand_NotStarted_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
@@ -1522,39 +1472,39 @@ public class TableTest
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.ClearCurrentHand(
+            table.FinishCurrentHand(
                 handUid: new HandUid(Guid.NewGuid())
             );
         });
 
         // Assert
-        Assert.Equal("The current hand has not been set yet", exc.Message);
+        Assert.Equal("The current hand has not been started yet", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
     [Fact]
-    public void ClearCurrentHand_DifferentUid_ShouldThrowInvalidOperationException()
+    public void FinishCurrentHand_DifferentUid_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var table = CreateTable();
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Alice"),
             seat: new Seat(2),
             stack: new Chips(1000)
         );
-        table.SitDown(
+        table.SitPlayerDown(
             nickname: new Nickname("Bobby"),
             seat: new Seat(1),
             stack: new Chips(1000)
         );
         table.RotateButton();
-        table.SetCurrentHand(new HandUid(Guid.NewGuid()));
+        table.StartCurrentHand(new HandUid(Guid.NewGuid()));
         table.PullEvents();
 
         // Act
         var exc = Assert.Throws<InvalidOperationException>(() =>
         {
-            table.ClearCurrentHand(
+            table.FinishCurrentHand(
                 handUid: new HandUid(Guid.NewGuid())
             );
         });

@@ -2,7 +2,7 @@ using Application.Connection;
 
 namespace Application.IntegrationEvent;
 
-public struct HoleCardsAreShownIntegrationEvent : IIntegrationEvent
+public struct BoardCardsDealtIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -11,17 +11,14 @@ public struct HoleCardsAreShownIntegrationEvent : IIntegrationEvent
     public required Guid TableUid { get; init; }
 
     public required Guid HandUid { get; init; }
-    public required string Nickname { get; init; }
     public required string Cards { get; init; }
-    public required string Type { get; init; }
-    public required int Weight { get; init; }
 }
 
-public class HoleCardsAreShownHandler(
+public class BoardCardsDealtHandler(
     IConnectionRegistry connectionRegistry
-) : IIntegrationEventHandler<HoleCardsAreShownIntegrationEvent>
+) : IIntegrationEventHandler<BoardCardsDealtIntegrationEvent>
 {
-    public async Task HandleAsync(HoleCardsAreShownIntegrationEvent integrationEvent)
+    public async Task HandleAsync(BoardCardsDealtIntegrationEvent integrationEvent)
     {
         await connectionRegistry.SendIntegrationEventToTableAsync(
             tableUid: integrationEvent.TableUid,

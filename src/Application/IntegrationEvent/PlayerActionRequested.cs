@@ -2,7 +2,7 @@ using Application.Connection;
 
 namespace Application.IntegrationEvent;
 
-public record struct DecisionIsRequestedIntegrationEvent : IIntegrationEvent
+public record struct PlayerActionRequestedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -15,17 +15,17 @@ public record struct DecisionIsRequestedIntegrationEvent : IIntegrationEvent
     public required bool FoldIsAvailable { get; init; }
     public required bool CheckIsAvailable { get; init; }
     public required bool CallIsAvailable { get; init; }
-    public required int CallToAmount { get; init; }
+    public required int CallByAmount { get; init; }
     public required bool RaiseIsAvailable { get; init; }
-    public required int MinRaiseToAmount { get; init; }
-    public required int MaxRaiseToAmount { get; init; }
+    public required int MinRaiseByAmount { get; init; }
+    public required int MaxRaiseByAmount { get; init; }
 }
 
-public class DecisionIsRequestedHandler(
+public class PlayerActionRequestedHandler(
     IConnectionRegistry connectionRegistry
-) : IIntegrationEventHandler<DecisionIsRequestedIntegrationEvent>
+) : IIntegrationEventHandler<PlayerActionRequestedIntegrationEvent>
 {
-    public async Task HandleAsync(DecisionIsRequestedIntegrationEvent integrationEvent)
+    public async Task HandleAsync(PlayerActionRequestedIntegrationEvent integrationEvent)
     {
         // TODO: if the player is sitting out, auto-fold instead of requesting a decision
 

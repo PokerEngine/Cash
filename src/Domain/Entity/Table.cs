@@ -68,7 +68,7 @@ public class Table
             maxSeat: maxSeat
         );
 
-        var @event = new TableIsCreatedEvent
+        var @event = new TableCreatedEvent
         {
             Game = game,
             SmallBlind = smallBlind,
@@ -84,13 +84,13 @@ public class Table
 
     public static Table FromEvents(TableUid uid, List<IEvent> events)
     {
-        if (events.Count == 0 || events[0] is not TableIsCreatedEvent)
+        if (events.Count == 0 || events[0] is not TableCreatedEvent)
         {
-            throw new InvalidOperationException("The first event must be a TableIsCreatedEvent");
+            throw new InvalidOperationException("The first event must be a TableCreatedEvent");
         }
 
-        var createdEvent = (TableIsCreatedEvent)events[0];
-        var table = FromScratch(
+        var createdEvent = (TableCreatedEvent)events[0];
+        var table = new Table(
             uid: uid,
             game: createdEvent.Game,
             maxSeat: createdEvent.MaxSeat,
@@ -103,31 +103,29 @@ public class Table
         {
             switch (@event)
             {
-                case TableIsCreatedEvent:
+                case TableCreatedEvent:
                     break;
                 case PlayerSatDownEvent e:
-                    table.SitDown(e.Nickname, e.Seat, e.Stack);
+                    table.SitPlayerDown(e.Nickname, e.Seat, e.Stack);
                     break;
                 case PlayerStoodUpEvent e:
-                    table.StandUp(e.Nickname);
+                    table.StandPlayerUp(e.Nickname);
                     break;
                 case PlayerSatOutEvent e:
-                    table.SitOut(e.Nickname);
+                    table.SitPlayerOut(e.Nickname);
                     break;
                 case PlayerSatInEvent e:
-                    table.SitIn(e.Nickname);
+                    table.SitPlayerIn(e.Nickname);
                     break;
-                case ButtonIsRotatedEvent:
+                case ButtonRotatedEvent:
                     table.RotateButton();
                     break;
-                case CurrentHandIsSetEvent e:
-                    table.SetCurrentHand(e.HandUid);
+                case CurrentHandStartedEvent e:
+                    table.StartCurrentHand(e.HandUid);
                     break;
-                case CurrentHandIsClearedEvent e:
-                    table.ClearCurrentHand(e.HandUid);
+                case CurrentHandFinishedEvent e:
+                    table.FinishCurrentHand(e.HandUid);
                     break;
-
-                    // TODO: handle other events when they are added
             }
         }
 
@@ -136,7 +134,7 @@ public class Table
         return table;
     }
 
-    public void SitDown(Nickname nickname, Seat seat, Chips stack)
+    public void SitPlayerDown(Nickname nickname, Seat seat, Chips stack)
     {
         if (seat > MaxSeat)
         {
@@ -175,7 +173,7 @@ public class Table
         AddEvent(@event);
     }
 
-    public void StandUp(Nickname nickname)
+    public void StandPlayerUp(Nickname nickname)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -193,7 +191,7 @@ public class Table
         AddEvent(@event);
     }
 
-    public void SitOut(Nickname nickname)
+    public void SitPlayerOut(Nickname nickname)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -211,7 +209,7 @@ public class Table
         AddEvent(@event);
     }
 
-    public void SitIn(Nickname nickname)
+    public void SitPlayerIn(Nickname nickname)
     {
         var player = GetPlayerByNickname(nickname);
         if (player is null)
@@ -220,9 +218,7 @@ public class Table
         }
 
         var isWaitingForBigBlind = ShouldWaitForBigBlind();
-        player.SitIn(
-            isWaitingForBigBlind: isWaitingForBigBlind
-        );
+        player.SitIn(isWaitingForBigBlind);
 
         var @event = new PlayerSatInEvent
         {
@@ -258,23 +254,23 @@ public class Table
             bbPlayer.StopWaitingForBigBlind();
         }
 
-        var @event = new ButtonIsRotatedEvent
+        var @event = new ButtonRotatedEvent
         {
             OccurredAt = DateTime.Now
         };
         AddEvent(@event);
     }
 
-    public void SetCurrentHand(HandUid handUid)
+    public void StartCurrentHand(HandUid handUid)
     {
         if (IsHandInProgress())
         {
-            throw new InvalidOperationException("The previous hand has not been cleared yet");
+            throw new InvalidOperationException("The previous hand has not been finished yet");
         }
 
         CurrentHandUid = handUid;
 
-        var @event = new CurrentHandIsSetEvent
+        var @event = new CurrentHandStartedEvent
         {
             HandUid = handUid,
             OccurredAt = DateTime.Now
@@ -282,11 +278,11 @@ public class Table
         AddEvent(@event);
     }
 
-    public void ClearCurrentHand(HandUid handUid)
+    public void FinishCurrentHand(HandUid handUid)
     {
         if (!IsHandInProgress())
         {
-            throw new InvalidOperationException("The current hand has not been set yet");
+            throw new InvalidOperationException("The current hand has not been started yet");
         }
 
         if (handUid != CurrentHandUid)
@@ -296,7 +292,7 @@ public class Table
 
         CurrentHandUid = null;
 
-        var @event = new CurrentHandIsClearedEvent
+        var @event = new CurrentHandFinishedEvent
         {
             HandUid = handUid,
             OccurredAt = DateTime.Now

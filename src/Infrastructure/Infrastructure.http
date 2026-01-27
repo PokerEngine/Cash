@@ -34,7 +34,7 @@ WEBSOCKET {{Infrastructure_HostWsAddress}}/ws/table/{{tableUid}}/events/bobby
     }
 %}
 
-### Sit down Alice at the table
+### Sit Alice down at the table
 POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/alice
 Accept: application/json
 Content-Type: application/json
@@ -44,7 +44,7 @@ Content-Type: application/json
     "stack": 1000
 }
 
-### Sit down Bobby at the table
+### Sit Bobby down at the table
 POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/sit-down/bobby
 Accept: application/json
 Content-Type: application/json
@@ -54,14 +54,14 @@ Content-Type: application/json
     "stack": 900
 }
 
-### Stand up Alice from the table
+### Stand Alice up from the table
 POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/alice
 Accept: application/json
 Content-Type: application/json
 
 {}
 
-### Stand up Bobby from the table
+### Stand Bobby up from the table
 POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/bobby
 Accept: application/json
 Content-Type: application/json

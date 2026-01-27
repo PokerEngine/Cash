@@ -3,13 +3,13 @@ using Domain.Event;
 
 namespace Application.Event;
 
-public class TableIsCreatedEventHandler(
+public class TableCreatedEventHandler(
     IIntegrationEventPublisher integrationEventPublisher
-) : IEventHandler<TableIsCreatedEvent>
+) : IEventHandler<TableCreatedEvent>
 {
-    public async Task HandleAsync(TableIsCreatedEvent @event, EventContext context)
+    public async Task HandleAsync(TableCreatedEvent @event, EventContext context)
     {
-        var integrationEvent = new TableIsCreatedIntegrationEvent
+        var integrationEvent = new TableCreatedIntegrationEvent
         {
             Uid = Guid.NewGuid(),
             TableUid = context.TableUid,
@@ -22,6 +22,6 @@ public class TableIsCreatedEventHandler(
             OccurredAt = @event.OccurredAt
         };
 
-        await integrationEventPublisher.PublishAsync(integrationEvent, "cash.table-is-created");
+        await integrationEventPublisher.PublishAsync(integrationEvent, "cash.table-created");
     }
 }

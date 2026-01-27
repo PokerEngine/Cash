@@ -7,7 +7,7 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class StandUpPlayerTest
+public class StandPlayerUpTest
 {
     [Fact]
     public async Task HandleAsync_Valid_ShouldSitDown()
@@ -16,7 +16,7 @@ public class StandUpPlayerTest
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
-        await SitDownPlayerAsync(
+        await SitPlayerDownAsync(
             repository: repository,
             eventDispatcher: eventDispatcher,
             tableUid: tableUid,
@@ -26,12 +26,12 @@ public class StandUpPlayerTest
         );
         await eventDispatcher.ClearDispatchedEvents(tableUid);
 
-        var command = new StandUpPlayerCommand
+        var command = new StandPlayerUpCommand
         {
             Uid = tableUid,
             Nickname = "Alice"
         };
-        var handler = new StandUpPlayerHandler(repository, eventDispatcher);
+        var handler = new StandPlayerUpHandler(repository, eventDispatcher);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -55,12 +55,12 @@ public class StandUpPlayerTest
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
 
-        var command = new StandUpPlayerCommand
+        var command = new StandPlayerUpCommand
         {
             Uid = new TableUid(Guid.NewGuid()),
             Nickname = "Alice"
         };
-        var handler = new StandUpPlayerHandler(repository, eventDispatcher);
+        var handler = new StandPlayerUpHandler(repository, eventDispatcher);
 
         // Act
         var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -91,7 +91,7 @@ public class StandUpPlayerTest
         return response.Uid;
     }
 
-    private async Task SitDownPlayerAsync(
+    private async Task SitPlayerDownAsync(
         StubRepository repository,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
@@ -100,11 +100,11 @@ public class StandUpPlayerTest
         int stack
     )
     {
-        var handler = new SitDownPlayerHandler(
+        var handler = new SitPlayerDownHandler(
             repository: repository,
             eventDispatcher: eventDispatcher
         );
-        var command = new SitDownPlayerCommand
+        var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
             Nickname = nickname,

@@ -6,7 +6,7 @@ using Domain.ValueObject;
 
 namespace Application.IntegrationEvent;
 
-public record struct HandIsFinishedIntegrationEvent : IIntegrationEvent
+public record struct HandFinishedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -17,13 +17,13 @@ public record struct HandIsFinishedIntegrationEvent : IIntegrationEvent
     public required Guid HandUid { get; init; }
 }
 
-public class HandIsFinishedHandler(
+public class HandFinishedHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository,
     IHandService handService
-) : IIntegrationEventHandler<HandIsFinishedIntegrationEvent>
+) : IIntegrationEventHandler<HandFinishedIntegrationEvent>
 {
-    public async Task HandleAsync(HandIsFinishedIntegrationEvent integrationEvent)
+    public async Task HandleAsync(HandFinishedIntegrationEvent integrationEvent)
     {
         await connectionRegistry.SendIntegrationEventToTableAsync(
             tableUid: integrationEvent.TableUid,
@@ -33,7 +33,7 @@ public class HandIsFinishedHandler(
         var events = await repository.GetEventsAsync(integrationEvent.TableUid);
         var table = Table.FromEvents(integrationEvent.TableUid, events);
 
-        table.ClearCurrentHand(integrationEvent.HandUid);
+        table.FinishCurrentHand(integrationEvent.HandUid);
 
         if (table.HasEnoughPlayersForHand())
         {
@@ -48,7 +48,7 @@ public class HandIsFinishedHandler(
     {
         table.RotateButton();
 
-        var handUid = await handService.CreateAsync(
+        var handUid = await handService.StartAsync(
             tableUid: table.Uid,
             game: table.Game,
             maxSeat: table.MaxSeat,
@@ -59,10 +59,7 @@ public class HandIsFinishedHandler(
             buttonSeat: (Seat)table.ButtonSeat!,
             participants: table.ActivePlayers.Select(GetParticipant).ToList()
         );
-
-        table.SetCurrentHand(handUid);
-
-        await handService.StartAsync(handUid);
+        table.StartCurrentHand(handUid);
     }
 
     private HandParticipant GetParticipant(Player player)

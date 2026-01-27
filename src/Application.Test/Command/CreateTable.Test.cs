@@ -40,6 +40,6 @@ public class CreateTableTest
 
         var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
         Assert.Single(events);
-        Assert.IsType<TableIsCreatedEvent>(events[0]);
+        Assert.IsType<TableCreatedEvent>(events[0]);
     }
 }

@@ -21,7 +21,7 @@ public class StubHandService : IHandService
         return Task.FromResult(state);
     }
 
-    public Task<HandUid> CreateAsync(
+    public Task<HandUid> StartAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -45,8 +45,8 @@ public class StubHandService : IHandService
             Pot = new HandStatePot
             {
                 Ante = 0,
-                CommittedBets = [],
-                UncommittedBets = [],
+                CollectedBets = [],
+                CurrentBets = [],
                 Awards = []
             }
         };
@@ -55,18 +55,10 @@ public class StubHandService : IHandService
         return Task.FromResult(handUid);
     }
 
-    public Task StartAsync(
-        HandUid handUid,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return Task.CompletedTask;
-    }
-
-    public Task CommitDecisionAsync(
+    public Task SubmitPlayerActionAsync(
         HandUid handUid,
         Nickname nickname,
-        DecisionType type,
+        PlayerActionType type,
         Chips amount,
         CancellationToken cancellationToken = default
     )

@@ -52,9 +52,9 @@ public static class Bootstrapper
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);
-        RegisterCommandHandler<SitDownPlayerCommand, SitDownPlayerHandler, SitDownPlayerResponse>(builder.Services);
-        RegisterCommandHandler<StandUpPlayerCommand, StandUpPlayerHandler, StandUpPlayerResponse>(builder.Services);
-        RegisterCommandHandler<CommitDecisionCommand, CommitDecisionHandler, CommitDecisionResponse>(builder.Services);
+        RegisterCommandHandler<SitPlayerDownCommand, SitPlayerDownHandler, SitPlayerDownResponse>(builder.Services);
+        RegisterCommandHandler<StandPlayerUpCommand, StandPlayerUpHandler, StandPlayerUpResponse>(builder.Services);
+        RegisterCommandHandler<SubmitPlayerActionCommand, SubmitPlayerActionHandler, SubmitPlayerActionResponse>(builder.Services);
         builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 
         // Register queries
@@ -62,7 +62,7 @@ public static class Bootstrapper
         builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
         // Register domain events
-        RegisterEventHandler<TableIsCreatedEvent, TableIsCreatedEventHandler>(builder.Services);
+        RegisterEventHandler<TableCreatedEvent, TableCreatedEventHandler>(builder.Services);
         RegisterEventHandler<PlayerSatDownEvent, PlayerSatDownEventHandler>(builder.Services);
         RegisterEventHandler<PlayerStoodUpEvent, PlayerStoodUpEventHandler>(builder.Services);
         builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
@@ -72,18 +72,17 @@ public static class Bootstrapper
         RegisterIntegrationEventHandler<PlayerSatOutIntegrationEvent, PlayerSatOutHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerSatInIntegrationEvent, PlayerSatInHandler>(builder.Services);
         RegisterIntegrationEventHandler<PlayerStoodUpIntegrationEvent, PlayerStoodUpHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HandIsCreatedIntegrationEvent, HandIsCreatedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HandIsStartedIntegrationEvent, HandIsStartedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HandIsFinishedIntegrationEvent, HandIsFinishedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<BlindIsPostedIntegrationEvent, BlindIsPostedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HoleCardsAreDealtIntegrationEvent, HoleCardsAreDealtHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HoleCardsAreShownIntegrationEvent, HoleCardsAreShownHandler>(builder.Services);
-        RegisterIntegrationEventHandler<HoleCardsAreMuckedIntegrationEvent, HoleCardsAreMuckedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<BoardCardsAreDealtIntegrationEvent, BoardCardsAreDealtHandler>(builder.Services);
-        RegisterIntegrationEventHandler<DecisionIsRequestedIntegrationEvent, DecisionIsRequestedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<DecisionIsCommittedIntegrationEvent, DecisionIsCommittedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<RefundIsCommittedIntegrationEvent, RefundIsCommittedHandler>(builder.Services);
-        RegisterIntegrationEventHandler<AwardIsCommittedIntegrationEvent, AwardIsCommittedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandStartedIntegrationEvent, HandStartedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HandFinishedIntegrationEvent, HandFinishedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<BlindPostedIntegrationEvent, BlindPostedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HoleCardsDealtIntegrationEvent, HoleCardsDealtHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HoleCardsShownIntegrationEvent, HoleCardsShownHandler>(builder.Services);
+        RegisterIntegrationEventHandler<HoleCardsMuckedIntegrationEvent, HoleCardsMuckedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<BoardCardsDealtIntegrationEvent, BoardCardsDealtHandler>(builder.Services);
+        RegisterIntegrationEventHandler<PlayerActionRequestedIntegrationEvent, PlayerActionRequestedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<PlayerActedIntegrationEvent, PlayerActedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<BetRefundedIntegrationEvent, BetRefundedHandler>(builder.Services);
+        RegisterIntegrationEventHandler<SidePotAwardedIntegrationEvent, SidePotAwardedHandler>(builder.Services);
         builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
 
         builder.Services.Configure<RabbitMqConnectionOptions>(

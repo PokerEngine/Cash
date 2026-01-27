@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public struct RefundIsCommittedIntegrationEvent : IIntegrationEvent
+public record struct PlayerActedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -14,19 +14,20 @@ public struct RefundIsCommittedIntegrationEvent : IIntegrationEvent
 
     public required Guid HandUid { get; init; }
     public required string Nickname { get; init; }
+    public required string Type { get; init; }
     public required int Amount { get; init; }
 }
 
-public class RefundIsCommittedHandler(
+public class PlayerActedHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository
-) : IIntegrationEventHandler<RefundIsCommittedIntegrationEvent>
+) : IIntegrationEventHandler<PlayerActedIntegrationEvent>
 {
-    public async Task HandleAsync(RefundIsCommittedIntegrationEvent integrationEvent)
+    public async Task HandleAsync(PlayerActedIntegrationEvent integrationEvent)
     {
         var events = await repository.GetEventsAsync(integrationEvent.TableUid);
         var table = Table.FromEvents(integrationEvent.TableUid, events);
-        // TODO: apply putting chips back into player's stack
+        // TODO: apply taking chips from player's stack
 
         await connectionRegistry.SendIntegrationEventToTableAsync(
             tableUid: integrationEvent.TableUid,

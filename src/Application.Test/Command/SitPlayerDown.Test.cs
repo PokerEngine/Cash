@@ -7,7 +7,7 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class SitDownPlayerTest
+public class SitPlayerDownTest
 {
     [Fact]
     public async Task HandleAsync_Valid_ShouldSitDown()
@@ -18,14 +18,14 @@ public class SitDownPlayerTest
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
         await eventDispatcher.ClearDispatchedEvents(tableUid);
 
-        var command = new SitDownPlayerCommand
+        var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
             Nickname = "Alice",
             Seat = 2,
             Stack = 1000
         };
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
+        var handler = new SitPlayerDownHandler(repository, eventDispatcher);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -54,14 +54,14 @@ public class SitDownPlayerTest
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
 
-        var command = new SitDownPlayerCommand
+        var command = new SitPlayerDownCommand
         {
             Uid = new TableUid(Guid.NewGuid()),
             Nickname = "Alice",
             Seat = 2,
             Stack = 1000
         };
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
+        var handler = new SitPlayerDownHandler(repository, eventDispatcher);
 
         // Act
         var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -92,7 +92,7 @@ public class SitDownPlayerTest
         return response.Uid;
     }
 
-    private async Task SitDownPlayerAsync(
+    private async Task SitPlayerDownAsync(
         StubRepository repository,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
@@ -101,8 +101,8 @@ public class SitDownPlayerTest
         int stack
     )
     {
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
-        var command = new SitDownPlayerCommand
+        var handler = new SitPlayerDownHandler(repository, eventDispatcher);
+        var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
             Nickname = nickname,

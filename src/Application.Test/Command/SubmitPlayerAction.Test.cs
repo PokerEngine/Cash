@@ -8,17 +8,17 @@ using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
-public class CommitDecisionTest
+public class SubmitPlayerActionTest
 {
     [Fact]
-    public async Task HandleAsync_Valid_ShouldCommitDecision()
+    public async Task HandleAsync_Valid_ShouldSubmitPlayerAction()
     {
         // Arrange
         var repository = new StubRepository();
         var eventDispatcher = new StubEventDispatcher();
         var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
-        await SitDownPlayerAsync(
+        await SitPlayerDownAsync(
             repository: repository,
             eventDispatcher: eventDispatcher,
             tableUid: tableUid,
@@ -26,7 +26,7 @@ public class CommitDecisionTest
             seat: 2,
             stack: 1000
         );
-        await SitDownPlayerAsync(
+        await SitPlayerDownAsync(
             repository: repository,
             eventDispatcher: eventDispatcher,
             tableUid: tableUid,
@@ -36,14 +36,14 @@ public class CommitDecisionTest
         );
         await StartHandAsync(repository, handService, tableUid);
 
-        var command = new CommitDecisionCommand
+        var command = new SubmitPlayerActionCommand
         {
             Uid = tableUid,
             Nickname = "Bobby",
-            Type = "RaiseTo",
-            Amount = 25
+            Type = "RaiseBy",
+            Amount = 20
         };
-        var handler = new CommitDecisionHandler(repository, handService);
+        var handler = new SubmitPlayerActionHandler(repository, handService);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -51,8 +51,6 @@ public class CommitDecisionTest
         // Assert
         Assert.Equal(command.Uid, response.Uid);
         Assert.Equal(command.Nickname, response.Nickname);
-
-        // TODO: perform taking chips from player's stack and adding to pot, and test it
     }
 
     private async Task<Guid> CreateTableAsync(StubRepository repository, StubEventDispatcher eventDispatcher)
@@ -71,7 +69,7 @@ public class CommitDecisionTest
         return response.Uid;
     }
 
-    private async Task SitDownPlayerAsync(
+    private async Task SitPlayerDownAsync(
         StubRepository repository,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
@@ -80,8 +78,8 @@ public class CommitDecisionTest
         int stack
     )
     {
-        var handler = new SitDownPlayerHandler(repository, eventDispatcher);
-        var command = new SitDownPlayerCommand
+        var handler = new SitPlayerDownHandler(repository, eventDispatcher);
+        var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
             Nickname = nickname,
@@ -100,7 +98,7 @@ public class CommitDecisionTest
         var table = Table.FromEvents(tableUid, await repository.GetEventsAsync(tableUid));
         table.RotateButton();
 
-        var handUid = await handService.CreateAsync(
+        var handUid = await handService.StartAsync(
             tableUid: table.Uid,
             game: table.Game,
             maxSeat: table.MaxSeat,
@@ -111,9 +109,7 @@ public class CommitDecisionTest
             buttonSeat: (Seat)table.ButtonSeat!,
             participants: table.ActivePlayers.Select(GetParticipant).ToList()
         );
-        table.SetCurrentHand(handUid);
-
-        await handService.StartAsync(handUid);
+        table.StartCurrentHand(handUid);
 
         await repository.AddEventsAsync(tableUid, table.PullEvents());
     }

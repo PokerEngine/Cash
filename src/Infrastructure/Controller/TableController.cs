@@ -35,53 +35,53 @@ public class TableController(
     }
 
     [HttpPost("{uid:guid}/sit-down/{nickname}")]
-    [ProducesResponseType(typeof(SitDownPlayerResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SitPlayerDownResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> SitDownPlayer(Guid uid, string nickname, [FromBody] SitDownPlayerRequest request)
+    public async Task<IActionResult> SitPlayerDown(Guid uid, string nickname, [FromBody] SitPlayerDownRequest request)
     {
-        var command = new SitDownPlayerCommand
+        var command = new SitPlayerDownCommand
         {
             Uid = uid,
             Nickname = nickname,
             Seat = request.Seat,
             Stack = request.Stack
         };
-        var response = await commandDispatcher.DispatchAsync<SitDownPlayerCommand, SitDownPlayerResponse>(command);
+        var response = await commandDispatcher.DispatchAsync<SitPlayerDownCommand, SitPlayerDownResponse>(command);
         return Ok(response);
     }
 
     [HttpPost("{uid:guid}/stand-up/{nickname}")]
-    [ProducesResponseType(typeof(StandUpPlayerResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(StandPlayerUpResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> StandUpPlayer(Guid uid, string nickname)
+    public async Task<IActionResult> StandPlayerUp(Guid uid, string nickname)
     {
-        var command = new StandUpPlayerCommand
+        var command = new StandPlayerUpCommand
         {
             Uid = uid,
             Nickname = nickname
         };
-        var response = await commandDispatcher.DispatchAsync<StandUpPlayerCommand, StandUpPlayerResponse>(command);
+        var response = await commandDispatcher.DispatchAsync<StandPlayerUpCommand, StandPlayerUpResponse>(command);
         return Ok(response);
     }
 
-    [HttpPost("{uid:guid}/commit-decision/{nickname}")]
-    [ProducesResponseType(typeof(CommitDecisionResponse), StatusCodes.Status200OK)]
+    [HttpPost("{uid:guid}/submit-player-action/{nickname}")]
+    [ProducesResponseType(typeof(SubmitPlayerActionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CommitDecision(Guid uid, string nickname, [FromBody] CommitDecisionRequest request)
+    public async Task<IActionResult> SubmitPlayerAction(Guid uid, string nickname, [FromBody] SubmitPlayerActionRequest request)
     {
-        var command = new CommitDecisionCommand
+        var command = new SubmitPlayerActionCommand
         {
             Uid = uid,
             Nickname = nickname,
             Type = request.Type,
             Amount = request.Amount
         };
-        var response = await commandDispatcher.DispatchAsync<CommitDecisionCommand, CommitDecisionResponse>(command);
+        var response = await commandDispatcher.DispatchAsync<SubmitPlayerActionCommand, SubmitPlayerActionResponse>(command);
         return Ok(response);
     }
 
@@ -113,13 +113,13 @@ public record CreateTableRequest
     public required string ChipCostCurrency { get; init; }
 }
 
-public record SitDownPlayerRequest
+public record SitPlayerDownRequest
 {
     public required int Seat { get; init; }
     public required int Stack { get; init; }
 }
 
-public record CommitDecisionRequest
+public record SubmitPlayerActionRequest
 {
     public required string Type { get; init; }
     public required int Amount { get; init; }

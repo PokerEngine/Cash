@@ -30,7 +30,7 @@ public class RemoteHandService(
         };
     }
 
-    public async Task<HandUid> CreateAsync(
+    public async Task<HandUid> StartAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -44,7 +44,7 @@ public class RemoteHandService(
     )
     {
         var url = "/api/hand";
-        var request = new CreateHandRequest
+        var request = new StartHandRequest
         {
             TableUid = tableUid,
             TableType = TableType,
@@ -57,36 +57,26 @@ public class RemoteHandService(
             ButtonSeat = buttonSeat,
             Participants = participants.Select(SerializeParticipant).ToList()
         };
-        var response = await PostAsync<CreateHandRequest, CreateHandResponse>(url, request, cancellationToken);
+        var response = await PostAsync<StartHandRequest, StartHandResponse>(url, request, cancellationToken);
 
         return response.Uid;
     }
 
-    public async Task StartAsync(
-        HandUid handUid,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var url = $"/api/hand/{handUid}/start";
-        var request = new EmptyRequest();
-        await PostAsync<EmptyRequest, EmptyResponse>(url, request, cancellationToken);
-    }
-
-    public async Task CommitDecisionAsync(
+    public async Task SubmitPlayerActionAsync(
         HandUid handUid,
         Nickname nickname,
-        DecisionType type,
+        PlayerActionType type,
         Chips amount,
         CancellationToken cancellationToken = default
     )
     {
-        var url = $"/api/hand/{handUid}/commit-decision/{nickname}";
-        var request = new CommitDecisionRequest
+        var url = $"/api/hand/{handUid}/submit-player-action/{nickname}";
+        var request = new SubmitPlayerActionRequest
         {
             Type = type.ToString(),
             Amount = amount
         };
-        await PostAsync<CommitDecisionRequest, EmptyResponse>(url, request, cancellationToken);
+        await PostAsync<SubmitPlayerActionRequest, EmptyResponse>(url, request, cancellationToken);
     }
 
     private async Task<TResponse> GetAsync<TResponse>(string url, CancellationToken cancellationToken)
@@ -133,9 +123,9 @@ public class RemoteHandService(
         return JsonSerializer.Deserialize<TResponse>(responseJson, JsonSerializerOptions)!;
     }
 
-    private CreateHandRequestParticipant SerializeParticipant(HandParticipant participant)
+    private StartHandRequestParticipant SerializeParticipant(HandParticipant participant)
     {
-        return new CreateHandRequestParticipant
+        return new StartHandRequestParticipant
         {
             Nickname = participant.Nickname,
             Seat = participant.Seat,
@@ -169,8 +159,8 @@ public class RemoteHandService(
         return new HandStatePot
         {
             Ante = pot.Ante,
-            CommittedBets = pot.CommittedBets.Select(DeserializeBet).ToList(),
-            UncommittedBets = pot.UncommittedBets.Select(DeserializeBet).ToList(),
+            CollectedBets = pot.CollectedBets.Select(DeserializeBet).ToList(),
+            CurrentBets = pot.CurrentBets.Select(DeserializeBet).ToList(),
             Awards = pot.Awards.Select(DeserializeAward).ToList()
         };
     }
@@ -188,7 +178,7 @@ public class RemoteHandService(
     {
         return new HandStateAward
         {
-            Nicknames = award.Nicknames.Select(n => new Nickname(n)).ToList(),
+            Winners = award.Winners.Select(n => new Nickname(n)).ToList(),
             Amount = award.Amount
         };
     }
@@ -238,8 +228,8 @@ internal sealed record GetHandResponseStatePlayer
 internal sealed record GetHandResponseStatePot
 {
     public required int Ante { get; init; }
-    public required List<GetHandResponseStateBet> CommittedBets { get; init; }
-    public required List<GetHandResponseStateBet> UncommittedBets { get; init; }
+    public required List<GetHandResponseStateBet> CollectedBets { get; init; }
+    public required List<GetHandResponseStateBet> CurrentBets { get; init; }
     public required List<GetHandResponseStateAward> Awards { get; init; }
 }
 
@@ -251,11 +241,11 @@ internal sealed record GetHandResponseStateBet
 
 internal sealed record GetHandResponseStateAward
 {
-    public required List<string> Nicknames { get; init; }
+    public required List<string> Winners { get; init; }
     public required int Amount { get; init; }
 }
 
-internal sealed record CreateHandRequest
+internal sealed record StartHandRequest
 {
     public required Guid TableUid { get; init; }
     public required string TableType { get; init; }
@@ -266,26 +256,25 @@ internal sealed record CreateHandRequest
     public required int? SmallBlindSeat { get; init; }
     public required int BigBlindSeat { get; init; }
     public required int ButtonSeat { get; init; }
-    public required List<CreateHandRequestParticipant> Participants { get; init; }
+    public required List<StartHandRequestParticipant> Participants { get; init; }
 }
 
-internal sealed record CreateHandRequestParticipant
+internal sealed record StartHandRequestParticipant
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
     public required int Stack { get; init; }
 }
 
-internal sealed record CreateHandResponse
+internal sealed record StartHandResponse
 {
     public required Guid Uid { get; init; }
 }
 
-internal sealed record CommitDecisionRequest
+internal sealed record SubmitPlayerActionRequest
 {
     public required string Type { get; init; }
     public required int Amount { get; init; }
 }
 
-internal sealed record EmptyRequest;
 internal sealed record EmptyResponse;

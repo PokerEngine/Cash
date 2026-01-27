@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public struct HoleCardsAreDealtIntegrationEvent : IIntegrationEvent
+public struct HoleCardsDealtIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }
@@ -17,17 +17,17 @@ public struct HoleCardsAreDealtIntegrationEvent : IIntegrationEvent
     public required string Cards { get; init; }
 }
 
-public class HoleCardsAreDealtHandler(
+public class HoleCardsDealtHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository
-) : IIntegrationEventHandler<HoleCardsAreDealtIntegrationEvent>
+) : IIntegrationEventHandler<HoleCardsDealtIntegrationEvent>
 {
-    public async Task HandleAsync(HoleCardsAreDealtIntegrationEvent integrationEvent)
+    public async Task HandleAsync(HoleCardsDealtIntegrationEvent integrationEvent)
     {
         var events = await repository.GetEventsAsync(integrationEvent.TableUid);
         var table = Table.FromEvents(integrationEvent.TableUid, events);
 
-        var anonymousIntegrationEvent = new HoleCardsAreDealtIntegrationEvent
+        var anonymousIntegrationEvent = new HoleCardsDealtIntegrationEvent
         {
             Uid = integrationEvent.Uid,
             CorrelationUid = integrationEvent.CorrelationUid,

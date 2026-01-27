@@ -47,7 +47,7 @@ public class PlayerSatDownHandler(
     {
         table.RotateButton();
 
-        var handUid = await handService.CreateAsync(
+        var handUid = await handService.StartAsync(
             tableUid: table.Uid,
             game: table.Game,
             maxSeat: table.MaxSeat,
@@ -58,10 +58,7 @@ public class PlayerSatDownHandler(
             buttonSeat: (Seat)table.ButtonSeat!,
             participants: table.ActivePlayers.Select(GetParticipant).ToList()
         );
-
-        table.SetCurrentHand(handUid);
-
-        await handService.StartAsync(handUid);
+        table.StartCurrentHand(handUid);
     }
 
     private HandParticipant GetParticipant(Player player)

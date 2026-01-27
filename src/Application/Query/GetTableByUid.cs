@@ -54,8 +54,8 @@ public record GetTableByUidResponseHandStatePlayer
 public record GetTableByUidResponseHandStatePot
 {
     public required int Ante { get; init; }
-    public required List<GetTableByUidResponseHandStateBet> CommittedBets { get; init; }
-    public required List<GetTableByUidResponseHandStateBet> UncommittedBets { get; init; }
+    public required List<GetTableByUidResponseHandStateBet> CollectedBets { get; init; }
+    public required List<GetTableByUidResponseHandStateBet> CurrentBets { get; init; }
     public required List<GetTableByUidResponseHandStateAward> Awards { get; init; }
 }
 
@@ -67,7 +67,7 @@ public record GetTableByUidResponseHandStateBet
 
 public record GetTableByUidResponseHandStateAward
 {
-    public required List<string> Nicknames { get; init; }
+    public required List<string> Winners { get; init; }
     public required int Amount { get; init; }
 }
 
@@ -150,8 +150,8 @@ public class GetTableByUidHandler(
         return new GetTableByUidResponseHandStatePot
         {
             Ante = pot.Ante,
-            CommittedBets = pot.CommittedBets.Select(SerializeHandStateBet).ToList(),
-            UncommittedBets = pot.UncommittedBets.Select(SerializeHandStateBet).ToList(),
+            CollectedBets = pot.CollectedBets.Select(SerializeHandStateBet).ToList(),
+            CurrentBets = pot.CurrentBets.Select(SerializeHandStateBet).ToList(),
             Awards = pot.Awards.Select(SerializeHandStateAward).ToList()
         };
     }
@@ -169,7 +169,7 @@ public class GetTableByUidHandler(
     {
         return new GetTableByUidResponseHandStateAward
         {
-            Nicknames = award.Nicknames.Select(x => (string)x).ToList(),
+            Winners = award.Winners.Select(x => (string)x).ToList(),
             Amount = award.Amount
         };
     }

@@ -7,7 +7,7 @@ public interface IEvent
     DateTime OccurredAt { init; get; }
 }
 
-public record struct TableIsCreatedEvent : IEvent
+public record struct TableCreatedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
@@ -48,19 +48,19 @@ public record struct PlayerSatInEvent : IEvent
     public required Nickname Nickname { get; init; }
 }
 
-public record struct ButtonIsRotatedEvent : IEvent
+public record struct ButtonRotatedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 }
 
-public record struct CurrentHandIsSetEvent : IEvent
+public record struct CurrentHandStartedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
     public required HandUid HandUid { get; init; }
 }
 
-public record struct CurrentHandIsClearedEvent : IEvent
+public record struct CurrentHandFinishedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 

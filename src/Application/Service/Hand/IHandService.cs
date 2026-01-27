@@ -9,7 +9,7 @@ public interface IHandService
         CancellationToken cancellationToken = default
     );
 
-    Task<HandUid> CreateAsync(
+    Task<HandUid> StartAsync(
         TableUid tableUid,
         Game game,
         Seat maxSeat,
@@ -22,15 +22,10 @@ public interface IHandService
         CancellationToken cancellationToken = default
     );
 
-    Task StartAsync(
-        HandUid handUid,
-        CancellationToken cancellationToken = default
-    );
-
-    Task CommitDecisionAsync(
+    Task SubmitPlayerActionAsync(
         HandUid handUid,
         Nickname nickname,
-        DecisionType type,
+        PlayerActionType type,
         Chips amount,
         CancellationToken cancellationToken = default
     );
@@ -67,8 +62,8 @@ public readonly struct HandStatePlayer
 public readonly struct HandStatePot
 {
     public required Chips Ante { get; init; }
-    public required List<HandStateBet> CommittedBets { get; init; }
-    public required List<HandStateBet> UncommittedBets { get; init; }
+    public required List<HandStateBet> CollectedBets { get; init; }
+    public required List<HandStateBet> CurrentBets { get; init; }
     public required List<HandStateAward> Awards { get; init; }
 }
 
@@ -80,14 +75,14 @@ public readonly struct HandStateBet
 
 public readonly struct HandStateAward
 {
-    public required List<Nickname> Nicknames { get; init; }
+    public required List<Nickname> Winners { get; init; }
     public required Chips Amount { get; init; }
 }
 
-public enum DecisionType
+public enum PlayerActionType
 {
     Fold,
     Check,
-    Call,
-    RaiseTo
+    CallBy,
+    RaiseBy
 }

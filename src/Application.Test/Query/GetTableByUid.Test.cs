@@ -17,7 +17,7 @@ public class GetTableByUidTest
         var eventDispatcher = new StubEventDispatcher();
         var handService = new StubHandService();
         var tableUid = await CreateTableAsync(repository, eventDispatcher);
-        await SitDownPlayerAsync(repository, eventDispatcher, tableUid, "Alice", 2, 1000);
+        await SitPlayerDownAsync(repository, eventDispatcher, tableUid, "Alice", 2, 1000);
 
         var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
@@ -86,7 +86,7 @@ public class GetTableByUidTest
         return response.Uid;
     }
 
-    private async Task SitDownPlayerAsync(
+    private async Task SitPlayerDownAsync(
         StubRepository repository,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
@@ -95,11 +95,11 @@ public class GetTableByUidTest
         int stack
     )
     {
-        var handler = new SitDownPlayerHandler(
+        var handler = new SitPlayerDownHandler(
             repository: repository,
             eventDispatcher: eventDispatcher
         );
-        var command = new SitDownPlayerCommand
+        var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
             Nickname = nickname,
