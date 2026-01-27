@@ -1,4 +1,6 @@
 using Application.Connection;
+using Application.Repository;
+using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
@@ -29,7 +31,8 @@ public record HandStartedIntegrationEvent : IIntegrationEvent
 }
 
 public class HandStartedHandler(
-    IConnectionRegistry connectionRegistry
+    IConnectionRegistry connectionRegistry,
+    IRepository repository
 ) : IIntegrationEventHandler<HandStartedIntegrationEvent>
 {
     public async Task HandleAsync(HandStartedIntegrationEvent integrationEvent)
@@ -38,5 +41,13 @@ public class HandStartedHandler(
             tableUid: integrationEvent.TableUid,
             integrationEvent: integrationEvent
         );
+
+        var events = await repository.GetEventsAsync(integrationEvent.TableUid);
+        var table = Table.FromEvents(integrationEvent.TableUid, events);
+
+        table.StartCurrentHand(integrationEvent.HandUid);
+
+        events = table.PullEvents();
+        await repository.AddEventsAsync(table.Uid, events);
     }
 }

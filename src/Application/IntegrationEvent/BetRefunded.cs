@@ -24,13 +24,20 @@ public class BetRefundedHandler(
 {
     public async Task HandleAsync(BetRefundedIntegrationEvent integrationEvent)
     {
-        var events = await repository.GetEventsAsync(integrationEvent.TableUid);
-        var table = Table.FromEvents(integrationEvent.TableUid, events);
-        // TODO: apply putting chips back into player's stack
-
         await connectionRegistry.SendIntegrationEventToTableAsync(
             tableUid: integrationEvent.TableUid,
             integrationEvent: integrationEvent
         );
+
+        if (integrationEvent.Amount > 0)
+        {
+            var events = await repository.GetEventsAsync(integrationEvent.TableUid);
+            var table = Table.FromEvents(integrationEvent.TableUid, events);
+
+            table.CreditPlayerChips(integrationEvent.Nickname, integrationEvent.Amount);
+
+            events = table.PullEvents();
+            await repository.AddEventsAsync(table.Uid, events);
+        }
     }
 }
