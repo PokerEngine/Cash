@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace Application.IntegrationEvent;
 
-public readonly record struct IntegrationEventRoutingKey
+public readonly struct IntegrationEventRoutingKey
 {
     private static readonly Regex Pattern = new(
         "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)*$",

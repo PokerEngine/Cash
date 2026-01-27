@@ -6,7 +6,7 @@ using Domain.ValueObject;
 
 namespace Application.IntegrationEvent;
 
-public record struct HandFinishedIntegrationEvent : IIntegrationEvent
+public record HandFinishedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

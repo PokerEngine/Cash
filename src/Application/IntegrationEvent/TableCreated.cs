@@ -1,6 +1,6 @@
 namespace Application.IntegrationEvent;
 
-public record struct TableCreatedIntegrationEvent : IIntegrationEvent
+public record TableCreatedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

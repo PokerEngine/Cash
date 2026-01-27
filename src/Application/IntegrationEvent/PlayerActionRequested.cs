@@ -2,7 +2,7 @@ using Application.Connection;
 
 namespace Application.IntegrationEvent;
 
-public record struct PlayerActionRequestedIntegrationEvent : IIntegrationEvent
+public record PlayerActionRequestedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

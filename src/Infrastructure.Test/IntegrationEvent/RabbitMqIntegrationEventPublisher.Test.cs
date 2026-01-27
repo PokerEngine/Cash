@@ -172,7 +172,7 @@ public class RabbitMqIntegrationEventPublisherTest(
     }
 }
 
-internal record TestPublishedIntegrationEvent : IIntegrationEvent
+internal sealed record TestPublishedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { get; init; }
     public Guid? CorrelationUid { get; init; }
@@ -184,14 +184,10 @@ internal record TestPublishedIntegrationEvent : IIntegrationEvent
     public required int Number { get; init; }
     public required List<IntegrationEventParticipant> Participants { get; init; }
 
-    public virtual bool Equals(TestPublishedIntegrationEvent? other)
+    public bool Equals(TestPublishedIntegrationEvent? other)
     {
-        if (other is null)
-        {
-            return false;
-        }
-
-        return Uid.Equals(other.Uid)
+        return other is not null
+               && Uid.Equals(other.Uid)
                && CorrelationUid.Equals(other.CorrelationUid)
                && OccurredAt.Equals(other.OccurredAt)
                && TableUid.Equals(other.TableUid)

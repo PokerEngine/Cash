@@ -2,7 +2,7 @@ using Application.Connection;
 
 namespace Application.IntegrationEvent;
 
-public struct HoleCardsMuckedIntegrationEvent : IIntegrationEvent
+public record HoleCardsMuckedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

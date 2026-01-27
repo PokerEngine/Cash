@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public struct BetRefundedIntegrationEvent : IIntegrationEvent
+public record BetRefundedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

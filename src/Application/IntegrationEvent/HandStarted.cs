@@ -2,14 +2,14 @@ using Application.Connection;
 
 namespace Application.IntegrationEvent;
 
-public record struct IntegrationEventParticipant
+public record IntegrationEventParticipant
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
     public required int Stack { get; init; }
 }
 
-public record struct HandStartedIntegrationEvent : IIntegrationEvent
+public record HandStartedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

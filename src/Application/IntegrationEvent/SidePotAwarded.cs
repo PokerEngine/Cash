@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public struct SidePotAwardedIntegrationEvent : IIntegrationEvent
+public record SidePotAwardedIntegrationEvent : IIntegrationEvent
 {
     public required Guid Uid { init; get; }
     public Guid? CorrelationUid { init; get; }

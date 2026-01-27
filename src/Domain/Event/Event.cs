@@ -7,7 +7,7 @@ public interface IEvent
     DateTime OccurredAt { init; get; }
 }
 
-public record struct TableCreatedEvent : IEvent
+public sealed record TableCreatedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
@@ -18,7 +18,7 @@ public record struct TableCreatedEvent : IEvent
     public required Money ChipCost { get; init; }
 }
 
-public record struct PlayerSatDownEvent : IEvent
+public sealed record PlayerSatDownEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
@@ -27,40 +27,40 @@ public record struct PlayerSatDownEvent : IEvent
     public required Chips Stack { get; init; }
 }
 
-public record struct PlayerStoodUpEvent : IEvent
+public sealed record PlayerStoodUpEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
     public required Nickname Nickname { get; init; }
 }
 
-public record struct PlayerSatOutEvent : IEvent
+public sealed record PlayerSatOutEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
     public required Nickname Nickname { get; init; }
 }
 
-public record struct PlayerSatInEvent : IEvent
+public sealed record PlayerSatInEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
     public required Nickname Nickname { get; init; }
 }
 
-public record struct ButtonRotatedEvent : IEvent
+public sealed record ButtonRotatedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 }
 
-public record struct CurrentHandStartedEvent : IEvent
+public sealed record CurrentHandStartedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
     public required HandUid HandUid { get; init; }
 }
 
-public record struct CurrentHandFinishedEvent : IEvent
+public sealed record CurrentHandFinishedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 

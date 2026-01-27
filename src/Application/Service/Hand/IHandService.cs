@@ -31,26 +31,26 @@ public interface IHandService
     );
 }
 
-public record struct HandParticipant
+public record HandParticipant
 {
     public required Nickname Nickname { get; init; }
     public required Seat Seat { get; init; }
     public required Chips Stack { get; init; }
 }
 
-public record struct HandState
+public record HandState
 {
     public required HandStateTable Table { get; init; }
     public required HandStatePot Pot { get; init; }
 }
 
-public readonly struct HandStateTable
+public record HandStateTable
 {
     public required List<HandStatePlayer> Players { get; init; }
     public required string BoardCards { get; init; }
 }
 
-public readonly struct HandStatePlayer
+public record HandStatePlayer
 {
     public required Nickname Nickname { get; init; }
     public required Seat Seat { get; init; }
@@ -59,7 +59,7 @@ public readonly struct HandStatePlayer
     public required bool IsFolded { get; init; }
 }
 
-public readonly struct HandStatePot
+public record HandStatePot
 {
     public required Chips Ante { get; init; }
     public required List<HandStateBet> CollectedBets { get; init; }
@@ -67,13 +67,13 @@ public readonly struct HandStatePot
     public required List<HandStateAward> Awards { get; init; }
 }
 
-public readonly struct HandStateBet
+public record HandStateBet
 {
     public required Nickname Nickname { get; init; }
     public required Chips Amount { get; init; }
 }
 
-public readonly struct HandStateAward
+public record HandStateAward
 {
     public required List<Nickname> Winners { get; init; }
     public required Chips Amount { get; init; }
