@@ -54,6 +54,26 @@ Content-Type: application/json
     "stack": 900
 }
 
+### Submit Alice's action
+POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/submit-action/alice
+Accept: application/json
+Content-Type: application/json
+
+{
+  "type": "RaiseBy",
+  "amount": 20
+}
+
+### Submit Bobby's action
+POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/submit-action/bobby
+Accept: application/json
+Content-Type: application/json
+
+{
+  "type": "CallBy",
+  "amount": 15
+}
+
 ### Stand Alice up from the table
 POST {{Infrastructure_HostAddress}}/api/table/{{tableUid}}/stand-up/alice
 Accept: application/json

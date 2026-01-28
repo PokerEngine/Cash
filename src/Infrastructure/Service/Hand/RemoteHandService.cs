@@ -70,7 +70,7 @@ public class RemoteHandService(
         CancellationToken cancellationToken = default
     )
     {
-        var url = $"/api/hand/{handUid}/submit-player-action/{nickname}";
+        var url = $"/api/hand/{handUid}/submit-action/{nickname}";
         var request = new SubmitPlayerActionRequest
         {
             Type = type.ToString(),

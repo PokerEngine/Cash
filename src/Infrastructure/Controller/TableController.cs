@@ -1,6 +1,5 @@
 using Application.Command;
 using Application.Query;
-using Application.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Infrastructure.Controller;
@@ -10,9 +9,7 @@ namespace Infrastructure.Controller;
 [Produces("application/json")]
 public class TableController(
     ICommandDispatcher commandDispatcher,
-    IQueryDispatcher queryDispatcher,
-    IRepository repository,
-    ILogger<TableController> logger
+    IQueryDispatcher queryDispatcher
 ) : ControllerBase
 {
     [HttpPost]
@@ -68,7 +65,7 @@ public class TableController(
         return Ok(response);
     }
 
-    [HttpPost("{uid:guid}/submit-player-action/{nickname}")]
+    [HttpPost("{uid:guid}/submit-action/{nickname}")]
     [ProducesResponseType(typeof(SubmitPlayerActionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -91,12 +88,6 @@ public class TableController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetTableByUid(Guid uid)
     {
-        var events = await repository.GetEventsAsync(uid);
-        foreach (var @event in events)
-        {
-            logger.LogInformation($"{@event}");
-        }
-
         var query = new GetTableByUidQuery { Uid = uid };
         var response = await queryDispatcher.DispatchAsync<GetTableByUidQuery, GetTableByUidResponse>(query);
         return Ok(response);
