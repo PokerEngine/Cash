@@ -1,3 +1,4 @@
+using Application.Exception;
 using Application.Service.Hand;
 using Domain.ValueObject;
 using System.Collections.Concurrent;
@@ -15,7 +16,7 @@ public class InMemoryHandService : IHandService
     {
         if (!_mapping.TryGetValue(handUid, out var state))
         {
-            throw new InvalidOperationException("The hand is not found");
+            throw new ExternalSystemErrorException("The hand is not found");
         }
 
         return Task.FromResult(state);

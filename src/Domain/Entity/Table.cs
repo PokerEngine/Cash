@@ -1,4 +1,5 @@
 using Domain.Event;
+using Domain.Exception;
 using Domain.ValueObject;
 
 namespace Domain.Entity;
@@ -24,7 +25,7 @@ public class Table
     public IEnumerable<Player> Players => _players.OfType<Player>();
     public IEnumerable<Player> ActivePlayers => Players.Where(p => p.IsActive);
 
-    private List<IEvent> _events;
+    private readonly List<IEvent> _events;
 
     private Table(
         TableUid uid,
@@ -86,7 +87,7 @@ public class Table
     {
         if (events.Count == 0 || events[0] is not TableCreatedEvent)
         {
-            throw new InvalidOperationException("The first event must be a TableCreatedEvent");
+            throw new InvalidTableStateException("The first event must be a TableCreatedEvent");
         }
 
         var createdEvent = (TableCreatedEvent)events[0];
@@ -144,19 +145,19 @@ public class Table
     {
         if (seat > MaxSeat)
         {
-            throw new InvalidOperationException($"The table supports seats till {MaxSeat}");
+            throw new SeatNotFoundException($"The table supports seats till {MaxSeat}");
         }
 
         var player = GetPlayerBySeat(seat);
         if (player is not null)
         {
-            throw new InvalidOperationException("The seat has already been occupied at the table");
+            throw new SeatOccupiedException("The seat has already been occupied at the table");
         }
 
         player = GetPlayerByNickname(nickname);
         if (player is not null)
         {
-            throw new InvalidOperationException("A player with the given nickname is already sitting down at the table");
+            throw new PlayerSatDownException("The player has already sat down at the table");
         }
 
         var isWaitingForBigBlind = ShouldWaitForBigBlind();
@@ -164,7 +165,6 @@ public class Table
             nickname: nickname,
             seat: seat,
             stack: stack,
-            isDisconnected: false,
             isSittingOut: false,
             isWaitingForBigBlind: isWaitingForBigBlind
         );
@@ -184,7 +184,7 @@ public class Table
         var player = GetPlayerByNickname(nickname);
         if (player is null)
         {
-            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+            throw new PlayerNotFoundException("The player is not found at the table");
         }
 
         _players[player.Seat - 1] = null;
@@ -202,7 +202,7 @@ public class Table
         var player = GetPlayerByNickname(nickname);
         if (player is null)
         {
-            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+            throw new PlayerNotFoundException("The player is not found at the table");
         }
 
         player.SitOut();
@@ -220,7 +220,7 @@ public class Table
         var player = GetPlayerByNickname(nickname);
         if (player is null)
         {
-            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+            throw new PlayerNotFoundException("The player is not found at the table");
         }
 
         var isWaitingForBigBlind = ShouldWaitForBigBlind();
@@ -239,7 +239,7 @@ public class Table
         var player = GetPlayerByNickname(nickname);
         if (player is null)
         {
-            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+            throw new PlayerNotFoundException("The player is not found at the table");
         }
 
         player.DebitChips(amount);
@@ -258,7 +258,7 @@ public class Table
         var player = GetPlayerByNickname(nickname);
         if (player is null)
         {
-            throw new InvalidOperationException("A player with the given nickname is not found at the table");
+            throw new PlayerNotFoundException("The player is not found at the table");
         }
 
         player.CreditChips(amount);
@@ -276,12 +276,12 @@ public class Table
     {
         if (IsHandInProgress())
         {
-            throw new InvalidOperationException("The previous hand has not been finished yet");
+            throw new InvalidTableStateException("The previous hand has not been finished yet");
         }
 
         if (!HasEnoughPlayersForHand())
         {
-            throw new InvalidOperationException("Not enough players to rotate the button");
+            throw new InvalidTableStateException("Not enough players to rotate the button");
         }
 
         var nextButtonSeat = GetNextButtonSeat(ButtonSeat, SmallBlindSeat);
@@ -309,7 +309,7 @@ public class Table
     {
         if (IsHandInProgress())
         {
-            throw new InvalidOperationException("The previous hand has not been finished yet");
+            throw new InvalidTableStateException("The previous hand has not been finished yet");
         }
 
         CurrentHandUid = handUid;
@@ -326,12 +326,12 @@ public class Table
     {
         if (!IsHandInProgress())
         {
-            throw new InvalidOperationException("The current hand has not been started yet");
+            throw new InvalidTableStateException("The current hand has not been started yet");
         }
 
         if (handUid != CurrentHandUid)
         {
-            throw new InvalidOperationException("The hand does not match the current one");
+            throw new InvalidTableStateException("The hand does not match the current one");
         }
 
         CurrentHandUid = null;
@@ -348,7 +348,7 @@ public class Table
     {
         if (!IsHandInProgress())
         {
-            throw new InvalidOperationException("The current hand has not been set yet");
+            throw new InvalidTableStateException("The current hand has not been set yet");
         }
 
         return (HandUid)CurrentHandUid!;
@@ -433,7 +433,7 @@ public class Table
 
             if (seat == previousSeat)
             {
-                throw new InvalidOperationException("No eligible seats");
+                throw new InvalidTableStateException("No eligible seats at the table");
             }
 
             var player = GetPlayerBySeat(seat);

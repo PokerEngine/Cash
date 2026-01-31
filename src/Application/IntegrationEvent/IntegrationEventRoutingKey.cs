@@ -1,3 +1,4 @@
+using Application.Exception;
 using System.Text.RegularExpressions;
 
 namespace Application.IntegrationEvent;
@@ -14,7 +15,7 @@ public readonly struct IntegrationEventRoutingKey
     {
         if (!Pattern.IsMatch(name))
         {
-            throw new ArgumentException("Must start with a latin letter and contain only latin letters, digits, dots, underscores, and dashes", nameof(name));
+            throw new InternalSystemMisconfiguredException("Must start with a latin letter and contain only latin letters, digits, dots, underscores, and dashes");
         }
 
         _name = name;

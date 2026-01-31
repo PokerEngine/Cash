@@ -1,4 +1,5 @@
 using Application.Command;
+using Application.Exception;
 using Application.Query;
 using Application.Test.Event;
 using Application.Test.Repository;
@@ -48,7 +49,7 @@ public class GetTableByUidTest
     }
 
     [Fact]
-    public async Task HandleAsync_NotExists_ShouldThrowInvalidOperationException()
+    public async Task HandleAsync_NotExists_ShouldThrowException()
     {
         // Arrange
         var repository = new StubRepository();
@@ -61,7 +62,7 @@ public class GetTableByUidTest
         );
 
         // Act
-        var exc = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var exc = await Assert.ThrowsAsync<TableNotFoundException>(async () =>
         {
             await handler.HandleAsync(query);
         });

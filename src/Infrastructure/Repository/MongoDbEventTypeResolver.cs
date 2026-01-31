@@ -1,3 +1,4 @@
+using Application.Exception;
 using Domain.Event;
 
 namespace Infrastructure.Repository;
@@ -30,7 +31,7 @@ internal static class MongoDbEventTypeResolver
     {
         if (!Mapping.TryGetValue(name, out var type))
         {
-            throw new TypeLoadException($"Cannot resolve event {name}");
+            throw new InternalSystemMisconfiguredException($"Cannot resolve event {name}");
         }
 
         return type;

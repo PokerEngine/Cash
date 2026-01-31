@@ -1,5 +1,6 @@
 ﻿using Domain.Entity;
 using Domain.Event;
+using Domain.Exception;
 using Domain.ValueObject;
 
 namespace Domain.Test.Entity;
@@ -205,7 +206,6 @@ public class TableTest
         Assert.Equal(new Seat(1), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
         Assert.False(player.IsWaitingForBigBlind);
-        Assert.False(player.IsDisconnected);
         Assert.False(player.IsSittingOut);
 
         var events = table.PullEvents();
@@ -241,7 +241,6 @@ public class TableTest
         Assert.Equal(new Seat(2), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
         Assert.False(player.IsWaitingForBigBlind);
-        Assert.False(player.IsDisconnected);
         Assert.False(player.IsSittingOut);
     }
 
@@ -275,7 +274,6 @@ public class TableTest
         Assert.Equal(new Seat(3), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
         Assert.False(player.IsWaitingForBigBlind);
-        Assert.False(player.IsDisconnected);
         Assert.False(player.IsSittingOut);
     }
 
@@ -311,12 +309,11 @@ public class TableTest
         Assert.Equal(new Seat(3), player.Seat);
         Assert.Equal(new Chips(1000), player.Stack);
         Assert.True(player.IsWaitingForBigBlind);
-        Assert.False(player.IsDisconnected);
         Assert.False(player.IsSittingOut);
     }
 
     [Fact]
-    public void SitPlayerDown_IsSittingDown_ShouldThrowInvalidOperationException()
+    public void SitPlayerDown_IsSittingDown_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -328,7 +325,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<PlayerSatDownException>(() =>
         {
             table.SitPlayerDown(
                 nickname: new Nickname("Alice"),
@@ -338,12 +335,12 @@ public class TableTest
         });
 
         // Assert
-        Assert.Equal("A player with the given nickname is already sitting down at the table", exc.Message);
+        Assert.Equal("The player has already sat down at the table", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
     [Fact]
-    public void SitPlayerDown_SeatIsOccupied_ShouldThrowInvalidOperationException()
+    public void SitPlayerDown_SeatIsOccupied_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -355,7 +352,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<SeatOccupiedException>(() =>
         {
             table.SitPlayerDown(
                 nickname: new Nickname("Bobby"),
@@ -370,14 +367,14 @@ public class TableTest
     }
 
     [Fact]
-    public void SitPlayerDown_SeatIsOutOfRange_ShouldThrowInvalidOperationException()
+    public void SitPlayerDown_SeatIsOutOfRange_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable(maxSeat: 6);
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<SeatNotFoundException>(() =>
         {
             table.SitPlayerDown(
                 nickname: new Nickname("Alice"),
@@ -416,20 +413,20 @@ public class TableTest
     }
 
     [Fact]
-    public void StandPlayerUp_IsNotSittingDown_ShouldThrowInvalidOperationException()
+    public void StandPlayerUp_IsNotSittingDown_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<PlayerNotFoundException>(() =>
         {
             table.StandPlayerUp(new Nickname("Alice"));
         });
 
         // Assert
-        Assert.Equal("A player with the given nickname is not found at the table", exc.Message);
+        Assert.Equal("The player is not found at the table", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
@@ -460,7 +457,7 @@ public class TableTest
     }
 
     [Fact]
-    public void SitPlayerOut_IsSittingOut_ShouldThrowInvalidOperationException()
+    public void SitPlayerOut_IsSittingOut_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -473,7 +470,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<PlayerSatOutException>(() =>
         {
             table.SitPlayerOut(new Nickname("Alice"));
         });
@@ -484,20 +481,20 @@ public class TableTest
     }
 
     [Fact]
-    public void SitPlayerOut_IsNotSittingDown_ShouldThrowInvalidOperationException()
+    public void SitPlayerOut_IsNotSittingDown_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<PlayerNotFoundException>(() =>
         {
             table.SitPlayerOut(new Nickname("Alice"));
         });
 
         // Assert
-        Assert.Equal("A player with the given nickname is not found at the table", exc.Message);
+        Assert.Equal("The player is not found at the table", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
@@ -619,7 +616,7 @@ public class TableTest
     }
 
     [Fact]
-    public void SitPlayerIn_IsNotSittingOut_ShouldThrowInvalidOperationException()
+    public void SitPlayerIn_IsNotSittingOut_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -631,7 +628,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<PlayerNotSatOutException>(() =>
         {
             table.SitPlayerIn(new Nickname("Alice"));
         });
@@ -642,20 +639,20 @@ public class TableTest
     }
 
     [Fact]
-    public void SitPlayerIn_IsNotSittingDown_ShouldThrowInvalidOperationException()
+    public void SitPlayerIn_IsNotSittingDown_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<PlayerNotFoundException>(() =>
         {
             table.SitPlayerIn(new Nickname("Alice"));
         });
 
         // Assert
-        Assert.Equal("A player with the given nickname is not found at the table", exc.Message);
+        Assert.Equal("The player is not found at the table", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
@@ -680,7 +677,7 @@ public class TableTest
     }
 
     [Fact]
-    public void DebitPlayerChips_WhenNotEnoughStack_ShouldThrowInvalidOperationException()
+    public void DebitPlayerChips_WhenNotEnoughStack_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -692,13 +689,13 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<InsufficientChipsException>(() =>
         {
             table.DebitPlayerChips(new Nickname("Alice"), new Chips(1001));
         });
 
         // Assert
-        Assert.Equal("The player has no enough stack", exc.Message);
+        Assert.Equal("Cannot subtract more chips than available", exc.Message);
         Assert.Empty(table.PullEvents());
     }
 
@@ -1403,7 +1400,7 @@ public class TableTest
     }
 
     [Fact]
-    public void RotateButton_NotEnoughPlayers_ShouldThrowInvalidOperationException()
+    public void RotateButton_NotEnoughPlayers_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -1421,7 +1418,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<InvalidTableStateException>(() =>
         {
             table.RotateButton();
         });
@@ -1432,7 +1429,7 @@ public class TableTest
     }
 
     [Fact]
-    public void RotateButton_HandIsInProgress_ShouldThrowInvalidOperationException()
+    public void RotateButton_HandIsInProgress_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -1451,7 +1448,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<InvalidTableStateException>(() =>
         {
             table.RotateButton();
         });
@@ -1496,7 +1493,7 @@ public class TableTest
     }
 
     [Fact]
-    public void StartCurrentHand_PreviousNotFinished_ShouldThrowInvalidOperationException()
+    public void StartCurrentHand_PreviousNotFinished_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -1515,7 +1512,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<InvalidTableStateException>(() =>
         {
             table.StartCurrentHand(new HandUid(Guid.NewGuid()));
         });
@@ -1562,7 +1559,7 @@ public class TableTest
     }
 
     [Fact]
-    public void FinishCurrentHand_NotStarted_ShouldThrowInvalidOperationException()
+    public void FinishCurrentHand_NotStarted_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -1579,7 +1576,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<InvalidTableStateException>(() =>
         {
             table.FinishCurrentHand(
                 handUid: new HandUid(Guid.NewGuid())
@@ -1592,7 +1589,7 @@ public class TableTest
     }
 
     [Fact]
-    public void FinishCurrentHand_DifferentUid_ShouldThrowInvalidOperationException()
+    public void FinishCurrentHand_DifferentUid_ShouldThrowException()
     {
         // Arrange
         var table = CreateTable();
@@ -1611,7 +1608,7 @@ public class TableTest
         table.PullEvents();
 
         // Act
-        var exc = Assert.Throws<InvalidOperationException>(() =>
+        var exc = Assert.Throws<InvalidTableStateException>(() =>
         {
             table.FinishCurrentHand(
                 handUid: new HandUid(Guid.NewGuid())

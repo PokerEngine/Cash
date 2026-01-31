@@ -1,3 +1,5 @@
+using Domain.Exception;
+
 namespace Domain.ValueObject;
 
 public enum Currency
@@ -16,7 +18,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (amount < 0 || decimal.Round(amount, 2) != amount)
         {
-            throw new ArgumentException("Amount must be a non-negative decimal with a 2-digit fraction", nameof(amount));
+            throw new InsufficientMoneyException("Amount must be a non-negative decimal with a 2-digit fraction");
         }
 
         Amount = amount;
@@ -27,7 +29,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot add money with different currencies");
+            throw new InsufficientMoneyException("Cannot add money with different currencies");
         }
 
         return new(a.Amount + b.Amount, a.Currency);
@@ -37,20 +39,22 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot subtract money with different currencies");
+            throw new InsufficientMoneyException("Cannot subtract money with different currencies");
+        }
+
+        if (a.Amount < b.Amount)
+        {
+            throw new InsufficientMoneyException("Cannot subtract more money than available");
         }
 
         return new(a.Amount - b.Amount, a.Currency);
     }
 
-    public static bool operator !(Money a)
-        => a.Amount == 0;
-
     public static bool operator ==(Money a, Money b)
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return a.Amount == b.Amount;
@@ -60,7 +64,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return a.Amount == b.Amount;
@@ -70,7 +74,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return a.Amount > b.Amount;
@@ -80,7 +84,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return a.Amount < b.Amount;
@@ -90,7 +94,7 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return a.Amount >= b.Amount;
@@ -100,23 +104,17 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
     {
         if (a.Currency != b.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return a.Amount <= b.Amount;
     }
 
-    public static bool operator true(Money a)
-        => a.Amount != 0;
-
-    public static bool operator false(Money a)
-        => a.Amount == 0;
-
     public int CompareTo(Money other)
     {
         if (Currency != other.Currency)
         {
-            throw new InvalidOperationException("Cannot compare money with different currencies");
+            throw new InsufficientMoneyException("Cannot compare money with different currencies");
         }
 
         return Amount.CompareTo(other.Amount);

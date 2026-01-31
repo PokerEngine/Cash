@@ -1,3 +1,5 @@
+using Domain.Exception;
+
 namespace Domain.ValueObject;
 
 public readonly struct Seat : IComparable<Seat>, IEquatable<Seat>
@@ -8,7 +10,7 @@ public readonly struct Seat : IComparable<Seat>, IEquatable<Seat>
     {
         if (number is < 1 or > 9)
         {
-            throw new ArgumentOutOfRangeException(nameof(number), number, "Seat must be between 1 and 9");
+            throw new InvalidTableConfigurationException("Seat must be between 1 and 9");
         }
 
         _number = number;

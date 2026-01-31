@@ -1,3 +1,4 @@
+using Application.Exception;
 using Application.Query;
 
 namespace Infrastructure.Query;
@@ -18,7 +19,7 @@ public class QueryDispatcher(
 
         if (handler is null)
         {
-            throw new InvalidOperationException("Handler is not found");
+            throw new InternalSystemMisconfiguredException($"Handler is not found for {query.GetType().Name}");
         }
 
         return await ((IQueryHandler<TQuery, TResponse>)handler).HandleAsync(query);

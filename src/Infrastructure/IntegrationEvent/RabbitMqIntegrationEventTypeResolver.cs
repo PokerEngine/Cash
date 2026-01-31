@@ -1,3 +1,4 @@
+using Application.Exception;
 using Application.IntegrationEvent;
 
 namespace Infrastructure.IntegrationEvent;
@@ -30,7 +31,7 @@ internal static class RabbitMqIntegrationEventTypeResolver
     {
         if (!Mapping.TryGetValue(name, out var type))
         {
-            throw new TypeLoadException($"Cannot resolve integration event {name}");
+            throw new InternalSystemMisconfiguredException($"Cannot resolve integration event {name}");
         }
 
         return type;

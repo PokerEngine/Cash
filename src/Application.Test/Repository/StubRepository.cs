@@ -1,3 +1,4 @@
+using Application.Exception;
 using Application.Repository;
 using Domain.Event;
 using Domain.ValueObject;
@@ -18,7 +19,7 @@ public class StubRepository : IRepository
     {
         if (!_mapping.TryGetValue(tableUid, out var events))
         {
-            throw new InvalidOperationException("The table is not found");
+            throw new TableNotFoundException("The table is not found");
         }
 
         List<IEvent> snapshot;

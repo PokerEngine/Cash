@@ -1,4 +1,5 @@
 using Application.Command;
+using Application.Exception;
 
 namespace Infrastructure.Command;
 
@@ -18,7 +19,7 @@ public class CommandDispatcher(
 
         if (handler is null)
         {
-            throw new InvalidOperationException("Handler is not found");
+            throw new InternalSystemMisconfiguredException($"Handler is not found for {command.GetType().Name}");
         }
 
         return await ((ICommandHandler<TCommand, TResponse>)handler).HandleAsync(command);

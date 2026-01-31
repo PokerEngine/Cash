@@ -1,3 +1,4 @@
+using Application.Exception;
 using Application.Repository;
 using Domain.Event;
 using Domain.ValueObject;
@@ -39,7 +40,7 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
     }
 
     [Fact]
-    public async Task GetEventsAsync_WhenNotAdded_ShouldThrowInvalidOperationException()
+    public async Task GetEventsAsync_WhenNotAdded_ShouldThrowException()
     {
         // Arrange
         var repository = CreateRepository();
@@ -58,7 +59,7 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
         await repository.AddEventsAsync(tableUid, [@event]);
 
         // Act & Assert
-        var exc = await Assert.ThrowsAsync<InvalidOperationException>(
+        var exc = await Assert.ThrowsAsync<TableNotFoundException>(
             async () => await repository.GetEventsAsync(new TableUid(Guid.NewGuid()))
         );
         Assert.Equal("The table is not found", exc.Message);

@@ -1,3 +1,4 @@
+using Application.Exception;
 using Application.Repository;
 using Domain.Event;
 using Domain.ValueObject;
@@ -49,7 +50,7 @@ public class MongoDbRepository : IRepository
 
         if (events.Count == 0)
         {
-            throw new InvalidOperationException("The table is not found");
+            throw new TableNotFoundException("The table is not found");
         }
 
         return events;

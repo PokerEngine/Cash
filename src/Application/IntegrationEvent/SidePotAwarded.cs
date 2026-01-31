@@ -49,7 +49,7 @@ public class SidePotAwardedHandler(
 
     private IEnumerable<(string, int)> SplitSidePot(SidePotAwardedIntegrationEvent integrationEvent)
     {
-        var amount = integrationEvent.Amount; 
+        var amount = integrationEvent.Amount;
         var amountPerWinner = amount / integrationEvent.Winners.Count;
         var remainder = amount % integrationEvent.Winners.Count;
 

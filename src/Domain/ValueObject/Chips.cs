@@ -1,3 +1,5 @@
+using Domain.Exception;
+
 namespace Domain.ValueObject;
 
 public readonly struct Chips : IComparable<Chips>, IEquatable<Chips>
@@ -8,7 +10,7 @@ public readonly struct Chips : IComparable<Chips>, IEquatable<Chips>
     {
         if (amount < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(amount), amount, "Chips amount must be a non-negative integer");
+            throw new InsufficientChipsException("Chips amount must be a non-negative integer");
         }
 
         _amount = amount;
@@ -24,19 +26,34 @@ public readonly struct Chips : IComparable<Chips>, IEquatable<Chips>
         => new(a._amount + b._amount);
 
     public static Chips operator -(Chips a, Chips b)
-        => new(a._amount - b._amount);
+    {
+        if (a < b)
+        {
+            throw new InsufficientChipsException("Cannot subtract more chips than available");
+        }
 
-    public static Chips operator *(Chips a, int b)
-        => new(a._amount * b);
+        return new(a._amount - b._amount);
+    }
 
     public static Chips operator /(Chips a, int b)
-        => new Chips(a._amount / b);
+    {
+        if (b < 0)
+        {
+            throw new InsufficientChipsException("Cannot divide by a negative integer");
+        }
+
+        return new(a._amount / b);
+    }
 
     public static Chips operator %(Chips a, int b)
-        => new(a._amount % b);
+    {
+        if (b < 0)
+        {
+            throw new InsufficientChipsException("Cannot divide by a negative integer");
+        }
 
-    public static bool operator !(Chips a)
-        => a._amount == 0;
+        return new(a._amount % b);
+    }
 
     public static bool operator ==(Chips a, Chips b)
         => a._amount == b._amount;
@@ -55,12 +72,6 @@ public readonly struct Chips : IComparable<Chips>, IEquatable<Chips>
 
     public static bool operator <=(Chips a, Chips b)
         => a._amount <= b._amount;
-
-    public static bool operator true(Chips a)
-        => a._amount != 0;
-
-    public static bool operator false(Chips a)
-        => a._amount == 0;
 
     public int CompareTo(Chips other)
         => _amount.CompareTo(other._amount);
