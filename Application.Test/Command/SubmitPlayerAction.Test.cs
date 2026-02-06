@@ -3,6 +3,7 @@ using Application.Service.Hand;
 using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Service.Hand;
+using Application.Test.Storage;
 using Domain.Entity;
 using Domain.ValueObject;
 
@@ -15,11 +16,13 @@ public class SubmitPlayerActionTest
     {
         // Arrange
         var repository = new StubRepository();
+        var storage = new StubStorage();
         var eventDispatcher = new StubEventDispatcher();
         var handService = new StubHandService();
-        var tableUid = await CreateTableAsync(repository, eventDispatcher);
+        var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
         await SitPlayerDownAsync(
             repository: repository,
+            storage: storage,
             eventDispatcher: eventDispatcher,
             tableUid: tableUid,
             nickname: "Alice",
@@ -28,13 +31,14 @@ public class SubmitPlayerActionTest
         );
         await SitPlayerDownAsync(
             repository: repository,
+            storage: storage,
             eventDispatcher: eventDispatcher,
             tableUid: tableUid,
             nickname: "Bobby",
             seat: 4,
             stack: 1000
         );
-        await StartHandAsync(repository, handService, tableUid);
+        await StartHandAsync(repository, storage, handService, tableUid);
 
         var command = new SubmitPlayerActionCommand
         {
@@ -53,9 +57,12 @@ public class SubmitPlayerActionTest
         Assert.Equal(command.Nickname, response.Nickname);
     }
 
-    private async Task<Guid> CreateTableAsync(StubRepository repository, StubEventDispatcher eventDispatcher)
+    private async Task<Guid> CreateTableAsync(
+        StubRepository repository,
+        StubStorage storage,
+        StubEventDispatcher eventDispatcher)
     {
-        var handler = new CreateTableHandler(repository, eventDispatcher);
+        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
         var command = new CreateTableCommand
         {
             Game = "NoLimitHoldem",
@@ -71,6 +78,7 @@ public class SubmitPlayerActionTest
 
     private async Task SitPlayerDownAsync(
         StubRepository repository,
+        StubStorage storage,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
         string nickname,
@@ -78,7 +86,7 @@ public class SubmitPlayerActionTest
         int stack
     )
     {
-        var handler = new SitPlayerDownHandler(repository, eventDispatcher);
+        var handler = new SitPlayerDownHandler(repository, storage, eventDispatcher);
         var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
@@ -91,6 +99,7 @@ public class SubmitPlayerActionTest
 
     private async Task StartHandAsync(
         StubRepository repository,
+        StubStorage storage,
         StubHandService handService,
         Guid tableUid
     )
@@ -112,6 +121,7 @@ public class SubmitPlayerActionTest
         table.StartCurrentHand(handUid);
 
         await repository.AddEventsAsync(tableUid, table.PullEvents());
+        await storage.SaveViewAsync(table);
     }
 
     private HandParticipant GetParticipant(Player player)

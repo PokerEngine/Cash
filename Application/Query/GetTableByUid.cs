@@ -1,6 +1,6 @@
-using Application.Repository;
 using Application.Service.Hand;
-using Domain.Entity;
+using Application.Storage;
+using Domain.ValueObject;
 
 namespace Application.Query;
 
@@ -14,10 +14,8 @@ public record GetTableByUidResponse : IQueryResponse
     public required Guid Uid { get; init; }
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
-    public required int SmallBlind { get; init; }
-    public required int BigBlind { get; init; }
-    public required decimal ChipCostAmount { get; init; }
-    public required string ChipCostCurrency { get; init; }
+    public required decimal SmallBlind { get; init; }
+    public required decimal BigBlind { get; init; }
     public required List<GetTableByUidResponsePlayer> Players { get; init; }
     public required GetTableByUidResponseHandState? HandState { get; init; }
 }
@@ -26,7 +24,7 @@ public record GetTableByUidResponsePlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
-    public required int Stack { get; init; }
+    public required decimal Stack { get; init; }
     public required bool IsSittingOut { get; init; }
 }
 
@@ -72,45 +70,40 @@ public record GetTableByUidResponseHandStateAward
 }
 
 public class GetTableByUidHandler(
-    IRepository repository,
+    IStorage storage,
     IHandService handService
 ) : IQueryHandler<GetTableByUidQuery, GetTableByUidResponse>
 {
     public async Task<GetTableByUidResponse> HandleAsync(GetTableByUidQuery command)
     {
-        var table = Table.FromEvents(
-            uid: command.Uid,
-            events: await repository.GetEventsAsync(command.Uid)
-        );
+        var view = await storage.GetDetailViewAsync(command.Uid);
 
         GetTableByUidResponseHandState? handState = null;
-        if (table.IsHandInProgress())
+        if (view.CurrentHandUid is not null)
         {
-            var state = await handService.GetAsync(table.GetCurrentHandUid());
+            var state = await handService.GetAsync((HandUid)view.CurrentHandUid);
             handState = SerializeHandState(state);
         }
 
         return new GetTableByUidResponse
         {
-            Uid = table.Uid,
-            Game = table.Game.ToString(),
-            MaxSeat = table.MaxSeat,
-            SmallBlind = table.SmallBlind,
-            BigBlind = table.BigBlind,
-            ChipCostAmount = table.ChipCost.Amount,
-            ChipCostCurrency = table.ChipCost.Currency.ToString(),
-            Players = table.Players.Select(SerializePlayer).ToList(),
+            Uid = view.Uid,
+            Game = view.Game.ToString(),
+            MaxSeat = view.MaxSeat,
+            SmallBlind = view.SmallBlind.Amount,
+            BigBlind = view.BigBlind.Amount,
+            Players = view.Players.Select(SerializePlayer).ToList(),
             HandState = handState
         };
     }
 
-    private GetTableByUidResponsePlayer SerializePlayer(Player player)
+    private GetTableByUidResponsePlayer SerializePlayer(DetailViewPlayer player)
     {
         return new GetTableByUidResponsePlayer
         {
             Nickname = player.Nickname,
             Seat = player.Seat,
-            Stack = player.Stack,
+            Stack = player.Stack.Amount,
             IsSittingOut = player.IsSittingOut
         };
     }

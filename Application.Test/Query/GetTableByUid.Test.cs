@@ -4,6 +4,7 @@ using Application.Query;
 using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Service.Hand;
+using Application.Test.Storage;
 using Domain.Entity;
 
 namespace Application.Test.Query;
@@ -15,14 +16,15 @@ public class GetTableByUidTest
     {
         // Arrange
         var repository = new StubRepository();
+        var storage = new StubStorage();
         var eventDispatcher = new StubEventDispatcher();
         var handService = new StubHandService();
-        var tableUid = await CreateTableAsync(repository, eventDispatcher);
-        await SitPlayerDownAsync(repository, eventDispatcher, tableUid, "Alice", 2, 1000);
+        var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
+        await SitPlayerDownAsync(repository, storage, eventDispatcher, tableUid, "Alice", 2, 1000);
 
         var query = new GetTableByUidQuery { Uid = tableUid };
         var handler = new GetTableByUidHandler(
-            repository: repository,
+            storage: storage,
             handService: handService
         );
 
@@ -32,12 +34,10 @@ public class GetTableByUidTest
         // Assert
         var table = Table.FromEvents(query.Uid, await repository.GetEventsAsync(query.Uid));
         Assert.Equal((Guid)table.Uid, response.Uid);
-        Assert.Equal(table.Game.ToString(), response.Game);
-        Assert.Equal((int)table.MaxSeat, response.MaxSeat);
-        Assert.Equal((int)table.SmallBlind, response.SmallBlind);
-        Assert.Equal((int)table.BigBlind, response.BigBlind);
-        Assert.Equal(table.ChipCost.Amount, response.ChipCostAmount);
-        Assert.Equal(table.ChipCost.Currency.ToString(), response.ChipCostCurrency);
+        Assert.Equal("NoLimitHoldem", response.Game);
+        Assert.Equal(6, response.MaxSeat);
+        Assert.Equal(5, response.SmallBlind);
+        Assert.Equal(10, response.BigBlind);
 
         Assert.Single(response.Players);
         Assert.Equal("Alice", response.Players[0].Nickname);
@@ -52,14 +52,11 @@ public class GetTableByUidTest
     public async Task HandleAsync_NotExists_ShouldThrowException()
     {
         // Arrange
-        var repository = new StubRepository();
+        var storage = new StubStorage();
         var handService = new StubHandService();
 
         var query = new GetTableByUidQuery { Uid = Guid.NewGuid() };
-        var handler = new GetTableByUidHandler(
-            repository: repository,
-            handService: handService
-        );
+        var handler = new GetTableByUidHandler(storage, handService);
 
         // Act
         var exc = await Assert.ThrowsAsync<TableNotFoundException>(async () =>
@@ -71,9 +68,13 @@ public class GetTableByUidTest
         Assert.Equal("The table is not found", exc.Message);
     }
 
-    private async Task<Guid> CreateTableAsync(StubRepository repository, StubEventDispatcher eventDispatcher)
+    private async Task<Guid> CreateTableAsync(
+        StubRepository repository,
+        StubStorage storage,
+        StubEventDispatcher eventDispatcher
+    )
     {
-        var handler = new CreateTableHandler(repository, eventDispatcher);
+        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
         var command = new CreateTableCommand
         {
             Game = "NoLimitHoldem",
@@ -89,6 +90,7 @@ public class GetTableByUidTest
 
     private async Task SitPlayerDownAsync(
         StubRepository repository,
+        StubStorage storage,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
         string nickname,
@@ -96,10 +98,7 @@ public class GetTableByUidTest
         int stack
     )
     {
-        var handler = new SitPlayerDownHandler(
-            repository: repository,
-            eventDispatcher: eventDispatcher
-        );
+        var handler = new SitPlayerDownHandler(repository, storage, eventDispatcher);
         var command = new SitPlayerDownCommand
         {
             Uid = tableUid,

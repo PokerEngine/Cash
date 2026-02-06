@@ -2,6 +2,7 @@ using Application.Command;
 using Application.Exception;
 using Application.Test.Event;
 using Application.Test.Repository;
+using Application.Test.Storage;
 using Domain.Entity;
 using Domain.Event;
 using Domain.ValueObject;
@@ -15,10 +16,12 @@ public class StandPlayerUpTest
     {
         // Arrange
         var repository = new StubRepository();
+        var storage = new StubStorage();
         var eventDispatcher = new StubEventDispatcher();
-        var tableUid = await CreateTableAsync(repository, eventDispatcher);
+        var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
         await SitPlayerDownAsync(
             repository: repository,
+            storage: storage,
             eventDispatcher: eventDispatcher,
             tableUid: tableUid,
             nickname: "Alice",
@@ -32,7 +35,7 @@ public class StandPlayerUpTest
             Uid = tableUid,
             Nickname = "Alice"
         };
-        var handler = new StandPlayerUpHandler(repository, eventDispatcher);
+        var handler = new StandPlayerUpHandler(repository, storage, eventDispatcher);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -44,6 +47,13 @@ public class StandPlayerUpTest
         var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.Empty(table.Players);
 
+        var detailView = await storage.GetDetailViewAsync(table.Uid);
+        Assert.Empty(detailView.Players);
+
+        var listViews = await storage.GetListViewsAsync();
+        Assert.Single(listViews);
+        Assert.Equal(0, listViews[0].PlayerCount);
+
         var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
         Assert.Single(events);
         Assert.IsType<PlayerStoodUpEvent>(events[0]);
@@ -54,6 +64,7 @@ public class StandPlayerUpTest
     {
         // Arrange
         var repository = new StubRepository();
+        var storage = new StubStorage();
         var eventDispatcher = new StubEventDispatcher();
 
         var command = new StandPlayerUpCommand
@@ -61,7 +72,7 @@ public class StandPlayerUpTest
             Uid = new TableUid(Guid.NewGuid()),
             Nickname = "Alice"
         };
-        var handler = new StandPlayerUpHandler(repository, eventDispatcher);
+        var handler = new StandPlayerUpHandler(repository, storage, eventDispatcher);
 
         // Act
         var exc = await Assert.ThrowsAsync<TableNotFoundException>(async () =>
@@ -76,9 +87,13 @@ public class StandPlayerUpTest
         Assert.Empty(events);
     }
 
-    private async Task<Guid> CreateTableAsync(StubRepository repository, StubEventDispatcher eventDispatcher)
+    private async Task<Guid> CreateTableAsync(
+        StubRepository repository,
+        StubStorage storage,
+        StubEventDispatcher eventDispatcher
+    )
     {
-        var handler = new CreateTableHandler(repository, eventDispatcher);
+        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
         var command = new CreateTableCommand
         {
             Game = "NoLimitHoldem",
@@ -94,6 +109,7 @@ public class StandPlayerUpTest
 
     private async Task SitPlayerDownAsync(
         StubRepository repository,
+        StubStorage storage,
         StubEventDispatcher eventDispatcher,
         Guid tableUid,
         string nickname,
@@ -101,10 +117,7 @@ public class StandPlayerUpTest
         int stack
     )
     {
-        var handler = new SitPlayerDownHandler(
-            repository: repository,
-            eventDispatcher: eventDispatcher
-        );
+        var handler = new SitPlayerDownHandler(repository, storage, eventDispatcher);
         var command = new SitPlayerDownCommand
         {
             Uid = tableUid,

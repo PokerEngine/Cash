@@ -1,6 +1,7 @@
 ﻿using Application.Command;
 using Application.Test.Event;
 using Application.Test.Repository;
+using Application.Test.Storage;
 using Domain.Entity;
 using Domain.Event;
 using Domain.ValueObject;
@@ -14,6 +15,7 @@ public class CreateTableTest
     {
         // Arrange
         var repository = new StubRepository();
+        var storage = new StubStorage();
         var eventDispatcher = new StubEventDispatcher();
         var command = new CreateTableCommand
         {
@@ -24,7 +26,7 @@ public class CreateTableTest
             ChipCostAmount = 1,
             ChipCostCurrency = "Usd"
         };
-        var handler = new CreateTableHandler(repository, eventDispatcher);
+        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -37,6 +39,13 @@ public class CreateTableTest
         Assert.Equal(new Chips(5), table.SmallBlind);
         Assert.Equal(new Chips(10), table.BigBlind);
         Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
+
+        var detailView = await storage.GetDetailViewAsync(table.Uid);
+        Assert.Equal(table.Uid, detailView.Uid);
+
+        var listViews = await storage.GetListViewsAsync();
+        Assert.Single(listViews);
+        Assert.Equal(table.Uid, listViews[0].Uid);
 
         var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
         Assert.Single(events);

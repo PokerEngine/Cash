@@ -1,5 +1,6 @@
 using Application.Event;
 using Application.Repository;
+using Application.Storage;
 using Domain.Entity;
 using Domain.ValueObject;
 
@@ -22,6 +23,7 @@ public record CreateTableResponse : ICommandResponse
 
 public class CreateTableHandler(
     IRepository repository,
+    IStorage storage,
     IEventDispatcher eventDispatcher
 ) : ICommandHandler<CreateTableCommand, CreateTableResponse>
 {
@@ -41,6 +43,7 @@ public class CreateTableHandler(
 
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
+        await storage.SaveViewAsync(table);
 
         var context = new EventContext
         {

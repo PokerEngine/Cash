@@ -1,5 +1,6 @@
 using Application.Event;
 using Application.Repository;
+using Application.Storage;
 using Domain.Entity;
 
 namespace Application.Command;
@@ -18,6 +19,7 @@ public record StandPlayerUpResponse : ICommandResponse
 
 public class StandPlayerUpHandler(
     IRepository repository,
+    IStorage storage,
     IEventDispatcher eventDispatcher
 ) : ICommandHandler<StandPlayerUpCommand, StandPlayerUpResponse>
 {
@@ -32,6 +34,7 @@ public class StandPlayerUpHandler(
 
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
+        await storage.SaveViewAsync(table);
 
         var context = new EventContext
         {

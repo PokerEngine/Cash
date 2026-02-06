@@ -1,5 +1,6 @@
 using Application.Event;
 using Application.Repository;
+using Application.Storage;
 using Domain.Entity;
 
 namespace Application.Command;
@@ -20,6 +21,7 @@ public record SitPlayerDownResponse : ICommandResponse
 
 public class SitPlayerDownHandler(
     IRepository repository,
+    IStorage storage,
     IEventDispatcher eventDispatcher
 ) : ICommandHandler<SitPlayerDownCommand, SitPlayerDownResponse>
 {
@@ -34,6 +36,7 @@ public class SitPlayerDownHandler(
 
         var events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
+        await storage.SaveViewAsync(table);
 
         var context = new EventContext
         {
