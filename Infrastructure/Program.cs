@@ -6,6 +6,8 @@ using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
 using Domain.Event;
+using Infrastructure.Client.MongoDb;
+using Infrastructure.Client.RabbitMq;
 using Infrastructure.Command;
 using Infrastructure.Connection;
 using Infrastructure.Controller;
@@ -26,6 +28,16 @@ public static class Bootstrapper
 
         builder.Configuration.AddEnvironmentVariables();
         builder.Services.AddOpenApi();
+
+        // Register clients
+        builder.Services.Configure<MongoDbClientOptions>(
+            builder.Configuration.GetSection(MongoDbClientOptions.SectionName)
+        );
+        builder.Services.AddSingleton<MongoDbClient>();
+        builder.Services.Configure<RabbitMqClientOptions>(
+            builder.Configuration.GetSection(RabbitMqClientOptions.SectionName)
+        );
+        builder.Services.AddSingleton<RabbitMqClient>();
 
         // Register repository
         builder.Services.Configure<MongoDbRepositoryOptions>(
@@ -85,9 +97,6 @@ public static class Bootstrapper
         RegisterIntegrationEventHandler<SidePotAwardedIntegrationEvent, SidePotAwardedHandler>(builder.Services);
         builder.Services.AddScoped<IIntegrationEventDispatcher, IntegrationEventDispatcher>();
 
-        builder.Services.Configure<RabbitMqConnectionOptions>(
-            builder.Configuration.GetSection(RabbitMqConnectionOptions.SectionName)
-        );
         builder.Services.Configure<RabbitMqIntegrationEventPublisherOptions>(
             builder.Configuration.GetSection(RabbitMqIntegrationEventPublisherOptions.SectionName)
         );
@@ -99,7 +108,6 @@ public static class Bootstrapper
             new RabbitMqIntegrationEventConsumer(
                 scopeFactory: provider.GetRequiredService<IServiceScopeFactory>(),
                 options: provider.GetRequiredService<IOptions<RabbitMqIntegrationEventConsumerOptions>>(),
-                connectionOptions: provider.GetRequiredService<IOptions<RabbitMqConnectionOptions>>(),
                 logger: provider.GetRequiredService<ILogger<RabbitMqIntegrationEventConsumer>>()
             )
         );

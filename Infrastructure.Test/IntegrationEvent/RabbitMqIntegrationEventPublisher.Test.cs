@@ -1,5 +1,6 @@
 using Application.IntegrationEvent;
 using Infrastructure.IntegrationEvent;
+using Infrastructure.Test.Client.RabbitMq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -11,8 +12,8 @@ namespace Infrastructure.Test.IntegrationEvent;
 
 [Trait("Category", "Integration")]
 public class RabbitMqIntegrationEventPublisherTest(
-    RabbitMqFixture fixture
-) : IClassFixture<RabbitMqFixture>, IAsyncLifetime
+    RabbitMqClientFixture fixture
+) : IClassFixture<RabbitMqClientFixture>, IAsyncLifetime
 {
     private IConnection _connection = default!;
     private IChannel _channel = default!;
@@ -95,18 +96,9 @@ public class RabbitMqIntegrationEventPublisherTest(
 
     public async Task InitializeAsync()
     {
-        var options = fixture.CreateOptions();
+        var client = fixture.CreateClient();
 
-        var factory = new ConnectionFactory
-        {
-            HostName = options.Host,
-            Port = options.Port,
-            UserName = options.Username,
-            Password = options.Password,
-            VirtualHost = options.VirtualHost
-        };
-
-        _connection = await factory.CreateConnectionAsync();
+        _connection = await client.Factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
 
         await _channel.ExchangeDeclareAsync(
@@ -138,22 +130,26 @@ public class RabbitMqIntegrationEventPublisherTest(
 
     private IIntegrationEventPublisher CreateIntegrationEventPublisher()
     {
-        var connectionOptions = Options.Create(fixture.CreateOptions());
-        var publisherOptions = Options.Create(
-            new RabbitMqIntegrationEventPublisherOptions
-            {
-                ExchangeName = ExchangeName,
-                ExchangeType = ExchangeType,
-                Durable = true,
-                AutoDelete = false
-            }
-        );
+        var client = fixture.CreateClient();
+        var options = CreateOptions();
         var loggerFactory = LoggerFactory.Create(builder =>
         {
             builder.SetMinimumLevel(LogLevel.Information).AddConsole();
         });
         var logger = loggerFactory.CreateLogger<RabbitMqIntegrationEventPublisher>();
-        return new RabbitMqIntegrationEventPublisher(connectionOptions, publisherOptions, logger);
+        return new RabbitMqIntegrationEventPublisher(client, options, logger);
+    }
+
+    private IOptions<RabbitMqIntegrationEventPublisherOptions> CreateOptions()
+    {
+        var options = new RabbitMqIntegrationEventPublisherOptions
+        {
+            ExchangeName = ExchangeName,
+            ExchangeType = ExchangeType,
+            Durable = true,
+            AutoDelete = false
+        };
+        return Options.Create(options);
     }
 
     private static DateTime GetNow()

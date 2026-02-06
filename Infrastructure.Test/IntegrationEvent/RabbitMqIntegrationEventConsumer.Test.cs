@@ -1,5 +1,7 @@
 using Application.IntegrationEvent;
+using Infrastructure.Client.RabbitMq;
 using Infrastructure.IntegrationEvent;
+using Infrastructure.Test.Client.RabbitMq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,9 +13,10 @@ namespace Infrastructure.Test.IntegrationEvent;
 
 [Trait("Category", "Integration")]
 public class RabbitMqIntegrationEventConsumerTest(
-    RabbitMqFixture fixture
-) : IClassFixture<RabbitMqFixture>, IAsyncLifetime
+    RabbitMqClientFixture fixture
+) : IClassFixture<RabbitMqClientFixture>, IAsyncLifetime
 {
+    private RabbitMqClient _client = default!;
     private IConnection _connection = default!;
     private IChannel _channel = default!;
 
@@ -121,41 +124,32 @@ public class RabbitMqIntegrationEventConsumerTest(
 
     public async Task InitializeAsync()
     {
-        var consumerOptions = CreateOptions();
-        var connectionOptions = fixture.CreateOptions();
-        var factory = new ConnectionFactory
-        {
-            HostName = connectionOptions.Host,
-            Port = connectionOptions.Port,
-            UserName = connectionOptions.Username,
-            Password = connectionOptions.Password,
-            VirtualHost = connectionOptions.VirtualHost
-        };
-
-        _connection = await factory.CreateConnectionAsync();
+        _client = fixture.CreateClient();
+        _connection = await _client.Factory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
+        var options = CreateOptions();
 
-        foreach (var binding in consumerOptions.Bindings)
+        foreach (var binding in options.Value.Bindings)
         {
             await _channel.ExchangeDeclareAsync(
                 exchange: binding.ExchangeName,
                 type: binding.ExchangeType,
-                durable: consumerOptions.Durable,
-                autoDelete: consumerOptions.AutoDelete
+                durable: options.Value.Durable,
+                autoDelete: options.Value.AutoDelete
             );
         }
 
         await _channel.QueueDeclareAsync(
-            queue: consumerOptions.QueueName,
-            durable: consumerOptions.Durable,
-            exclusive: consumerOptions.Exclusive,
-            autoDelete: consumerOptions.AutoDelete
+            queue: options.Value.QueueName,
+            durable: options.Value.Durable,
+            exclusive: options.Value.Exclusive,
+            autoDelete: options.Value.AutoDelete
         );
 
-        foreach (var binding in consumerOptions.Bindings)
+        foreach (var binding in options.Value.Bindings)
         {
             await _channel.QueueBindAsync(
-                queue: consumerOptions.QueueName,
+                queue: options.Value.QueueName,
                 exchange: binding.ExchangeName,
                 routingKey: binding.RoutingKey
             );
@@ -173,24 +167,23 @@ public class RabbitMqIntegrationEventConsumerTest(
         var services = new ServiceCollection();
 
         services.AddSingleton<IIntegrationEventDispatcher>(dispatcher);
+        services.AddSingleton<RabbitMqClient>(_client);
         services.AddLogging();
 
         var provider = services.BuildServiceProvider();
 
-        var consumerOptions = Options.Create(CreateOptions());
-        var connectionOptions = Options.Create(fixture.CreateOptions());
+        var options = CreateOptions();
 
         return new RabbitMqIntegrationEventConsumer(
             provider.GetRequiredService<IServiceScopeFactory>(),
-            consumerOptions,
-            connectionOptions,
+            options,
             provider.GetRequiredService<ILogger<RabbitMqIntegrationEventConsumer>>()
         );
     }
 
-    private RabbitMqIntegrationEventConsumerOptions CreateOptions()
+    private IOptions<RabbitMqIntegrationEventConsumerOptions> CreateOptions()
     {
-        return new RabbitMqIntegrationEventConsumerOptions
+        var options = new RabbitMqIntegrationEventConsumerOptions
         {
             QueueName = QueueName,
             Durable = false,
@@ -202,6 +195,7 @@ public class RabbitMqIntegrationEventConsumerTest(
                 new() { ExchangeName = ExchangeName, ExchangeType = "topic", RoutingKey = RoutingKey }
             ]
         };
+        return Options.Create(options);
     }
 
     private static DateTime GetNow()

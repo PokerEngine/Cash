@@ -1,4 +1,5 @@
 using Application.IntegrationEvent;
+using Infrastructure.Client.RabbitMq;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -10,7 +11,6 @@ namespace Infrastructure.IntegrationEvent;
 public class RabbitMqIntegrationEventConsumer(
     IServiceScopeFactory scopeFactory,
     IOptions<RabbitMqIntegrationEventConsumerOptions> options,
-    IOptions<RabbitMqConnectionOptions> connectionOptions,
     ILogger<RabbitMqIntegrationEventConsumer> logger
 ) : BackgroundService
 {
@@ -23,15 +23,9 @@ public class RabbitMqIntegrationEventConsumer(
     {
         logger.LogInformation("IntegrationEventConsumer started");
 
-        var factory = new ConnectionFactory
-        {
-            HostName = connectionOptions.Value.Host,
-            Port = connectionOptions.Value.Port,
-            UserName = connectionOptions.Value.Username,
-            Password = connectionOptions.Value.Password,
-            VirtualHost = connectionOptions.Value.VirtualHost
-        };
-        await using var connection = await factory.CreateConnectionAsync(cancellationToken);
+        using var scope = scopeFactory.CreateScope();
+        var client = scope.ServiceProvider.GetRequiredService<RabbitMqClient>();
+        await using var connection = await client.Factory.CreateConnectionAsync(cancellationToken);
         await using var channel = await connection.CreateChannelAsync(null, cancellationToken);
         await DeclareTopologyAsync(channel);
 

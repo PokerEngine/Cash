@@ -1,9 +1,10 @@
-using Infrastructure.IntegrationEvent;
+using Infrastructure.Client.RabbitMq;
+using Microsoft.Extensions.Options;
 using Testcontainers.RabbitMq;
 
-namespace Infrastructure.Test.IntegrationEvent;
+namespace Infrastructure.Test.Client.RabbitMq;
 
-public sealed class RabbitMqFixture : IAsyncLifetime
+public sealed class RabbitMqClientFixture : IAsyncLifetime
 {
     private const string Username = "guest";
     private const string Password = "guest";
@@ -26,9 +27,15 @@ public sealed class RabbitMqFixture : IAsyncLifetime
         await Container.DisposeAsync();
     }
 
-    public RabbitMqConnectionOptions CreateOptions()
+    public RabbitMqClient CreateClient()
     {
-        return new RabbitMqConnectionOptions
+        var options = CreateOptions();
+        return new RabbitMqClient(options);
+    }
+
+    private IOptions<RabbitMqClientOptions> CreateOptions()
+    {
+        var options = new RabbitMqClientOptions
         {
             Host = Container.Hostname,
             Port = Container.GetMappedPublicPort(Port),
@@ -36,5 +43,6 @@ public sealed class RabbitMqFixture : IAsyncLifetime
             Password = Password,
             VirtualHost = "/"
         };
+        return Options.Create(options);
     }
 }

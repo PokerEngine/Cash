@@ -3,13 +3,13 @@ using Application.Repository;
 using Domain.Event;
 using Domain.ValueObject;
 using Infrastructure.Repository;
-using Microsoft.Extensions.Logging.Abstractions;
+using Infrastructure.Test.Client.MongoDb;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Test.Repository;
 
 [Trait("Category", "Integration")]
-public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<MongoDbFixture>
+public class MongoDbRepositoryTest(MongoDbClientFixture fixture) : IClassFixture<MongoDbClientFixture>
 {
     [Fact]
     public async Task GetEventsAsync_WhenAdded_ShouldExtractEvents()
@@ -67,11 +67,18 @@ public class MongoDbRepositoryTest(MongoDbFixture fixture) : IClassFixture<Mongo
 
     private IRepository CreateRepository()
     {
-        var options = Options.Create(fixture.CreateOptions());
-        return new MongoDbRepository(
-            options,
-            NullLogger<MongoDbRepository>.Instance
-        );
+        var client = fixture.CreateClient();
+        var options = CreateOptions();
+        return new MongoDbRepository(client, options);
+    }
+
+    private IOptions<MongoDbRepositoryOptions> CreateOptions()
+    {
+        var options = new MongoDbRepositoryOptions
+        {
+            Database = $"test_repository_{Guid.NewGuid()}"
+        };
+        return Options.Create(options);
     }
 
     private static DateTime GetNow()

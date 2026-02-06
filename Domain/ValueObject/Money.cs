@@ -4,8 +4,7 @@ namespace Domain.ValueObject;
 
 public enum Currency
 {
-    Usd,
-    Eur
+    Usd
 }
 
 public readonly struct Money : IEquatable<Money>, IComparable<Money>
@@ -48,6 +47,16 @@ public readonly struct Money : IEquatable<Money>, IComparable<Money>
         }
 
         return new(a.Amount - b.Amount, a.Currency);
+    }
+
+    public static Money operator *(Money a, Chips b)
+    {
+        return new(a.Amount * b, a.Currency);
+    }
+
+    public static Money operator *(Chips a, Money b)
+    {
+        return new(b.Amount * a, b.Currency);
     }
 
     public static bool operator ==(Money a, Money b)

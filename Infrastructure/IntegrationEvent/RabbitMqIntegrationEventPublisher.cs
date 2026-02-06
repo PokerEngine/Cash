@@ -1,4 +1,5 @@
 using Application.IntegrationEvent;
+using Infrastructure.Client.RabbitMq;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System.Text;
@@ -18,7 +19,7 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
     private readonly IChannel _channel;
 
     public RabbitMqIntegrationEventPublisher(
-        IOptions<RabbitMqConnectionOptions> connectionOptions,
+        RabbitMqClient client,
         IOptions<RabbitMqIntegrationEventPublisherOptions> options,
         ILogger<RabbitMqIntegrationEventPublisher> logger
     )
@@ -26,16 +27,7 @@ public class RabbitMqIntegrationEventPublisher : IIntegrationEventPublisher, IAs
         _options = options.Value;
         _logger = logger;
 
-        var factory = new ConnectionFactory
-        {
-            HostName = connectionOptions.Value.Host,
-            Port = connectionOptions.Value.Port,
-            UserName = connectionOptions.Value.Username,
-            Password = connectionOptions.Value.Password,
-            VirtualHost = connectionOptions.Value.VirtualHost
-        };
-
-        _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
+        _connection = client.Factory.CreateConnectionAsync().GetAwaiter().GetResult();
         _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
 
         _logger.LogInformation("Declaring exchange {ExchangeName} ({ExchangeType})", _options.ExchangeName, _options.ExchangeType);

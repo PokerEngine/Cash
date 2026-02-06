@@ -10,14 +10,14 @@ services:
             - '7053:7053'
         environment:
             ASPNETCORE_ENVIRONMENT: Development
-            MongoDB__Host: mongodb
-            MongoDB__Port: 27017
-            MongoDB__Username: ${MONGODB_USERNAME}
-            MongoDB__Password: ${MONGODB_PASSWORD}
-            RabbitMqConnection__Host: rabbitmq
-            RabbitMqConnection__Port: 5672
-            RabbitMqConnection__Username: ${RABBITMQ_USERNAME}
-            RabbitMqConnection__Password: ${RABBITMQ_PASSWORD}
+            MongoDb__Host: mongodb
+            MongoDb__Port: 27017
+            MongoDb__Username: ${MONGODB_USERNAME}
+            MongoDb__Password: ${MONGODB_PASSWORD}
+            RabbitMq__Host: rabbitmq
+            RabbitMq__Port: 5672
+            RabbitMq__Username: ${RABBITMQ_USERNAME}
+            RabbitMq__Password: ${RABBITMQ_PASSWORD}
         depends_on:
             - mongodb
 

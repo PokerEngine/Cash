@@ -1,9 +1,10 @@
-using Infrastructure.Repository;
+using Infrastructure.Client.MongoDb;
+using Microsoft.Extensions.Options;
 using Testcontainers.MongoDb;
 
-namespace Infrastructure.Test.Repository;
+namespace Infrastructure.Test.Client.MongoDb;
 
-public sealed class MongoDbFixture : IAsyncLifetime
+public sealed class MongoDbClientFixture : IAsyncLifetime
 {
     private const string Username = "guest";
     private const string Password = "guest";
@@ -27,16 +28,21 @@ public sealed class MongoDbFixture : IAsyncLifetime
         await Container.DisposeAsync();
     }
 
-    public MongoDbRepositoryOptions CreateOptions()
+    public MongoDbClient CreateClient()
     {
-        var databaseName = $"test-db-{Guid.NewGuid()}";
-        return new MongoDbRepositoryOptions
+        var options = CreateOptions();
+        return new MongoDbClient(options);
+    }
+
+    private IOptions<MongoDbClientOptions> CreateOptions()
+    {
+        var options = new MongoDbClientOptions
         {
             Host = Container.Hostname,
             Port = Container.GetMappedPublicPort(Port),
             Username = Username,
-            Password = Password,
-            Database = databaseName
+            Password = Password
         };
+        return Options.Create(options);
     }
 }
