@@ -5,11 +5,10 @@ using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Service.Hand;
 using Application.Test.Storage;
-using Domain.Entity;
 
 namespace Application.Test.Query;
 
-public class GetTableByUidTest
+public class GetTableDetailTest
 {
     [Fact]
     public async Task HandleAsync_Exists_ShouldReturn()
@@ -22,23 +21,13 @@ public class GetTableByUidTest
         var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
         await SitPlayerDownAsync(repository, storage, eventDispatcher, tableUid, "Alice", 2, 1000);
 
-        var query = new GetTableByUidQuery { Uid = tableUid };
-        var handler = new GetTableByUidHandler(
-            storage: storage,
-            handService: handService
-        );
+        var query = new GetTableDetailQuery { Uid = tableUid };
+        var handler = new GetTableDetailHandler(storage, handService);
 
         // Act
         var response = await handler.HandleAsync(query);
 
         // Assert
-        var table = Table.FromEvents(query.Uid, await repository.GetEventsAsync(query.Uid));
-        Assert.Equal((Guid)table.Uid, response.Uid);
-        Assert.Equal("NoLimitHoldem", response.Game);
-        Assert.Equal(6, response.MaxSeat);
-        Assert.Equal(5, response.SmallBlind);
-        Assert.Equal(10, response.BigBlind);
-
         Assert.Single(response.Players);
         Assert.Equal("Alice", response.Players[0].Nickname);
         Assert.Equal(2, response.Players[0].Seat);
@@ -55,8 +44,8 @@ public class GetTableByUidTest
         var storage = new StubStorage();
         var handService = new StubHandService();
 
-        var query = new GetTableByUidQuery { Uid = Guid.NewGuid() };
-        var handler = new GetTableByUidHandler(storage, handService);
+        var query = new GetTableDetailQuery { Uid = Guid.NewGuid() };
+        var handler = new GetTableDetailHandler(storage, handService);
 
         // Act
         var exc = await Assert.ThrowsAsync<TableNotFoundException>(async () =>

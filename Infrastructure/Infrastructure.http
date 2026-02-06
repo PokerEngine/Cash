@@ -88,8 +88,12 @@ Content-Type: application/json
 
 {}
 
-### Get the table
+### Get table detail
 GET {{Infrastructure_HostAddress}}/api/table/{{tableUid}}
+Accept: application/json
+
+### Get table list
+GET {{Infrastructure_HostAddress}}/api/table
 Accept: application/json
 
 ###

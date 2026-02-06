@@ -5,6 +5,7 @@ using Application.IntegrationEvent;
 using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
+using Application.Storage;
 using Domain.Event;
 using Infrastructure.Client.MongoDb;
 using Infrastructure.Client.RabbitMq;
@@ -16,6 +17,7 @@ using Infrastructure.IntegrationEvent;
 using Infrastructure.Query;
 using Infrastructure.Repository;
 using Infrastructure.Service.Hand;
+using Infrastructure.Storage;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure;
@@ -45,6 +47,12 @@ public static class Bootstrapper
         );
         builder.Services.AddSingleton<IRepository, MongoDbRepository>();
 
+        // Register storage
+        builder.Services.Configure<MongoDbStorageOptions>(
+            builder.Configuration.GetSection(MongoDbStorageOptions.SectionName)
+        );
+        builder.Services.AddSingleton<IStorage, MongoDbStorage>();
+
         // Register connection registry
         builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();
 
@@ -70,7 +78,8 @@ public static class Bootstrapper
         builder.Services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 
         // Register queries
-        RegisterQueryHandler<GetTableByUidQuery, GetTableByUidHandler, GetTableByUidResponse>(builder.Services);
+        RegisterQueryHandler<GetTableDetailQuery, GetTableDetailHandler, GetTableDetailResponse>(builder.Services);
+        RegisterQueryHandler<GetTableListQuery, GetTableListHandler, GetTableListResponse>(builder.Services);
         builder.Services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
         // Register domain events

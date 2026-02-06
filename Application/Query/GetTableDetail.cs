@@ -4,23 +4,23 @@ using Domain.ValueObject;
 
 namespace Application.Query;
 
-public record GetTableByUidQuery : IQuery
+public record GetTableDetailQuery : IQuery
 {
     public required Guid Uid { get; init; }
 }
 
-public record GetTableByUidResponse : IQueryResponse
+public record GetTableDetailResponse : IQueryResponse
 {
     public required Guid Uid { get; init; }
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required decimal SmallBlind { get; init; }
     public required decimal BigBlind { get; init; }
-    public required List<GetTableByUidResponsePlayer> Players { get; init; }
-    public required GetTableByUidResponseHandState? HandState { get; init; }
+    public required List<GetTableDetailResponsePlayer> Players { get; init; }
+    public required GetTableDetailResponseHandState? HandState { get; init; }
 }
 
-public record GetTableByUidResponsePlayer
+public record GetTableDetailResponsePlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
@@ -28,19 +28,19 @@ public record GetTableByUidResponsePlayer
     public required bool IsSittingOut { get; init; }
 }
 
-public record GetTableByUidResponseHandState
+public record GetTableDetailResponseHandState
 {
-    public required GetTableByUidResponseHandStateTable Table { get; init; }
-    public required GetTableByUidResponseHandStatePot Pot { get; init; }
+    public required GetTableDetailResponseHandStateTable Table { get; init; }
+    public required GetTableDetailResponseHandStatePot Pot { get; init; }
 }
 
-public record GetTableByUidResponseHandStateTable
+public record GetTableDetailResponseHandStateTable
 {
-    public required List<GetTableByUidResponseHandStatePlayer> Players { get; init; }
+    public required List<GetTableDetailResponseHandStatePlayer> Players { get; init; }
     public required string BoardCards { get; init; }
 }
 
-public record GetTableByUidResponseHandStatePlayer
+public record GetTableDetailResponseHandStatePlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
@@ -49,43 +49,43 @@ public record GetTableByUidResponseHandStatePlayer
     public required bool IsFolded { get; init; }
 }
 
-public record GetTableByUidResponseHandStatePot
+public record GetTableDetailResponseHandStatePot
 {
     public required int Ante { get; init; }
-    public required List<GetTableByUidResponseHandStateBet> CollectedBets { get; init; }
-    public required List<GetTableByUidResponseHandStateBet> CurrentBets { get; init; }
-    public required List<GetTableByUidResponseHandStateAward> Awards { get; init; }
+    public required List<GetTableDetailResponseHandStateBet> CollectedBets { get; init; }
+    public required List<GetTableDetailResponseHandStateBet> CurrentBets { get; init; }
+    public required List<GetTableDetailResponseHandStateAward> Awards { get; init; }
 }
 
-public record GetTableByUidResponseHandStateBet
+public record GetTableDetailResponseHandStateBet
 {
     public required string Nickname { get; init; }
     public required int Amount { get; init; }
 }
 
-public record GetTableByUidResponseHandStateAward
+public record GetTableDetailResponseHandStateAward
 {
     public required List<string> Winners { get; init; }
     public required int Amount { get; init; }
 }
 
-public class GetTableByUidHandler(
+public class GetTableDetailHandler(
     IStorage storage,
     IHandService handService
-) : IQueryHandler<GetTableByUidQuery, GetTableByUidResponse>
+) : IQueryHandler<GetTableDetailQuery, GetTableDetailResponse>
 {
-    public async Task<GetTableByUidResponse> HandleAsync(GetTableByUidQuery command)
+    public async Task<GetTableDetailResponse> HandleAsync(GetTableDetailQuery query)
     {
-        var view = await storage.GetDetailViewAsync(command.Uid);
+        var view = await storage.GetDetailViewAsync(query.Uid);
 
-        GetTableByUidResponseHandState? handState = null;
+        GetTableDetailResponseHandState? handState = null;
         if (view.CurrentHandUid is not null)
         {
             var state = await handService.GetAsync((HandUid)view.CurrentHandUid);
             handState = SerializeHandState(state);
         }
 
-        return new GetTableByUidResponse
+        return new GetTableDetailResponse
         {
             Uid = view.Uid,
             Game = view.Game.ToString(),
@@ -97,9 +97,9 @@ public class GetTableByUidHandler(
         };
     }
 
-    private GetTableByUidResponsePlayer SerializePlayer(DetailViewPlayer player)
+    private GetTableDetailResponsePlayer SerializePlayer(DetailViewPlayer player)
     {
-        return new GetTableByUidResponsePlayer
+        return new GetTableDetailResponsePlayer
         {
             Nickname = player.Nickname,
             Seat = player.Seat,
@@ -108,27 +108,27 @@ public class GetTableByUidHandler(
         };
     }
 
-    private GetTableByUidResponseHandState SerializeHandState(HandState state)
+    private GetTableDetailResponseHandState SerializeHandState(HandState state)
     {
-        return new GetTableByUidResponseHandState
+        return new GetTableDetailResponseHandState
         {
             Table = SerializeHandStateTable(state.Table),
             Pot = SerializeHandStatePot(state.Pot)
         };
     }
 
-    private GetTableByUidResponseHandStateTable SerializeHandStateTable(HandStateTable table)
+    private GetTableDetailResponseHandStateTable SerializeHandStateTable(HandStateTable table)
     {
-        return new GetTableByUidResponseHandStateTable
+        return new GetTableDetailResponseHandStateTable
         {
             Players = table.Players.Select(SerializeHandStatePlayer).ToList(),
             BoardCards = table.BoardCards
         };
     }
 
-    private GetTableByUidResponseHandStatePlayer SerializeHandStatePlayer(HandStatePlayer player)
+    private GetTableDetailResponseHandStatePlayer SerializeHandStatePlayer(HandStatePlayer player)
     {
-        return new GetTableByUidResponseHandStatePlayer
+        return new GetTableDetailResponseHandStatePlayer
         {
             Nickname = player.Nickname,
             Seat = player.Seat,
@@ -138,9 +138,9 @@ public class GetTableByUidHandler(
         };
     }
 
-    private GetTableByUidResponseHandStatePot SerializeHandStatePot(HandStatePot pot)
+    private GetTableDetailResponseHandStatePot SerializeHandStatePot(HandStatePot pot)
     {
-        return new GetTableByUidResponseHandStatePot
+        return new GetTableDetailResponseHandStatePot
         {
             Ante = pot.Ante,
             CollectedBets = pot.CollectedBets.Select(SerializeHandStateBet).ToList(),
@@ -149,18 +149,18 @@ public class GetTableByUidHandler(
         };
     }
 
-    private GetTableByUidResponseHandStateBet SerializeHandStateBet(HandStateBet bet)
+    private GetTableDetailResponseHandStateBet SerializeHandStateBet(HandStateBet bet)
     {
-        return new GetTableByUidResponseHandStateBet
+        return new GetTableDetailResponseHandStateBet
         {
             Nickname = bet.Nickname,
             Amount = bet.Amount
         };
     }
 
-    private GetTableByUidResponseHandStateAward SerializeHandStateAward(HandStateAward award)
+    private GetTableDetailResponseHandStateAward SerializeHandStateAward(HandStateAward award)
     {
-        return new GetTableByUidResponseHandStateAward
+        return new GetTableDetailResponseHandStateAward
         {
             Winners = award.Winners.Select(x => (string)x).ToList(),
             Amount = award.Amount

@@ -28,7 +28,7 @@ public class TableController(
             ChipCostCurrency = request.ChipCostCurrency
         };
         var response = await commandDispatcher.DispatchAsync<CreateTableCommand, CreateTableResponse>(command);
-        return CreatedAtAction(nameof(GetTableByUid), new { uid = response.Uid }, response);
+        return CreatedAtAction(nameof(GetTableDetail), new { uid = response.Uid }, response);
     }
 
     [HttpPost("{uid:guid}/sit-down/{nickname}")]
@@ -83,13 +83,29 @@ public class TableController(
     }
 
     [HttpGet("{uid:guid}")]
-    [ProducesResponseType(typeof(GetTableByUidResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetTableDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetTableByUid(Guid uid)
+    public async Task<IActionResult> GetTableDetail(Guid uid)
     {
-        var query = new GetTableByUidQuery { Uid = uid };
-        var response = await queryDispatcher.DispatchAsync<GetTableByUidQuery, GetTableByUidResponse>(query);
+        var query = new GetTableDetailQuery { Uid = uid };
+        var response = await queryDispatcher.DispatchAsync<GetTableDetailQuery, GetTableDetailResponse>(query);
+        return Ok(response);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(typeof(GetTableListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetTableList([FromQuery] GetTableListRequest request)
+    {
+        var query = new GetTableListQuery
+        {
+            HasPlayersOnly = request.HasPlayersOnly,
+            Games = request.Games,
+            MinStake = request.MinStake,
+            MaxStake = request.MaxStake
+        };
+        var response = await queryDispatcher.DispatchAsync<GetTableListQuery, GetTableListResponse>(query);
         return Ok(response);
     }
 }
@@ -114,4 +130,12 @@ public record SubmitPlayerActionRequest
 {
     public required string Type { get; init; }
     public required int Amount { get; init; }
+}
+
+public record GetTableListRequest
+{
+    public bool HasPlayersOnly { get; init; }
+    public List<string>? Games { get; init; }
+    public decimal? MinStake { get; init; }
+    public decimal? MaxStake { get; init; }
 }
