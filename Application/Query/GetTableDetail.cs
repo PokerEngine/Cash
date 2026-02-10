@@ -17,7 +17,7 @@ public record GetTableDetailResponse : IQueryResponse
     public required decimal SmallBlind { get; init; }
     public required decimal BigBlind { get; init; }
     public required List<GetTableDetailResponsePlayer> Players { get; init; }
-    public required GetTableDetailResponseHandState? HandState { get; init; }
+    public required GetTableDetailResponseCurrentHand? CurrentHand { get; init; }
 }
 
 public record GetTableDetailResponsePlayer
@@ -28,19 +28,19 @@ public record GetTableDetailResponsePlayer
     public required bool IsSittingOut { get; init; }
 }
 
-public record GetTableDetailResponseHandState
+public record GetTableDetailResponseCurrentHand
 {
-    public required GetTableDetailResponseHandStateTable Table { get; init; }
-    public required GetTableDetailResponseHandStatePot Pot { get; init; }
+    public required GetTableDetailResponseCurrentHandTable Table { get; init; }
+    public required GetTableDetailResponseCurrentHandPot Pot { get; init; }
 }
 
-public record GetTableDetailResponseHandStateTable
+public record GetTableDetailResponseCurrentHandTable
 {
-    public required List<GetTableDetailResponseHandStatePlayer> Players { get; init; }
+    public required List<GetTableDetailResponseCurrentHandPlayer> Players { get; init; }
     public required string BoardCards { get; init; }
 }
 
-public record GetTableDetailResponseHandStatePlayer
+public record GetTableDetailResponseCurrentHandPlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
@@ -49,21 +49,21 @@ public record GetTableDetailResponseHandStatePlayer
     public required bool IsFolded { get; init; }
 }
 
-public record GetTableDetailResponseHandStatePot
+public record GetTableDetailResponseCurrentHandPot
 {
     public required int Ante { get; init; }
-    public required List<GetTableDetailResponseHandStateBet> CollectedBets { get; init; }
-    public required List<GetTableDetailResponseHandStateBet> CurrentBets { get; init; }
-    public required List<GetTableDetailResponseHandStateAward> Awards { get; init; }
+    public required List<GetTableDetailResponseCurrentHandBet> CollectedBets { get; init; }
+    public required List<GetTableDetailResponseCurrentHandBet> CurrentBets { get; init; }
+    public required List<GetTableDetailResponseCurrentHandAward> Awards { get; init; }
 }
 
-public record GetTableDetailResponseHandStateBet
+public record GetTableDetailResponseCurrentHandBet
 {
     public required string Nickname { get; init; }
     public required int Amount { get; init; }
 }
 
-public record GetTableDetailResponseHandStateAward
+public record GetTableDetailResponseCurrentHandAward
 {
     public required List<string> Winners { get; init; }
     public required int Amount { get; init; }
@@ -78,11 +78,11 @@ public class GetTableDetailHandler(
     {
         var view = await storage.GetDetailViewAsync(query.Uid);
 
-        GetTableDetailResponseHandState? handState = null;
+        GetTableDetailResponseCurrentHand? handState = null;
         if (view.CurrentHandUid is not null)
         {
             var state = await handService.GetAsync((HandUid)view.CurrentHandUid);
-            handState = SerializeHandState(state);
+            handState = SerializeCurrentHand(state);
         }
 
         return new GetTableDetailResponse
@@ -93,7 +93,7 @@ public class GetTableDetailHandler(
             SmallBlind = view.SmallBlind.Amount,
             BigBlind = view.BigBlind.Amount,
             Players = view.Players.Select(SerializePlayer).ToList(),
-            HandState = handState
+            CurrentHand = handState
         };
     }
 
@@ -108,27 +108,27 @@ public class GetTableDetailHandler(
         };
     }
 
-    private GetTableDetailResponseHandState SerializeHandState(HandState state)
+    private GetTableDetailResponseCurrentHand SerializeCurrentHand(HandState hand)
     {
-        return new GetTableDetailResponseHandState
+        return new GetTableDetailResponseCurrentHand
         {
-            Table = SerializeHandStateTable(state.Table),
-            Pot = SerializeHandStatePot(state.Pot)
+            Table = SerializeCurrentHandTable(hand.Table),
+            Pot = SerializeCurrentHandPot(hand.Pot)
         };
     }
 
-    private GetTableDetailResponseHandStateTable SerializeHandStateTable(HandStateTable table)
+    private GetTableDetailResponseCurrentHandTable SerializeCurrentHandTable(HandTable table)
     {
-        return new GetTableDetailResponseHandStateTable
+        return new GetTableDetailResponseCurrentHandTable
         {
-            Players = table.Players.Select(SerializeHandStatePlayer).ToList(),
+            Players = table.Players.Select(SerializeCurrentHandPlayer).ToList(),
             BoardCards = table.BoardCards
         };
     }
 
-    private GetTableDetailResponseHandStatePlayer SerializeHandStatePlayer(HandStatePlayer player)
+    private GetTableDetailResponseCurrentHandPlayer SerializeCurrentHandPlayer(HandPlayer player)
     {
-        return new GetTableDetailResponseHandStatePlayer
+        return new GetTableDetailResponseCurrentHandPlayer
         {
             Nickname = player.Nickname,
             Seat = player.Seat,
@@ -138,29 +138,29 @@ public class GetTableDetailHandler(
         };
     }
 
-    private GetTableDetailResponseHandStatePot SerializeHandStatePot(HandStatePot pot)
+    private GetTableDetailResponseCurrentHandPot SerializeCurrentHandPot(HandPot pot)
     {
-        return new GetTableDetailResponseHandStatePot
+        return new GetTableDetailResponseCurrentHandPot
         {
             Ante = pot.Ante,
-            CollectedBets = pot.CollectedBets.Select(SerializeHandStateBet).ToList(),
-            CurrentBets = pot.CurrentBets.Select(SerializeHandStateBet).ToList(),
-            Awards = pot.Awards.Select(SerializeHandStateAward).ToList()
+            CollectedBets = pot.CollectedBets.Select(SerializeCurrentHandBet).ToList(),
+            CurrentBets = pot.CurrentBets.Select(SerializeCurrentHandBet).ToList(),
+            Awards = pot.Awards.Select(SerializeCurrentHandAward).ToList()
         };
     }
 
-    private GetTableDetailResponseHandStateBet SerializeHandStateBet(HandStateBet bet)
+    private GetTableDetailResponseCurrentHandBet SerializeCurrentHandBet(HandBet bet)
     {
-        return new GetTableDetailResponseHandStateBet
+        return new GetTableDetailResponseCurrentHandBet
         {
             Nickname = bet.Nickname,
             Amount = bet.Amount
         };
     }
 
-    private GetTableDetailResponseHandStateAward SerializeHandStateAward(HandStateAward award)
+    private GetTableDetailResponseCurrentHandAward SerializeCurrentHandAward(HandAward award)
     {
-        return new GetTableDetailResponseHandStateAward
+        return new GetTableDetailResponseCurrentHandAward
         {
             Winners = award.Winners.Select(x => (string)x).ToList(),
             Amount = award.Amount

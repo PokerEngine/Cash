@@ -34,7 +34,7 @@ public class GetTableDetailTest
         Assert.Equal(1000, response.Players[0].Stack);
         Assert.False(response.Players[0].IsSittingOut);
 
-        Assert.Null(response.HandState);
+        Assert.Null(response.CurrentHand);
     }
 
     [Fact]

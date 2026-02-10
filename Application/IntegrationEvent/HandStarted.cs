@@ -4,7 +4,7 @@ using Domain.Entity;
 
 namespace Application.IntegrationEvent;
 
-public record IntegrationEventParticipant
+public record IntegrationEventPlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
@@ -27,7 +27,7 @@ public record HandStartedIntegrationEvent : IIntegrationEvent
     public required int SmallBlindSeat { get; init; }
     public required int BigBlindSeat { get; init; }
     public required int ButtonSeat { get; init; }
-    public required List<IntegrationEventParticipant> Participants { get; init; }
+    public required List<IntegrationEventPlayer> Players { get; init; }
 }
 
 public class HandStartedHandler(

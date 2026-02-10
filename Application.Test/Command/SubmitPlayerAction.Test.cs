@@ -109,14 +109,23 @@ public class SubmitPlayerActionTest
 
         var handUid = await handService.StartAsync(
             tableUid: table.Uid,
-            game: table.Game,
-            maxSeat: table.MaxSeat,
-            smallBlind: table.SmallBlind,
-            bigBlind: table.BigBlind,
-            smallBlindSeat: table.SmallBlindSeat,
-            bigBlindSeat: (Seat)table.BigBlindSeat!,
-            buttonSeat: (Seat)table.ButtonSeat!,
-            participants: table.ActivePlayers.Select(GetParticipant).ToList()
+            rules: new HandRules
+            {
+                Game = table.Game,
+                MaxSeat = table.MaxSeat,
+                SmallBlind = table.SmallBlind,
+                BigBlind = table.BigBlind
+            },
+            table: new HandTable
+            {
+                Positions = new HandPositions
+                {
+                    SmallBlindSeat = table.SmallBlindSeat,
+                    BigBlindSeat = (Seat)table.BigBlindSeat!,
+                    ButtonSeat = (Seat)table.ButtonSeat!,
+                },
+                Players = table.ActivePlayers.Select(GetHandPlayer).ToList()
+            }
         );
         table.StartCurrentHand(handUid);
 
@@ -124,9 +133,9 @@ public class SubmitPlayerActionTest
         await storage.SaveViewAsync(table);
     }
 
-    private HandParticipant GetParticipant(Player player)
+    private HandPlayer GetHandPlayer(Player player)
     {
-        return new HandParticipant
+        return new HandPlayer
         {
             Nickname = player.Nickname,
             Seat = player.Seat,

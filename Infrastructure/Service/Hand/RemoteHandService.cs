@@ -25,21 +25,18 @@ public class RemoteHandService(
 
         return new HandState
         {
-            Table = DeserializeTable(response.State.Table),
-            Pot = DeserializePot(response.State.Pot)
+            Uid = response.Uid,
+            TableUid = response.TableUid,
+            Rules = DeserializeRules(response.Rules),
+            Table = DeserializeTable(response.Table),
+            Pot = DeserializePot(response.Pot)
         };
     }
 
     public async Task<HandUid> StartAsync(
         TableUid tableUid,
-        Game game,
-        Seat maxSeat,
-        Chips smallBlind,
-        Chips bigBlind,
-        Seat? smallBlindSeat,
-        Seat bigBlindSeat,
-        Seat buttonSeat,
-        List<HandParticipant> participants,
+        HandRules rules,
+        HandTable table,
         CancellationToken cancellationToken = default
     )
     {
@@ -48,14 +45,8 @@ public class RemoteHandService(
         {
             TableUid = tableUid,
             TableType = TableType,
-            Game = game.ToString(),
-            MaxSeat = maxSeat,
-            SmallBlind = smallBlind,
-            BigBlind = bigBlind,
-            SmallBlindSeat = smallBlindSeat,
-            BigBlindSeat = bigBlindSeat,
-            ButtonSeat = buttonSeat,
-            Participants = participants.Select(SerializeParticipant).ToList()
+            Rules = SerializeRules(rules),
+            Table = SerializeTable(table)
         };
         var response = await PostAsync<StartHandRequest, StartHandResponse>(url, request, cancellationToken);
 
@@ -123,28 +114,80 @@ public class RemoteHandService(
         return JsonSerializer.Deserialize<TResponse>(responseJson, JsonSerializerOptions)!;
     }
 
-    private StartHandRequestParticipant SerializeParticipant(HandParticipant participant)
+    private HandServiceRules SerializeRules(HandRules rules)
     {
-        return new StartHandRequestParticipant
+        return new HandServiceRules
         {
-            Nickname = participant.Nickname,
-            Seat = participant.Seat,
-            Stack = participant.Stack
+            Game = rules.Game.ToString(),
+            MaxSeat = rules.MaxSeat,
+            SmallBlind = rules.SmallBlind,
+            BigBlind = rules.BigBlind
         };
     }
 
-    private HandStateTable DeserializeTable(GetHandResponseStateTable table)
+    private HandServiceTable SerializeTable(HandTable table)
     {
-        return new HandStateTable
+        return new HandServiceTable
         {
+            Positions = SerializePositions(table.Positions),
+            Players = table.Players.Select(SerializePlayer).ToList()
+        };
+    }
+
+    private HandServicePositions SerializePositions(HandPositions positions)
+    {
+        return new HandServicePositions
+        {
+            SmallBlindSeat = positions.SmallBlindSeat,
+            BigBlindSeat = positions.BigBlindSeat,
+            ButtonSeat = positions.ButtonSeat
+        };
+    }
+
+    private HandServicePlayer SerializePlayer(HandPlayer player)
+    {
+        return new HandServicePlayer
+        {
+            Nickname = player.Nickname,
+            Seat = player.Seat,
+            Stack = player.Stack
+        };
+    }
+
+    private HandRules DeserializeRules(HandServiceRules rules)
+    {
+        return new HandRules
+        {
+            Game = (Game)Enum.Parse(typeof(Game), rules.Game),
+            MaxSeat = rules.MaxSeat,
+            SmallBlind = rules.SmallBlind,
+            BigBlind = rules.BigBlind
+        };
+    }
+
+    private HandTable DeserializeTable(HandServiceTable table)
+    {
+        return new HandTable
+        {
+            Positions = DeserializePositions(table.Positions),
             Players = table.Players.Select(DeserializePlayer).ToList(),
             BoardCards = table.BoardCards
         };
     }
 
-    private HandStatePlayer DeserializePlayer(GetHandResponseStatePlayer player)
+    private HandPositions DeserializePositions(HandServicePositions positions)
     {
-        return new HandStatePlayer
+        return new HandPositions
+        {
+            SmallBlindSeat = positions.SmallBlindSeat,
+            BigBlindSeat = positions.BigBlindSeat,
+            ButtonSeat = positions.ButtonSeat
+        };
+    }
+
+    private HandPlayer DeserializePlayer(HandServicePlayer player)
+    {
+        return new HandPlayer
         {
             Nickname = player.Nickname,
             Seat = player.Seat,
@@ -154,9 +197,9 @@ public class RemoteHandService(
         };
     }
 
-    private HandStatePot DeserializePot(GetHandResponseStatePot pot)
+    private HandPot DeserializePot(HandServicePot pot)
     {
-        return new HandStatePot
+        return new HandPot
         {
             Ante = pot.Ante,
             CollectedBets = pot.CollectedBets.Select(DeserializeBet).ToList(),
@@ -165,18 +208,18 @@ public class RemoteHandService(
         };
     }
 
-    private HandStateBet DeserializeBet(GetHandResponseStateBet bet)
+    private HandBet DeserializeBet(HandServiceBet bet)
     {
-        return new HandStateBet
+        return new HandBet
         {
             Nickname = bet.Nickname,
             Amount = bet.Amount
         };
     }
 
-    private HandStateAward DeserializeAward(GetHandResponseStateAward award)
+    private HandAward DeserializeAward(HandServiceAward award)
     {
-        return new HandStateAward
+        return new HandAward
         {
             Winners = award.Winners.Select(n => new Nickname(n)).ToList(),
             Amount = award.Amount
@@ -194,76 +237,18 @@ public class RemoteHandServiceOptions
 internal sealed record GetHandResponse
 {
     public required Guid Uid { get; init; }
-    public required string Game { get; init; }
-    public required int MaxSeat { get; init; }
-    public required int SmallBlind { get; init; }
-    public required int BigBlind { get; init; }
-    public required int SmallBlindSeat { get; init; }
-    public required int BigBlindSeat { get; init; }
-    public required int ButtonSeat { get; init; }
-    public required GetHandResponseState State { get; init; }
-}
-
-internal sealed record GetHandResponseState
-{
-    public required GetHandResponseStateTable Table { get; init; }
-    public required GetHandResponseStatePot Pot { get; init; }
-}
-
-internal sealed record GetHandResponseStateTable
-{
-    public required List<GetHandResponseStatePlayer> Players { get; init; }
-    public required string BoardCards { get; init; }
-}
-
-internal sealed record GetHandResponseStatePlayer
-{
-    public required string Nickname { get; init; }
-    public required int Seat { get; init; }
-    public required int Stack { get; init; }
-    public required string HoleCards { get; init; }
-    public required bool IsFolded { get; init; }
-}
-
-internal sealed record GetHandResponseStatePot
-{
-    public required int Ante { get; init; }
-    public required List<GetHandResponseStateBet> CollectedBets { get; init; }
-    public required List<GetHandResponseStateBet> CurrentBets { get; init; }
-    public required List<GetHandResponseStateAward> Awards { get; init; }
-}
-
-internal sealed record GetHandResponseStateBet
-{
-    public required string Nickname { get; init; }
-    public required int Amount { get; init; }
-}
-
-internal sealed record GetHandResponseStateAward
-{
-    public required List<string> Winners { get; init; }
-    public required int Amount { get; init; }
+    public required Guid TableUid { get; init; }
+    public required HandServiceRules Rules { get; init; }
+    public required HandServiceTable Table { get; init; }
+    public required HandServicePot Pot { get; init; }
 }
 
 internal sealed record StartHandRequest
 {
     public required Guid TableUid { get; init; }
     public required string TableType { get; init; }
-    public required string Game { get; init; }
-    public required int MaxSeat { get; init; }
-    public required int SmallBlind { get; init; }
-    public required int BigBlind { get; init; }
-    public required int? SmallBlindSeat { get; init; }
-    public required int BigBlindSeat { get; init; }
-    public required int ButtonSeat { get; init; }
-    public required List<StartHandRequestParticipant> Participants { get; init; }
-}
-
-internal sealed record StartHandRequestParticipant
-{
-    public required string Nickname { get; init; }
-    public required int Seat { get; init; }
-    public required int Stack { get; init; }
+    public required HandServiceRules Rules { get; init; }
+    public required HandServiceTable Table { get; init; }
 }
 
 internal sealed record StartHandResponse
@@ -278,3 +263,54 @@ internal sealed record SubmitPlayerActionRequest
 }
 
 internal sealed record EmptyResponse;
+
+internal sealed record HandServiceTable
+{
+    public required HandServicePositions Positions { get; init; }
+    public required List<HandServicePlayer> Players { get; init; }
+    public string BoardCards { get; init; } = "";
+}
+
+internal sealed record HandServicePot
+{
+    public required int Ante { get; init; }
+    public required List<HandServiceBet> CollectedBets { get; init; }
+    public required List<HandServiceBet> CurrentBets { get; init; }
+    public required List<HandServiceAward> Awards { get; init; }
+}
+
+internal sealed record HandServiceRules
+{
+    public required string Game { get; init; }
+    public required int MaxSeat { get; init; }
+    public required int SmallBlind { get; init; }
+    public required int BigBlind { get; init; }
+}
+
+internal sealed record HandServicePositions
+{
+    public required int? SmallBlindSeat { get; init; }
+    public required int BigBlindSeat { get; init; }
+    public required int ButtonSeat { get; init; }
+}
+
+internal sealed record HandServicePlayer
+{
+    public required string Nickname { get; init; }
+    public required int Seat { get; init; }
+    public required int Stack { get; init; }
+    public string HoleCards { get; init; } = "";
+    public bool IsFolded { get; init; } = false;
+}
+
+internal sealed record HandServiceBet
+{
+    public required string Nickname { get; init; }
+    public required int Amount { get; init; }
+}
+
+internal sealed record HandServiceAward
+{
+    public required List<string> Winners { get; init; }
+    public required int Amount { get; init; }
+}

@@ -41,7 +41,7 @@ public class RabbitMqIntegrationEventConsumerTest(
             TableUid = Guid.NewGuid(),
             Name = "Test Consumed Integration Event",
             Number = 500100,
-            Participants = [
+            Players = [
                 new()
                 {
                     Nickname = "Nickname",
@@ -224,7 +224,7 @@ internal sealed record TestConsumedIntegrationEvent : IIntegrationEvent
 
     public required string Name { get; init; }
     public required int Number { get; init; }
-    public required List<IntegrationEventParticipant> Participants { get; init; }
+    public required List<IntegrationEventPlayer> Players { get; init; }
 
     public bool Equals(TestConsumedIntegrationEvent? other)
     {
@@ -235,7 +235,7 @@ internal sealed record TestConsumedIntegrationEvent : IIntegrationEvent
                && TableUid.Equals(other.TableUid)
                && Name.Equals(other.Name)
                && Number.Equals(other.Number)
-               && Participants.SequenceEqual(other.Participants);
+               && Players.SequenceEqual(other.Players);
     }
 
     public override int GetHashCode()
@@ -251,7 +251,7 @@ internal sealed record TestConsumedIntegrationEvent : IIntegrationEvent
         hash.Add(Name);
         hash.Add(Number);
 
-        foreach (var participant in Participants)
+        foreach (var participant in Players)
         {
             hash.Add(participant);
         }

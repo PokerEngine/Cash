@@ -1,8 +1,7 @@
 using Application.Connection;
 using Application.Repository;
-using Application.Service.Hand;
+using Application.Service.HandManager;
 using Domain.Entity;
-using Domain.ValueObject;
 
 namespace Application.IntegrationEvent;
 
@@ -22,7 +21,7 @@ public record PlayerSatDownIntegrationEvent : IIntegrationEvent
 public class PlayerSatDownHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository,
-    IHandService handService
+    IHandManager handManager
 ) : IIntegrationEventHandler<PlayerSatDownIntegrationEvent>
 {
     public async Task HandleAsync(PlayerSatDownIntegrationEvent integrationEvent)
@@ -36,37 +35,10 @@ public class PlayerSatDownHandler(
         var table = Table.FromEvents(integrationEvent.TableUid, events);
         if (table.HasEnoughPlayersForHand() && !table.IsHandInProgress())
         {
-            await StartHandAsync(table);
+            await handManager.StartHandAsync(table);
         }
 
         events = table.PullEvents();
         await repository.AddEventsAsync(table.Uid, events);
-    }
-
-    private async Task StartHandAsync(Table table)
-    {
-        table.RotateButton();
-
-        await handService.StartAsync(
-            tableUid: table.Uid,
-            game: table.Game,
-            maxSeat: table.MaxSeat,
-            smallBlind: table.SmallBlind,
-            bigBlind: table.BigBlind,
-            smallBlindSeat: table.SmallBlindSeat,
-            bigBlindSeat: (Seat)table.BigBlindSeat!,
-            buttonSeat: (Seat)table.ButtonSeat!,
-            participants: table.ActivePlayers.Select(GetParticipant).ToList()
-        );
-    }
-
-    private HandParticipant GetParticipant(Player player)
-    {
-        return new HandParticipant
-        {
-            Nickname = player.Nickname,
-            Seat = player.Seat,
-            Stack = player.Stack
-        };
     }
 }

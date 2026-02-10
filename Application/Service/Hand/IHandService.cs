@@ -11,14 +11,8 @@ public interface IHandService
 
     Task<HandUid> StartAsync(
         TableUid tableUid,
-        Game game,
-        Seat maxSeat,
-        Chips smallBlind,
-        Chips bigBlind,
-        Seat? smallBlindSeat,
-        Seat bigBlindSeat,
-        Seat buttonSeat,
-        List<HandParticipant> participants,
+        HandRules rules,
+        HandTable table,
         CancellationToken cancellationToken = default
     );
 
@@ -31,49 +25,61 @@ public interface IHandService
     );
 }
 
-public record HandParticipant
-{
-    public required Nickname Nickname { get; init; }
-    public required Seat Seat { get; init; }
-    public required Chips Stack { get; init; }
-}
-
 public record HandState
 {
-    public required HandStateTable Table { get; init; }
-    public required HandStatePot Pot { get; init; }
+    public required HandUid Uid { get; init; }
+    public required TableUid TableUid { get; init; }
+    public required HandRules Rules { get; init; }
+    public required HandTable Table { get; init; }
+    public required HandPot Pot { get; init; }
 }
 
-public record HandStateTable
+public record HandRules
 {
-    public required List<HandStatePlayer> Players { get; init; }
-    public required string BoardCards { get; init; }
+    public required Game Game { get; init; }
+    public required Seat MaxSeat { get; init; }
+    public required Chips SmallBlind { get; init; }
+    public required Chips BigBlind { get; init; }
 }
 
-public record HandStatePlayer
+public record HandTable
+{
+    public required HandPositions Positions { get; init; }
+    public required List<HandPlayer> Players { get; init; }
+    public string BoardCards { get; init; } = "";
+}
+
+public record HandPositions
+{
+    public required Seat? SmallBlindSeat { get; init; }
+    public required Seat BigBlindSeat { get; init; }
+    public required Seat ButtonSeat { get; init; }
+}
+
+public record HandPlayer
 {
     public required Nickname Nickname { get; init; }
     public required Seat Seat { get; init; }
     public required Chips Stack { get; init; }
-    public required string HoleCards { get; init; }
-    public required bool IsFolded { get; init; }
+    public string HoleCards { get; init; } = "";
+    public bool IsFolded { get; init; } = false;
 }
 
-public record HandStatePot
+public record HandPot
 {
     public required Chips Ante { get; init; }
-    public required List<HandStateBet> CollectedBets { get; init; }
-    public required List<HandStateBet> CurrentBets { get; init; }
-    public required List<HandStateAward> Awards { get; init; }
+    public required List<HandBet> CollectedBets { get; init; }
+    public required List<HandBet> CurrentBets { get; init; }
+    public required List<HandAward> Awards { get; init; }
 }
 
-public record HandStateBet
+public record HandBet
 {
     public required Nickname Nickname { get; init; }
     public required Chips Amount { get; init; }
 }
 
-public record HandStateAward
+public record HandAward
 {
     public required List<Nickname> Winners { get; init; }
     public required Chips Amount { get; init; }

@@ -24,26 +24,19 @@ public class StubHandService : IHandService
 
     public Task<HandUid> StartAsync(
         TableUid tableUid,
-        Game game,
-        Seat maxSeat,
-        Chips smallBlind,
-        Chips bigBlind,
-        Seat? smallBlindSeat,
-        Seat bigBlindSeat,
-        Seat buttonSeat,
-        List<HandParticipant> participants,
+        HandRules rules,
+        HandTable table,
         CancellationToken cancellationToken = default
     )
     {
         var handUid = new HandUid(Guid.NewGuid());
         var state = new HandState
         {
-            Table = new HandStateTable
-            {
-                Players = participants.Select(CreatePlayer).ToList(),
-                BoardCards = ""
-            },
-            Pot = new HandStatePot
+            Uid = handUid,
+            TableUid = tableUid,
+            Rules = rules,
+            Table = table,
+            Pot = new HandPot
             {
                 Ante = 0,
                 CollectedBets = [],
@@ -65,17 +58,5 @@ public class StubHandService : IHandService
     )
     {
         return Task.CompletedTask;
-    }
-
-    private HandStatePlayer CreatePlayer(HandParticipant participant)
-    {
-        return new HandStatePlayer
-        {
-            Nickname = participant.Nickname,
-            Seat = participant.Seat,
-            Stack = participant.Stack,
-            HoleCards = "",
-            IsFolded = false
-        };
     }
 }
