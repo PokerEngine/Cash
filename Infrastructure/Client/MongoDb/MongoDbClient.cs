@@ -41,6 +41,8 @@ internal static class MongoDbSerializerConfig
         BsonSerializer.TryRegisterSerializer(new SeatSerializer());
         BsonSerializer.TryRegisterSerializer(new ChipsSerializer());
         BsonSerializer.TryRegisterSerializer(new MoneySerializer());
+        BsonSerializer.TryRegisterSerializer(new RulesSerializer());
+        BsonSerializer.TryRegisterSerializer(new PositionsSerializer());
     }
 }
 
@@ -137,5 +139,153 @@ internal sealed class MoneySerializer : SerializerBase<Money>
         context.Reader.ReadEndDocument();
 
         return new Money(amount, currency);
+    }
+}
+
+internal sealed class RulesSerializer : SerializerBase<Rules>
+{
+    private const string GameField = "game";
+    private const string MaxSeatField = "maxSeat";
+    private const string SmallBlindField = "smallBlind";
+    private const string BigBlindField = "bigBlind";
+    private const string ChipCostField = "chipCost";
+
+    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Rules value)
+    {
+        context.Writer.WriteStartDocument();
+        context.Writer.WriteName(GameField);
+        context.Writer.WriteString(value.Game.ToString());
+        context.Writer.WriteName(MaxSeatField);
+        BsonSerializer.Serialize(context.Writer, value.MaxSeat);
+        context.Writer.WriteName(SmallBlindField);
+        BsonSerializer.Serialize(context.Writer, value.SmallBlind);
+        context.Writer.WriteName(BigBlindField);
+        BsonSerializer.Serialize(context.Writer, value.BigBlind);
+        context.Writer.WriteName(ChipCostField);
+        BsonSerializer.Serialize(context.Writer, value.ChipCost);
+        context.Writer.WriteEndDocument();
+    }
+
+    public override Rules Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+    {
+        Game game = default;
+        Seat maxSeat = default;
+        Chips smallBlind = default;
+        Chips bigBlind = default;
+        Money chipCost = default;
+
+        context.Reader.ReadStartDocument();
+
+        while (context.Reader.ReadBsonType() != BsonType.EndOfDocument)
+        {
+            var name = context.Reader.ReadName(Utf8NameDecoder.Instance);
+
+            switch (name)
+            {
+                case GameField:
+                    game = Enum.Parse<Game>(
+                        context.Reader.ReadString(),
+                        ignoreCase: true
+                    );
+                    break;
+
+                case MaxSeatField:
+                    maxSeat = BsonSerializer.Deserialize<Seat>(context.Reader);
+                    break;
+
+                case SmallBlindField:
+                    smallBlind = BsonSerializer.Deserialize<Chips>(context.Reader);
+                    break;
+
+                case BigBlindField:
+                    bigBlind = BsonSerializer.Deserialize<Chips>(context.Reader);
+                    break;
+
+                case ChipCostField:
+                    chipCost = BsonSerializer.Deserialize<Money>(context.Reader);
+                    break;
+
+                default:
+                    context.Reader.SkipValue();
+                    break;
+            }
+        }
+
+        context.Reader.ReadEndDocument();
+
+        return new Rules
+        {
+            Game = game,
+            MaxSeat = maxSeat,
+            SmallBlind = smallBlind,
+            BigBlind = bigBlind,
+            ChipCost = chipCost
+        };
+    }
+}
+
+internal sealed class PositionsSerializer : SerializerBase<Positions>
+{
+    private const string SmallBlindSeatField = "smallBlindSeat";
+    private const string BigBlindSeatField = "bigBlindSeat";
+    private const string ButtonSeatField = "buttonSeat";
+
+    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, Positions value)
+    {
+        context.Writer.WriteStartDocument();
+
+        if (value.SmallBlindSeat is not null)
+        {
+            context.Writer.WriteName(SmallBlindSeatField);
+            BsonSerializer.Serialize(context.Writer, value.SmallBlindSeat);
+        }
+
+        context.Writer.WriteName(BigBlindSeatField);
+        BsonSerializer.Serialize(context.Writer, value.BigBlindSeat);
+        context.Writer.WriteName(ButtonSeatField);
+        BsonSerializer.Serialize(context.Writer, value.ButtonSeat);
+        context.Writer.WriteEndDocument();
+    }
+
+    public override Positions Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+    {
+        Seat? smallBlindSeat = null;
+        Seat bigBlindSeat = default;
+        Seat buttonSeat = default;
+
+        context.Reader.ReadStartDocument();
+
+        while (context.Reader.ReadBsonType() != BsonType.EndOfDocument)
+        {
+            var name = context.Reader.ReadName(Utf8NameDecoder.Instance);
+
+            switch (name)
+            {
+                case SmallBlindSeatField:
+                    smallBlindSeat = BsonSerializer.Deserialize<Seat>(context.Reader);
+                    break;
+
+                case BigBlindSeatField:
+                    bigBlindSeat = BsonSerializer.Deserialize<Seat>(context.Reader);
+                    break;
+
+                case ButtonSeatField:
+                    buttonSeat = BsonSerializer.Deserialize<Seat>(context.Reader);
+                    break;
+
+                default:
+                    context.Reader.SkipValue();
+                    break;
+            }
+        }
+
+        context.Reader.ReadEndDocument();
+
+        return new Positions
+        {
+            SmallBlindSeat = smallBlindSeat,
+            BigBlindSeat = bigBlindSeat,
+            ButtonSeat = buttonSeat
+        };
     }
 }

@@ -19,33 +19,34 @@ public class TableTest
         // Act
         var table = Table.FromScratch(
             uid: uid,
-            game: Game.NoLimitHoldem,
-            maxSeat: new Seat(maxSeat),
-            smallBlind: new Chips(5),
-            bigBlind: new Chips(10),
-            chipCost: new Money(1, Currency.Usd)
+            rules: new Rules
+            {
+                Game = Game.NoLimitHoldem,
+                MaxSeat = new Seat(maxSeat),
+                SmallBlind = new Chips(5),
+                BigBlind = new Chips(10),
+                ChipCost = new Money(1, Currency.Usd)
+            }
         );
 
         // Assert
         Assert.Equal(uid, table.Uid);
-        Assert.Equal(Game.NoLimitHoldem, table.Game);
-        Assert.Equal(new Seat(maxSeat), table.MaxSeat);
-        Assert.Equal(new Chips(5), table.SmallBlind);
-        Assert.Equal(new Chips(10), table.BigBlind);
-        Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
-        Assert.Null(table.ButtonSeat);
-        Assert.Null(table.SmallBlindSeat);
-        Assert.Null(table.BigBlindSeat);
+        Assert.Equal(Game.NoLimitHoldem, table.Rules.Game);
+        Assert.Equal(new Seat(maxSeat), table.Rules.MaxSeat);
+        Assert.Equal(new Chips(5), table.Rules.SmallBlind);
+        Assert.Equal(new Chips(10), table.Rules.BigBlind);
+        Assert.Equal(new Money(1, Currency.Usd), table.Rules.ChipCost);
+        Assert.Null(table.Positions);
         Assert.Empty(table.Players);
 
         var events = table.PullEvents();
         Assert.Single(events);
         var @event = Assert.IsType<TableCreatedEvent>(events[0]);
-        Assert.Equal(Game.NoLimitHoldem, @event.Game);
-        Assert.Equal(new Chips(5), @event.SmallBlind);
-        Assert.Equal(new Chips(10), @event.BigBlind);
-        Assert.Equal(new Money(1, Currency.Usd), @event.ChipCost);
-        Assert.Equal(new Seat(maxSeat), @event.MaxSeat);
+        Assert.Equal(Game.NoLimitHoldem, @event.Rules.Game);
+        Assert.Equal(new Seat(maxSeat), @event.Rules.MaxSeat);
+        Assert.Equal(new Chips(5), @event.Rules.SmallBlind);
+        Assert.Equal(new Chips(10), @event.Rules.BigBlind);
+        Assert.Equal(new Money(1, Currency.Usd), @event.Rules.ChipCost);
     }
 
     [Theory]
@@ -61,11 +62,14 @@ public class TableTest
         {
             new TableCreatedEvent
             {
-                Game = Game.NoLimitHoldem,
-                MaxSeat = new Seat(maxSeat),
-                SmallBlind = new Chips(5),
-                BigBlind = new Chips(10),
-                ChipCost = new Money(1, Currency.Usd),
+                Rules = new Rules
+                {
+                    Game = Game.NoLimitHoldem,
+                    MaxSeat = new Seat(maxSeat),
+                    SmallBlind = new Chips(5),
+                    BigBlind = new Chips(10),
+                    ChipCost = new Money(1, Currency.Usd)
+                },
                 OccurredAt = DateTime.Now
             },
             new PlayerSatDownEvent
@@ -170,14 +174,15 @@ public class TableTest
 
         // Assert
         Assert.Equal(uid, table.Uid);
-        Assert.Equal(Game.NoLimitHoldem, table.Game);
-        Assert.Equal(new Chips(5), table.SmallBlind);
-        Assert.Equal(new Chips(10), table.BigBlind);
-        Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
-        Assert.Equal(new Seat(maxSeat), table.MaxSeat);
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(4), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.Equal(Game.NoLimitHoldem, table.Rules.Game);
+        Assert.Equal(new Seat(maxSeat), table.Rules.MaxSeat);
+        Assert.Equal(new Chips(5), table.Rules.SmallBlind);
+        Assert.Equal(new Chips(10), table.Rules.BigBlind);
+        Assert.Equal(new Money(1, Currency.Usd), table.Rules.ChipCost);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(4), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
         Assert.Equal(handUid2, table.GetCurrentHandUid());
         Assert.Equal(3, table.Players.Count());
         var alice = table.Players.First(p => p.Nickname == new Nickname("Alice"));
@@ -760,9 +765,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(2), table.ButtonSeat);
-        Assert.Equal(new Seat(2), table.SmallBlindSeat);
-        Assert.Equal(new Seat(4), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(2), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(2), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(4), table.Positions.BigBlindSeat);
 
         var events = table.PullEvents();
         Assert.Single(events);
@@ -793,9 +799,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(4), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(4), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
 
         var events = table.PullEvents();
         Assert.Single(events);
@@ -830,9 +837,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(4), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(4), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
 
         var player = table.Players.First(p => p.Seat == new Seat(3));
         Assert.True(player.IsWaitingForBigBlind);
@@ -866,9 +874,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Null(table.SmallBlindSeat); // No small blind when a heads-up table transformed into 3max
-        Assert.Equal(new Seat(6), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Null(table.Positions.SmallBlindSeat); // No small blind when a heads-up table transformed into 3max
+        Assert.Equal(new Seat(6), table.Positions.BigBlindSeat);
 
         var player = table.Players.First(p => p.Seat == new Seat(6));
         Assert.False(player.IsWaitingForBigBlind);
@@ -906,9 +915,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(6), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat); // Posts 2nd BB in a row
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(6), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat); // Posts 2nd BB in a row
     }
 
     [Fact]
@@ -936,9 +946,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(2), table.ButtonSeat);
-        Assert.Equal(new Seat(4), table.SmallBlindSeat);
-        Assert.Equal(new Seat(6), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(2), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(4), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(6), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -969,9 +980,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1007,9 +1019,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
 
         var player = table.Players.First(p => p.Seat == new Seat(3));
         Assert.True(player.IsWaitingForBigBlind);
@@ -1048,9 +1061,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
 
         var player = table.Players.First(p => p.Seat == new Seat(5));
         Assert.True(player.IsWaitingForBigBlind);
@@ -1089,9 +1103,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(7), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(7), table.Positions.BigBlindSeat);
 
         var player = table.Players.First(p => p.Seat == new Seat(7));
         Assert.False(player.IsWaitingForBigBlind);
@@ -1126,9 +1141,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(4), table.SmallBlindSeat);
-        Assert.Equal(new Seat(6), table.BigBlindSeat); // Posts 2nd BB in a row
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(4), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(6), table.Positions.BigBlindSeat); // Posts 2nd BB in a row
     }
 
     [Fact]
@@ -1160,9 +1176,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat); // Dead button
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat); // Dead button
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1194,9 +1211,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Null(table.SmallBlindSeat); // No small blind after big blind left the table
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Null(table.Positions.SmallBlindSeat); // No small blind after big blind left the table
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1236,9 +1254,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(6), table.ButtonSeat);
-        Assert.Equal(new Seat(8), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(6), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(8), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1275,9 +1294,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(8), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(8), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1314,9 +1334,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat); // Dead button
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(8), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat); // Dead button
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(8), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1353,9 +1374,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Null(table.SmallBlindSeat); // No small blind after big blind left the table
-        Assert.Equal(new Seat(8), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Null(table.Positions.SmallBlindSeat); // No small blind after big blind left the table
+        Assert.Equal(new Seat(8), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1394,9 +1416,10 @@ public class TableTest
         table.RotateButton();
 
         // Assert
-        Assert.Equal(new Seat(4), table.ButtonSeat);
-        Assert.Equal(new Seat(6), table.SmallBlindSeat);
-        Assert.Equal(new Seat(2), table.BigBlindSeat);
+        Assert.NotNull(table.Positions);
+        Assert.Equal(new Seat(4), table.Positions.ButtonSeat);
+        Assert.Equal(new Seat(6), table.Positions.SmallBlindSeat);
+        Assert.Equal(new Seat(2), table.Positions.BigBlindSeat);
     }
 
     [Fact]
@@ -1629,11 +1652,14 @@ public class TableTest
     {
         return Table.FromScratch(
             uid: new TableUid(Guid.NewGuid()),
-            game: Game.NoLimitHoldem,
-            smallBlind: new Chips(smallBlind),
-            bigBlind: new Chips(bigBlind),
-            maxSeat: new Seat(maxSeat),
-            chipCost: new Money(chipCost, Currency.Usd)
+            rules: new Rules
+            {
+                Game = Game.NoLimitHoldem,
+                MaxSeat = new Seat(maxSeat),
+                SmallBlind = new Chips(smallBlind),
+                BigBlind = new Chips(bigBlind),
+                ChipCost = new Money(chipCost, Currency.Usd)
+            }
         );
     }
 }

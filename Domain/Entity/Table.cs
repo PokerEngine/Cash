@@ -9,15 +9,8 @@ public class Table
     private const int MinPlayersForHand = 2;
 
     public readonly TableUid Uid;
-    public readonly Game Game;
-    public readonly Money ChipCost;
-    public readonly Chips SmallBlind;
-    public readonly Chips BigBlind;
-    public readonly Seat MaxSeat;
-
-    public Seat? SmallBlindSeat { get; private set; }
-    public Seat? BigBlindSeat { get; private set; }
-    public Seat? ButtonSeat { get; private set; }
+    public readonly Rules Rules;
+    public Positions? Positions { get; private set; }
     private HandUid? CurrentHandUid { get; set; }
 
     private readonly Player?[] _players;
@@ -29,53 +22,31 @@ public class Table
 
     private Table(
         TableUid uid,
-        Game game,
-        Seat maxSeat,
-        Chips smallBlind,
-        Chips bigBlind,
-        Money chipCost
+        Rules rules
     )
     {
         Uid = uid;
-        Game = game;
-        MaxSeat = maxSeat;
-        SmallBlind = smallBlind;
-        BigBlind = bigBlind;
-        ChipCost = chipCost;
+        Rules = rules;
 
-        SmallBlindSeat = null;
-        BigBlindSeat = null;
-        ButtonSeat = null;
+        Positions = null;
 
-        _players = new Player?[maxSeat];
+        _players = new Player?[rules.MaxSeat];
         _events = [];
     }
 
     public static Table FromScratch(
         TableUid uid,
-        Game game,
-        Seat maxSeat,
-        Chips smallBlind,
-        Chips bigBlind,
-        Money chipCost
+        Rules rules
     )
     {
         var table = new Table(
             uid: uid,
-            game: game,
-            smallBlind: smallBlind,
-            bigBlind: bigBlind,
-            chipCost: chipCost,
-            maxSeat: maxSeat
+            rules: rules
         );
 
         var @event = new TableCreatedEvent
         {
-            Game = game,
-            SmallBlind = smallBlind,
-            BigBlind = bigBlind,
-            ChipCost = chipCost,
-            MaxSeat = maxSeat,
+            Rules = rules,
             OccurredAt = DateTime.Now
         };
         table.AddEvent(@event);
@@ -93,11 +64,7 @@ public class Table
         var createdEvent = (TableCreatedEvent)events[0];
         var table = new Table(
             uid: uid,
-            game: createdEvent.Game,
-            maxSeat: createdEvent.MaxSeat,
-            smallBlind: createdEvent.SmallBlind,
-            bigBlind: createdEvent.BigBlind,
-            chipCost: createdEvent.ChipCost
+            rules: createdEvent.Rules
         );
 
         foreach (var @event in events)
@@ -143,9 +110,9 @@ public class Table
 
     public void SitPlayerDown(Nickname nickname, Seat seat, Chips stack)
     {
-        if (seat > MaxSeat)
+        if (seat > Rules.MaxSeat)
         {
-            throw new SeatNotFoundException($"The table supports seats till {MaxSeat}");
+            throw new SeatNotFoundException($"The table supports seats till {Rules.MaxSeat}");
         }
 
         var player = GetPlayerBySeat(seat);
@@ -284,15 +251,18 @@ public class Table
             throw new InvalidTableStateException("Not enough players to rotate the button");
         }
 
-        var nextButtonSeat = GetNextButtonSeat(ButtonSeat, SmallBlindSeat);
-        var nextSmallBlindSeat = GetNextSmallBlindSeat(nextButtonSeat, BigBlindSeat);
+        var nextButtonSeat = GetNextButtonSeat(Positions?.ButtonSeat, Positions?.SmallBlindSeat);
+        var nextSmallBlindSeat = GetNextSmallBlindSeat(nextButtonSeat, Positions?.BigBlindSeat);
         var nextBigBlindSeat = GetNextBigBlindSeat(nextSmallBlindSeat, nextButtonSeat);
 
-        ButtonSeat = nextButtonSeat;
-        SmallBlindSeat = nextSmallBlindSeat;
-        BigBlindSeat = nextBigBlindSeat;
+        Positions = new Positions
+        {
+            SmallBlindSeat = nextSmallBlindSeat,
+            BigBlindSeat = nextBigBlindSeat,
+            ButtonSeat = nextButtonSeat
+        };
 
-        var bbPlayer = GetPlayerBySeat((Seat)BigBlindSeat);
+        var bbPlayer = GetPlayerBySeat(Positions.BigBlindSeat);
         if (bbPlayer is not null && bbPlayer.IsWaitingForBigBlind)
         {
             bbPlayer.StopWaitingForBigBlind();
@@ -372,7 +342,7 @@ public class Table
             return (Seat)previousSmallBlindSeat;
         }
 
-        var previousSeat = previousButtonSeat ?? MaxSeat; // For the first hand, start from the max seat
+        var previousSeat = previousButtonSeat ?? Rules.MaxSeat; // For the first hand, start from the max seat
         return GetNextSeat(previousSeat, p => p.IsActive && !p.IsWaitingForBigBlind);
     }
 
@@ -429,7 +399,7 @@ public class Table
 
         do
         {
-            seat = seat == MaxSeat ? new Seat(1) : new Seat(seat + 1);
+            seat = seat == Rules.MaxSeat ? new Seat(1) : new Seat(seat + 1);
 
             if (seat == previousSeat)
             {

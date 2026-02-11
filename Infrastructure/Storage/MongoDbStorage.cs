@@ -25,7 +25,7 @@ public class MongoDbStorage : IStorage
         _listViewCollection = db.GetCollection<ListViewDocument>(ListViewCollectionName);
     }
 
-    public async Task<DetailView> GetDetailViewAsync(TableUid uid)
+    public async Task<DetailView> GetDetailViewAsync(Guid uid)
     {
         var document = await _detailViewCollection
             .Find(e => e.Uid == uid)
@@ -39,27 +39,17 @@ public class MongoDbStorage : IStorage
         return new DetailView
         {
             Uid = document.Uid,
-            Game = document.Game,
-            Stake = document.Stake,
-            MaxSeat = document.MaxSeat,
-            SmallBlind = document.SmallBlind,
-            BigBlind = document.BigBlind,
+            Rules = document.Rules,
             CurrentHandUid = document.CurrentHandUid,
-            Players = document.Players.Select(p => new DetailViewPlayer
-            {
-                Nickname = p.Nickname,
-                Seat = p.Seat,
-                Stack = p.Stack,
-                IsSittingOut = p.IsSittingOut
-            }).ToList()
+            Players = document.Players
         };
     }
 
     public async Task<List<ListView>> GetListViewsAsync(
         bool hasPlayersOnly = false,
-        IEnumerable<Game>? games = null,
-        Money? minStake = null,
-        Money? maxStake = null
+        IEnumerable<string>? games = null,
+        int? minStake = null,
+        int? maxStake = null
     )
     {
         var filterBuilder = Builders<ListViewDocument>.Filter;
@@ -72,32 +62,30 @@ public class MongoDbStorage : IStorage
 
         if (games is not null)
         {
-            filter &= filterBuilder.In(e => e.Game, games);
+            filter &= filterBuilder.In(e => e.Rules.Game, games);
         }
 
         if (minStake is not null)
         {
-            filter &= filterBuilder.Gte(e => e.Stake, minStake);
+            filter &= filterBuilder.Gte(e => e.Rules.Stake, minStake);
         }
 
         if (maxStake is not null)
         {
-            filter &= filterBuilder.Lte(e => e.Stake, maxStake);
+            filter &= filterBuilder.Lte(e => e.Rules.Stake, maxStake);
         }
 
         var documents = await _listViewCollection
             .Find(filter)
-            .SortBy(e => e.Stake)
-            .ThenBy(e => e.MaxSeat)
-            .ThenBy(e => e.Game)
+            .SortBy(e => e.Rules.Stake)
+            .ThenBy(e => e.Rules.MaxSeat)
+            .ThenBy(e => e.Rules.Game)
             .ToListAsync();
 
         return documents.Select(d => new ListView
         {
             Uid = d.Uid,
-            Game = d.Game,
-            MaxSeat = d.MaxSeat,
-            Stake = d.Stake,
+            Rules = d.Rules,
             PlayerCount = d.PlayerCount
         }).ToList();
     }
@@ -119,22 +107,25 @@ public class MongoDbStorage : IStorage
         var document = new DetailViewDocument
         {
             Uid = table.Uid,
-            Game = table.Game,
-            MaxSeat = table.MaxSeat,
-            Stake = table.BigBlind * table.ChipCost * 100,
-            SmallBlind = table.SmallBlind * table.ChipCost,
-            BigBlind = table.BigBlind * table.ChipCost,
+            Rules = new DetailViewRules
+            {
+                Game = table.Rules.Game.ToString(),
+                MaxSeat = table.Rules.MaxSeat,
+                Stake = (int)(table.Rules.BigBlind * table.Rules.ChipCost * 100).Amount,
+                SmallBlind = (table.Rules.SmallBlind * table.Rules.ChipCost).Amount,
+                BigBlind = (table.Rules.BigBlind * table.Rules.ChipCost).Amount
+            },
             CurrentHandUid = table.IsHandInProgress() ? table.GetCurrentHandUid() : null,
-            Players = table.Players.Select(p => new DetailViewDocumentPlayer
+            Players = table.Players.Select(p => new DetailViewPlayer
             {
                 Nickname = p.Nickname,
                 Seat = p.Seat,
-                Stack = p.Stack * table.ChipCost,
+                Stack = (p.Stack * table.Rules.ChipCost).Amount,
                 IsSittingOut = p.IsSittingOut
             }).ToList()
         };
 
-        await _detailViewCollection.FindOneAndReplaceAsync(e => e.Uid == table.Uid, document, options);
+        await _detailViewCollection.FindOneAndReplaceAsync(e => e.Uid == (Guid)table.Uid, document, options);
     }
 
     private async Task SaveListViewAsync(Table table)
@@ -148,9 +139,12 @@ public class MongoDbStorage : IStorage
         var document = new ListViewDocument
         {
             Uid = table.Uid,
-            Game = table.Game,
-            MaxSeat = table.MaxSeat,
-            Stake = table.BigBlind * table.ChipCost * 100,
+            Rules = new ListViewRules
+            {
+                Game = table.Rules.Game.ToString(),
+                MaxSeat = table.Rules.MaxSeat,
+                Stake = (int)(table.Rules.BigBlind * table.Rules.ChipCost * 100).Amount,
+            },
             PlayerCount = table.Players.Count()
         };
 
@@ -168,22 +162,10 @@ public class MongoDbStorageOptions
 internal sealed class DetailViewDocument
 {
     [BsonId]
-    public required TableUid Uid { get; init; }
-    public required Game Game { get; init; }
-    public required Seat MaxSeat { get; init; }
-    public required Money Stake { get; init; }
-    public required Money SmallBlind { get; init; }
-    public required Money BigBlind { get; init; }
-    public required HandUid? CurrentHandUid { get; init; }
-    public required List<DetailViewDocumentPlayer> Players { get; init; }
-}
-
-internal sealed class DetailViewDocumentPlayer
-{
-    public required Nickname Nickname { get; init; }
-    public required Seat Seat { get; init; }
-    public required Money Stack { get; init; }
-    public required bool IsSittingOut { get; init; }
+    public required Guid Uid { get; init; }
+    public required DetailViewRules Rules { get; init; }
+    public required Guid? CurrentHandUid { get; init; }
+    public required List<DetailViewPlayer> Players { get; init; }
 }
 
 internal sealed class ListViewDocument
@@ -191,8 +173,6 @@ internal sealed class ListViewDocument
 
     [BsonId]
     public required TableUid Uid { get; init; }
-    public required Game Game { get; init; }
-    public required Seat MaxSeat { get; init; }
-    public required Money Stake { get; init; }
+    public required ListViewRules Rules { get; init; }
     public required int PlayerCount { get; init; }
 }

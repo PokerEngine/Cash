@@ -13,12 +13,12 @@ public class TableCreatedEventHandler(
         {
             Uid = Guid.NewGuid(),
             TableUid = context.TableUid,
-            Game = @event.Game.ToString(),
-            MaxSeat = @event.MaxSeat,
-            SmallBlind = @event.SmallBlind,
-            BigBlind = @event.BigBlind,
-            ChipCostAmount = @event.ChipCost.Amount,
-            ChipCostCurrency = @event.ChipCost.Currency.ToString(),
+            Game = @event.Rules.Game.ToString(),
+            MaxSeat = @event.Rules.MaxSeat,
+            SmallBlind = @event.Rules.SmallBlind,
+            BigBlind = @event.Rules.BigBlind,
+            ChipCostAmount = @event.Rules.ChipCost.Amount,
+            ChipCostCurrency = @event.Rules.ChipCost.Currency.ToString(),
             OccurredAt = @event.OccurredAt
         };
 

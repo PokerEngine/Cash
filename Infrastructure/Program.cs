@@ -5,6 +5,7 @@ using Application.IntegrationEvent;
 using Application.Query;
 using Application.Repository;
 using Application.Service.Hand;
+using Application.Service.HandManager;
 using Application.Storage;
 using Domain.Event;
 using Infrastructure.Client.MongoDb;
@@ -69,6 +70,9 @@ public static class Bootstrapper
             builder.Services.AddHttpClient<IHandService>();
             builder.Services.AddSingleton<IHandService, RemoteHandService>();
         }
+
+        // Register hand manager
+        builder.Services.AddSingleton<IHandManager, HandManager>();
 
         // Register commands
         RegisterCommandHandler<CreateTableCommand, CreateTableHandler, CreateTableResponse>(builder.Services);

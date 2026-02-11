@@ -11,11 +11,7 @@ public sealed record TableCreatedEvent : IEvent
 {
     public required DateTime OccurredAt { get; init; }
 
-    public required Game Game { get; init; }
-    public required Seat MaxSeat { get; init; }
-    public required Chips SmallBlind { get; init; }
-    public required Chips BigBlind { get; init; }
-    public required Money ChipCost { get; init; }
+    public required Rules Rules { get; init; }
 }
 
 public sealed record PlayerSatDownEvent : IEvent

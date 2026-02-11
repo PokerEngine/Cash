@@ -27,9 +27,9 @@ public class GetTableListTest
         // Assert
         Assert.Single(response.Items);
         Assert.Equal(tableUid, response.Items[0].Uid);
-        Assert.Equal("NoLimitHoldem", response.Items[0].Game);
-        Assert.Equal(6, response.Items[0].MaxSeat);
-        Assert.Equal(1000, response.Items[0].Stake);
+        Assert.Equal("NoLimitHoldem", response.Items[0].Rules.Game);
+        Assert.Equal(6, response.Items[0].Rules.MaxSeat);
+        Assert.Equal(1000, response.Items[0].Rules.Stake);
         Assert.Equal(1, response.Items[0].PlayerCount);
     }
 
@@ -58,12 +58,15 @@ public class GetTableListTest
         var handler = new CreateTableHandler(repository, storage, eventDispatcher);
         var command = new CreateTableCommand
         {
-            Game = "NoLimitHoldem",
-            MaxSeat = 6,
-            SmallBlind = 5,
-            BigBlind = 10,
-            ChipCostAmount = 1,
-            ChipCostCurrency = "Usd"
+            Rules = new CreateTableCommandRules
+            {
+                Game = "NoLimitHoldem",
+                MaxSeat = 6,
+                SmallBlind = 5,
+                BigBlind = 10,
+                ChipCostAmount = 1,
+                ChipCostCurrency = "Usd"
+            }
         };
         var response = await handler.HandleAsync(command);
         return response.Uid;

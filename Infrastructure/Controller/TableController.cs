@@ -20,12 +20,15 @@ public class TableController(
     {
         var command = new CreateTableCommand
         {
-            Game = request.Game,
-            MaxSeat = request.MaxSeat,
-            SmallBlind = request.SmallBlind,
-            BigBlind = request.BigBlind,
-            ChipCostAmount = request.ChipCostAmount,
-            ChipCostCurrency = request.ChipCostCurrency
+            Rules = new CreateTableCommandRules
+            {
+                Game = request.Rules.Game,
+                MaxSeat = request.Rules.MaxSeat,
+                SmallBlind = request.Rules.SmallBlind,
+                BigBlind = request.Rules.BigBlind,
+                ChipCostAmount = request.Rules.ChipCostAmount,
+                ChipCostCurrency = request.Rules.ChipCostCurrency
+            }
         };
         var response = await commandDispatcher.DispatchAsync<CreateTableCommand, CreateTableResponse>(command);
         return CreatedAtAction(nameof(GetTableDetail), new { uid = response.Uid }, response);
@@ -112,6 +115,11 @@ public class TableController(
 
 public record CreateTableRequest
 {
+    public required CreateTableRequestRules Rules { get; init; }
+}
+
+public record CreateTableRequestRules
+{
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required int SmallBlind { get; init; }
@@ -136,6 +144,6 @@ public record GetTableListRequest
 {
     public bool HasPlayersOnly { get; init; }
     public List<string>? Games { get; init; }
-    public decimal? MinStake { get; init; }
-    public decimal? MaxStake { get; init; }
+    public int? MinStake { get; init; }
+    public int? MaxStake { get; init; }
 }

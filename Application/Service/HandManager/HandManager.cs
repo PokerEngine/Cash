@@ -1,6 +1,5 @@
 using Application.Service.Hand;
 using Domain.Entity;
-using Domain.ValueObject;
 
 namespace Application.Service.HandManager;
 
@@ -14,31 +13,21 @@ public class HandManager(IHandService handService) : IHandManager
             tableUid: table.Uid,
             rules: new HandRules
             {
-                Game = table.Game,
-                MaxSeat = table.MaxSeat,
-                SmallBlind = table.SmallBlind,
-                BigBlind = table.BigBlind,
+                Game = table.Rules.Game,
+                MaxSeat = table.Rules.MaxSeat,
+                SmallBlind = table.Rules.SmallBlind,
+                BigBlind = table.Rules.BigBlind,
             },
             table: new HandTable
             {
                 Positions = new HandPositions
                 {
-                    SmallBlindSeat = table.SmallBlindSeat,
-                    BigBlindSeat = (Seat)table.BigBlindSeat!,
-                    ButtonSeat = (Seat)table.ButtonSeat!
+                    SmallBlindSeat = table.Positions!.SmallBlindSeat,
+                    BigBlindSeat = table.Positions.BigBlindSeat,
+                    ButtonSeat = table.Positions.ButtonSeat
                 },
                 Players = table.ActivePlayers.Select(GetPlayer).ToList()
             }
-        );
-    }
-
-    public async Task SubmitPlayerActionAsync(Table table, Nickname nickname, PlayerActionType type, Chips amount)
-    {
-        await handService.SubmitPlayerActionAsync(
-            handUid: table.GetCurrentHandUid(),
-            nickname: nickname,
-            type: type,
-            amount: amount
         );
     }
 

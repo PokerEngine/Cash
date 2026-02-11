@@ -19,12 +19,15 @@ public class CreateTableTest
         var eventDispatcher = new StubEventDispatcher();
         var command = new CreateTableCommand
         {
-            Game = "NoLimitHoldem",
-            MaxSeat = 6,
-            SmallBlind = 5,
-            BigBlind = 10,
-            ChipCostAmount = 1,
-            ChipCostCurrency = "Usd"
+            Rules = new CreateTableCommandRules
+            {
+                Game = "NoLimitHoldem",
+                MaxSeat = 6,
+                SmallBlind = 5,
+                BigBlind = 10,
+                ChipCostAmount = 1,
+                ChipCostCurrency = "Usd"
+            }
         };
         var handler = new CreateTableHandler(repository, storage, eventDispatcher);
 
@@ -34,18 +37,18 @@ public class CreateTableTest
         // Assert
         var table = Table.FromEvents(response.Uid, await repository.GetEventsAsync(response.Uid));
         Assert.Equal(new TableUid(response.Uid), table.Uid);
-        Assert.Equal(Game.NoLimitHoldem, table.Game);
-        Assert.Equal(new Seat(6), table.MaxSeat);
-        Assert.Equal(new Chips(5), table.SmallBlind);
-        Assert.Equal(new Chips(10), table.BigBlind);
-        Assert.Equal(new Money(1, Currency.Usd), table.ChipCost);
+        Assert.Equal(Game.NoLimitHoldem, table.Rules.Game);
+        Assert.Equal(new Seat(6), table.Rules.MaxSeat);
+        Assert.Equal(new Chips(5), table.Rules.SmallBlind);
+        Assert.Equal(new Chips(10), table.Rules.BigBlind);
+        Assert.Equal(new Money(1, Currency.Usd), table.Rules.ChipCost);
 
         var detailView = await storage.GetDetailViewAsync(table.Uid);
-        Assert.Equal(table.Uid, detailView.Uid);
+        Assert.Equal((Guid)table.Uid, detailView.Uid);
 
         var listViews = await storage.GetListViewsAsync();
         Assert.Single(listViews);
-        Assert.Equal(table.Uid, listViews[0].Uid);
+        Assert.Equal((Guid)table.Uid, listViews[0].Uid);
 
         var events = await eventDispatcher.GetDispatchedEvents(response.Uid);
         Assert.Single(events);

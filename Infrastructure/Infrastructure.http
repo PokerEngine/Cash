@@ -7,12 +7,14 @@ Accept: application/json
 Content-Type: application/json
 
 {
-    "game": "NoLimitHoldem",
-    "maxSeat": 6,
-    "smallBlind": 5,
-    "bigBlind": 10,
-    "chipCostAmount": 1,
-    "chipCostCurrency": "Usd"
+    "rules": {
+        "game": "NoLimitHoldem",
+        "maxSeat": 6,
+        "smallBlind": 5,
+        "bigBlind": 10,
+        "chipCostAmount": 1,
+        "chipCostCurrency": "Usd"
+    }
 }
 > {%
     client.global.set("tableUid", response.body.uid);
@@ -93,7 +95,7 @@ GET {{Infrastructure_HostAddress}}/api/table/{{tableUid}}
 Accept: application/json
 
 ### Get table list
-GET {{Infrastructure_HostAddress}}/api/table
+GET {{Infrastructure_HostAddress}}/api/table?game=NoLimitHoldem
 Accept: application/json
 
 ###

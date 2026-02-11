@@ -11,7 +11,7 @@ public class StubStorage : IStorage
     private readonly ConcurrentDictionary<TableUid, DetailView> _detailMapping = new();
     private readonly ConcurrentDictionary<TableUid, ListView> _listMapping = new();
 
-    public Task<DetailView> GetDetailViewAsync(TableUid tableUid)
+    public Task<DetailView> GetDetailViewAsync(Guid tableUid)
     {
         if (!_detailMapping.TryGetValue(tableUid, out var view))
         {
@@ -23,13 +23,13 @@ public class StubStorage : IStorage
 
     public Task<List<ListView>> GetListViewsAsync(
         bool hasPlayersOnly = false,
-        IEnumerable<Game>? games = null,
-        Money? minStake = null,
-        Money? maxStake = null
+        IEnumerable<string>? games = null,
+        int? minStake = null,
+        int? maxStake = null
     )
     {
         List<ListView> views = [];
-        var gamesSet = (games is not null) ? games.ToHashSet() : new HashSet<Game>();
+        var gamesSet = (games is not null) ? games.ToHashSet() : new HashSet<string>();
 
         foreach (var view in _listMapping.Values)
         {
@@ -38,17 +38,17 @@ public class StubStorage : IStorage
                 continue;
             }
 
-            if (games is not null && !gamesSet.Contains(view.Game))
+            if (games is not null && !gamesSet.Contains(view.Rules.Game))
             {
                 continue;
             }
 
-            if (minStake is not null && view.Stake < minStake)
+            if (minStake is not null && view.Rules.Stake < minStake)
             {
                 continue;
             }
 
-            if (maxStake is not null && view.Stake > maxStake)
+            if (maxStake is not null && view.Rules.Stake > maxStake)
             {
                 continue;
             }
@@ -71,17 +71,20 @@ public class StubStorage : IStorage
         var view = new DetailView
         {
             Uid = table.Uid,
-            Game = table.Game,
-            Stake = table.BigBlind * table.ChipCost * 100,
-            MaxSeat = table.MaxSeat,
-            SmallBlind = table.SmallBlind * table.ChipCost,
-            BigBlind = table.BigBlind * table.ChipCost,
+            Rules = new DetailViewRules
+            {
+                Game = table.Rules.Game.ToString(),
+                MaxSeat = table.Rules.MaxSeat,
+                SmallBlind = (table.Rules.SmallBlind * table.Rules.ChipCost).Amount,
+                BigBlind = (table.Rules.BigBlind * table.Rules.ChipCost).Amount,
+                Stake = (int)(table.Rules.BigBlind * table.Rules.ChipCost * 100).Amount
+            },
             CurrentHandUid = table.IsHandInProgress() ? table.GetCurrentHandUid() : null,
             Players = table.Players.Select(p => new DetailViewPlayer
             {
                 Nickname = p.Nickname,
                 Seat = p.Seat,
-                Stack = p.Stack * table.ChipCost,
+                Stack = (p.Stack * table.Rules.ChipCost).Amount,
                 IsSittingOut = p.IsSittingOut
             }).ToList()
         };
@@ -93,9 +96,12 @@ public class StubStorage : IStorage
         var view = new ListView
         {
             Uid = table.Uid,
-            Game = table.Game,
-            Stake = table.BigBlind * table.ChipCost * 100,
-            MaxSeat = table.MaxSeat,
+            Rules = new ListViewRules
+            {
+                Game = table.Rules.Game.ToString(),
+                MaxSeat = table.Rules.MaxSeat,
+                Stake = (int)(table.Rules.BigBlind * table.Rules.ChipCost * 100).Amount
+            },
             PlayerCount = table.Players.Count()
         };
         _listMapping.AddOrUpdate(table.Uid, view, (_, _) => view);

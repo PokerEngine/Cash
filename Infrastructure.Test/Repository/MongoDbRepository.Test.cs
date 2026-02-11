@@ -26,6 +26,20 @@ public class MongoDbRepositoryTest(MongoDbClientFixture fixture) : IClassFixture
             Chips = new Chips(1000),
             Money = new Money(12.34m, Currency.Usd),
             HandUid = Guid.NewGuid(),
+            Rules = new Rules
+            {
+                Game = Game.NoLimitHoldem,
+                MaxSeat = new Seat(6),
+                SmallBlind = new Chips(5),
+                BigBlind = new Chips(10),
+                ChipCost = new Money(1, Currency.Usd)
+            },
+            Positions = new Positions
+            {
+                SmallBlindSeat = null,
+                BigBlindSeat = new Seat(2),
+                ButtonSeat = new Seat(6)
+            },
             OccurredAt = GetNow()
         };
         await repository.AddEventsAsync(tableUid, [@event]);
@@ -54,6 +68,20 @@ public class MongoDbRepositoryTest(MongoDbClientFixture fixture) : IClassFixture
             Chips = new Chips(1000),
             Money = new Money(12.34m, Currency.Usd),
             HandUid = Guid.NewGuid(),
+            Rules = new Rules
+            {
+                Game = Game.NoLimitHoldem,
+                MaxSeat = new Seat(6),
+                SmallBlind = new Chips(5),
+                BigBlind = new Chips(10),
+                ChipCost = new Money(1, Currency.Usd)
+            },
+            Positions = new Positions
+            {
+                SmallBlindSeat = null,
+                BigBlindSeat = new Seat(2),
+                ButtonSeat = new Seat(6)
+            },
             OccurredAt = GetNow()
         };
         await repository.AddEventsAsync(tableUid, [@event]);
@@ -106,5 +134,7 @@ internal record TestEvent : IEvent
     public required Chips Chips { get; init; }
     public required Money Money { get; init; }
     public required HandUid HandUid { get; init; }
+    public required Rules Rules { get; init; }
+    public required Positions Positions { get; init; }
     public required DateTime OccurredAt { get; init; }
 }

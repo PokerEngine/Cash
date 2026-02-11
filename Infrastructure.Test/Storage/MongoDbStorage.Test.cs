@@ -27,22 +27,22 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
         var view = await storage.GetDetailViewAsync(table.Uid);
 
         // Assert
-        Assert.Equal(table.Uid, view.Uid);
-        Assert.Equal(Game.NoLimitHoldem, view.Game);
-        Assert.Equal(new Seat(6), view.MaxSeat);
-        Assert.Equal(new Money(1000, Currency.Usd), view.Stake);
-        Assert.Equal(new Money(5, Currency.Usd), view.SmallBlind);
-        Assert.Equal(new Money(10, Currency.Usd), view.BigBlind);
+        Assert.Equal((Guid)table.Uid, view.Uid);
+        Assert.Equal("NoLimitHoldem", view.Rules.Game);
+        Assert.Equal(6, view.Rules.MaxSeat);
+        Assert.Equal(1000, view.Rules.Stake);
+        Assert.Equal(5, view.Rules.SmallBlind);
+        Assert.Equal(10, view.Rules.BigBlind);
         Assert.Equal(table.GetCurrentHandUid(), view.CurrentHandUid);
 
         Assert.Equal(2, view.Players.Count);
-        Assert.Equal(new Nickname("Alice"), view.Players[0].Nickname);
-        Assert.Equal(new Seat(1), view.Players[0].Seat);
-        Assert.Equal(new Money(1000, Currency.Usd), view.Players[0].Stack);
+        Assert.Equal("Alice", view.Players[0].Nickname);
+        Assert.Equal(1, view.Players[0].Seat);
+        Assert.Equal(1000.0, (float)view.Players[0].Stack);
         Assert.False(view.Players[0].IsSittingOut);
-        Assert.Equal(new Nickname("Bobby"), view.Players[1].Nickname);
-        Assert.Equal(new Seat(2), view.Players[1].Seat);
-        Assert.Equal(new Money(900, Currency.Usd), view.Players[1].Stack);
+        Assert.Equal("Bobby", view.Players[1].Nickname);
+        Assert.Equal(2, view.Players[1].Seat);
+        Assert.Equal(900.0, (float)view.Players[1].Stack);
         Assert.True(view.Players[1].IsSittingOut);
     }
 
@@ -78,15 +78,15 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
 
         // Assert
         Assert.Equal(2, views.Count);
-        Assert.Equal(table6MaxNlh1000.Uid, views[0].Uid);
-        Assert.Equal(Game.NoLimitHoldem, views[0].Game);
-        Assert.Equal(new Seat(6), views[0].MaxSeat);
-        Assert.Equal(new Money(1000, Currency.Usd), views[0].Stake);
+        Assert.Equal((Guid)table6MaxNlh1000.Uid, views[0].Uid);
+        Assert.Equal("NoLimitHoldem", views[0].Rules.Game);
+        Assert.Equal(6, views[0].Rules.MaxSeat);
+        Assert.Equal(1000, views[0].Rules.Stake);
         Assert.Equal(2, views[0].PlayerCount);
-        Assert.Equal(table9MaxPlo2000.Uid, views[1].Uid);
-        Assert.Equal(Game.PotLimitOmaha, views[1].Game);
-        Assert.Equal(new Seat(9), views[1].MaxSeat);
-        Assert.Equal(new Money(2000, Currency.Usd), views[1].Stake);
+        Assert.Equal((Guid)table9MaxPlo2000.Uid, views[1].Uid);
+        Assert.Equal("PotLimitOmaha", views[1].Rules.Game);
+        Assert.Equal(9, views[1].Rules.MaxSeat);
+        Assert.Equal(2000, views[1].Rules.Stake);
         Assert.Equal(1, views[1].PlayerCount);
     }
 
@@ -106,7 +106,7 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
 
         // Assert
         Assert.Single(views);
-        Assert.Equal(table6MaxNlh1000.Uid, views[0].Uid);
+        Assert.Equal((Guid)table6MaxNlh1000.Uid, views[0].Uid);
         Assert.Equal(1, views[0].PlayerCount);
     }
 
@@ -121,12 +121,12 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
         await storage.SaveViewAsync(table9MaxPlo2000);
 
         // Act
-        var views = await storage.GetListViewsAsync(games: [Game.NoLimitHoldem]);
+        var views = await storage.GetListViewsAsync(games: ["NoLimitHoldem"]);
 
         // Assert
         Assert.Single(views);
-        Assert.Equal(table6MaxNlh1000.Uid, views[0].Uid);
-        Assert.Equal(Game.NoLimitHoldem, views[0].Game);
+        Assert.Equal((Guid)table6MaxNlh1000.Uid, views[0].Uid);
+        Assert.Equal("NoLimitHoldem", views[0].Rules.Game);
     }
 
     [Fact]
@@ -140,12 +140,12 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
         await storage.SaveViewAsync(table9MaxPlo2000);
 
         // Act
-        var views = await storage.GetListViewsAsync(minStake: new Money(1001, Currency.Usd));
+        var views = await storage.GetListViewsAsync(minStake: 1001);
 
         // Assert
         Assert.Single(views);
-        Assert.Equal(table9MaxPlo2000.Uid, views[0].Uid);
-        Assert.Equal(new Money(2000, Currency.Usd), views[0].Stake);
+        Assert.Equal((Guid)table9MaxPlo2000.Uid, views[0].Uid);
+        Assert.Equal(2000, views[0].Rules.Stake);
     }
 
     [Fact]
@@ -159,12 +159,12 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
         await storage.SaveViewAsync(table9MaxPlo2000);
 
         // Act
-        var views = await storage.GetListViewsAsync(maxStake: new Money(1999, Currency.Usd));
+        var views = await storage.GetListViewsAsync(maxStake: 1999);
 
         // Assert
         Assert.Single(views);
-        Assert.Equal(table6MaxNlh1000.Uid, views[0].Uid);
-        Assert.Equal(new Money(1000, Currency.Usd), views[0].Stake);
+        Assert.Equal((Guid)table6MaxNlh1000.Uid, views[0].Uid);
+        Assert.Equal(1000, views[0].Rules.Stake);
     }
 
     private IStorage CreateStorage()
@@ -192,11 +192,14 @@ public class MongoDbStorageTest(MongoDbClientFixture fixture) : IClassFixture<Mo
     {
         return Table.FromScratch(
             uid: new TableUid(Guid.NewGuid()),
-            game: game,
-            maxSeat: maxSeat,
-            smallBlind: smallBlind,
-            bigBlind: bigBlind,
-            chipCost: new Money(1, Currency.Usd)
+            rules: new Rules
+            {
+                Game = game,
+                MaxSeat = maxSeat,
+                SmallBlind = smallBlind,
+                BigBlind = bigBlind,
+                ChipCost = new Money(1, Currency.Usd)
+            }
         );
     }
 }

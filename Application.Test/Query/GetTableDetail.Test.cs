@@ -66,12 +66,15 @@ public class GetTableDetailTest
         var handler = new CreateTableHandler(repository, storage, eventDispatcher);
         var command = new CreateTableCommand
         {
-            Game = "NoLimitHoldem",
-            MaxSeat = 6,
-            SmallBlind = 5,
-            BigBlind = 10,
-            ChipCostAmount = 1,
-            ChipCostCurrency = "Usd"
+            Rules = new CreateTableCommandRules
+            {
+                Game = "NoLimitHoldem",
+                MaxSeat = 6,
+                SmallBlind = 5,
+                BigBlind = 10,
+                ChipCostAmount = 1,
+                ChipCostCurrency = "Usd"
+            }
         };
         var response = await handler.HandleAsync(command);
         return response.Uid;

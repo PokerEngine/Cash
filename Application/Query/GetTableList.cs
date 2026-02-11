@@ -7,8 +7,8 @@ public record GetTableListQuery : IQuery
 {
     public bool HasPlayersOnly { get; init; } = false;
     public List<string>? Games { get; init; } = null;
-    public decimal? MinStake { get; init; } = null;
-    public decimal? MaxStake { get; init; } = null;
+    public int? MinStake { get; init; } = null;
+    public int? MaxStake { get; init; } = null;
 }
 
 public record GetTableListResponse : IQueryResponse
@@ -19,10 +19,15 @@ public record GetTableListResponse : IQueryResponse
 public record GetTableListResponseItem
 {
     public required Guid Uid { get; init; }
+    public required GetTableListResponseRules Rules { get; init; }
+    public required int PlayerCount { get; init; }
+}
+
+public record GetTableListResponseRules
+{
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required decimal Stake { get; init; }
-    public required int PlayerCount { get; init; }
 }
 
 public class GetTableListHandler(
@@ -33,20 +38,15 @@ public class GetTableListHandler(
     {
         var views = await storage.GetListViewsAsync(
             hasPlayersOnly: query.HasPlayersOnly,
-            games: query.Games is not null ? query.Games.Select(DeserializeGame) : null,
-            minStake: DeserializeMoney(query.MinStake),
-            maxStake: DeserializeMoney(query.MaxStake)
+            games: query.Games,
+            minStake: query.MinStake,
+            maxStake: query.MaxStake
         );
 
         return new GetTableListResponse
         {
             Items = views.Select(SerializeListView).ToList()
         };
-    }
-
-    private Game DeserializeGame(string value)
-    {
-        return (Game)Enum.Parse(typeof(Game), value);
     }
 
     private Money? DeserializeMoney(decimal? amount)
@@ -64,10 +64,18 @@ public class GetTableListHandler(
         return new GetTableListResponseItem
         {
             Uid = view.Uid,
-            Game = view.Game.ToString(),
-            MaxSeat = view.MaxSeat,
-            Stake = view.Stake.Amount,
+            Rules = SerializeRules(view.Rules),
             PlayerCount = view.PlayerCount
+        };
+    }
+
+    private GetTableListResponseRules SerializeRules(ListViewRules rules)
+    {
+        return new GetTableListResponseRules
+        {
+            Game = rules.Game,
+            MaxSeat = rules.MaxSeat,
+            Stake = rules.Stake
         };
     }
 }

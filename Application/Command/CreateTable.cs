@@ -8,6 +8,11 @@ namespace Application.Command;
 
 public record CreateTableCommand : ICommand
 {
+    public required CreateTableCommandRules Rules { get; init; }
+}
+
+public record CreateTableCommandRules : ICommand
+{
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required int SmallBlind { get; init; }
@@ -29,16 +34,19 @@ public class CreateTableHandler(
 {
     public async Task<CreateTableResponse> HandleAsync(CreateTableCommand command)
     {
-        var game = (Game)Enum.Parse(typeof(Game), command.Game);
-        var chipCostCurrency = (Currency)Enum.Parse(typeof(Currency), command.ChipCostCurrency);
+        var game = (Game)Enum.Parse(typeof(Game), command.Rules.Game);
+        var chipCostCurrency = (Currency)Enum.Parse(typeof(Currency), command.Rules.ChipCostCurrency);
 
         var table = Table.FromScratch(
             uid: await repository.GetNextUidAsync(),
-            game: game,
-            maxSeat: command.MaxSeat,
-            smallBlind: command.SmallBlind,
-            bigBlind: command.BigBlind,
-            chipCost: new Money(command.ChipCostAmount, chipCostCurrency)
+            rules: new Rules
+            {
+                Game = game,
+                MaxSeat = command.Rules.MaxSeat,
+                SmallBlind = command.Rules.SmallBlind,
+                BigBlind = command.Rules.BigBlind,
+                ChipCost = new Money(command.Rules.ChipCostAmount, chipCostCurrency)
+            }
         );
 
         var events = table.PullEvents();

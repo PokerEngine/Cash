@@ -12,12 +12,17 @@ public record GetTableDetailQuery : IQuery
 public record GetTableDetailResponse : IQueryResponse
 {
     public required Guid Uid { get; init; }
+    public required GetTableDetailResponseRules Rules { get; init; }
+    public required List<GetTableDetailResponsePlayer> Players { get; init; }
+    public required GetTableDetailResponseCurrentHand? CurrentHand { get; init; }
+}
+
+public record GetTableDetailResponseRules
+{
     public required string Game { get; init; }
     public required int MaxSeat { get; init; }
     public required decimal SmallBlind { get; init; }
     public required decimal BigBlind { get; init; }
-    public required List<GetTableDetailResponsePlayer> Players { get; init; }
-    public required GetTableDetailResponseCurrentHand? CurrentHand { get; init; }
 }
 
 public record GetTableDetailResponsePlayer
@@ -44,7 +49,7 @@ public record GetTableDetailResponseCurrentHandPlayer
 {
     public required string Nickname { get; init; }
     public required int Seat { get; init; }
-    public required int Stack { get; init; }
+    public required decimal Stack { get; init; }
     public required string HoleCards { get; init; }
     public required bool IsFolded { get; init; }
 }
@@ -88,12 +93,20 @@ public class GetTableDetailHandler(
         return new GetTableDetailResponse
         {
             Uid = view.Uid,
-            Game = view.Game.ToString(),
-            MaxSeat = view.MaxSeat,
-            SmallBlind = view.SmallBlind.Amount,
-            BigBlind = view.BigBlind.Amount,
+            Rules = SerializeRules(view.Rules),
             Players = view.Players.Select(SerializePlayer).ToList(),
             CurrentHand = handState
+        };
+    }
+
+    private GetTableDetailResponseRules SerializeRules(DetailViewRules rules)
+    {
+        return new GetTableDetailResponseRules
+        {
+            Game = rules.Game,
+            MaxSeat = rules.MaxSeat,
+            SmallBlind = rules.SmallBlind,
+            BigBlind = rules.BigBlind,
         };
     }
 
@@ -103,7 +116,7 @@ public class GetTableDetailHandler(
         {
             Nickname = player.Nickname,
             Seat = player.Seat,
-            Stack = player.Stack.Amount,
+            Stack = player.Stack,
             IsSittingOut = player.IsSittingOut
         };
     }

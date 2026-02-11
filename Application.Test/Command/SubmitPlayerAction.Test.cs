@@ -5,7 +5,6 @@ using Application.Test.Repository;
 using Application.Test.Service.Hand;
 using Application.Test.Storage;
 using Domain.Entity;
-using Domain.ValueObject;
 
 namespace Application.Test.Command;
 
@@ -65,12 +64,15 @@ public class SubmitPlayerActionTest
         var handler = new CreateTableHandler(repository, storage, eventDispatcher);
         var command = new CreateTableCommand
         {
-            Game = "NoLimitHoldem",
-            MaxSeat = 6,
-            SmallBlind = 5,
-            BigBlind = 10,
-            ChipCostAmount = 1,
-            ChipCostCurrency = "Usd"
+            Rules = new CreateTableCommandRules
+            {
+                Game = "NoLimitHoldem",
+                MaxSeat = 6,
+                SmallBlind = 5,
+                BigBlind = 10,
+                ChipCostAmount = 1,
+                ChipCostCurrency = "Usd"
+            }
         };
         var response = await handler.HandleAsync(command);
         return response.Uid;
@@ -111,18 +113,18 @@ public class SubmitPlayerActionTest
             tableUid: table.Uid,
             rules: new HandRules
             {
-                Game = table.Game,
-                MaxSeat = table.MaxSeat,
-                SmallBlind = table.SmallBlind,
-                BigBlind = table.BigBlind
+                Game = table.Rules.Game,
+                MaxSeat = table.Rules.MaxSeat,
+                SmallBlind = table.Rules.SmallBlind,
+                BigBlind = table.Rules.BigBlind
             },
             table: new HandTable
             {
                 Positions = new HandPositions
                 {
-                    SmallBlindSeat = table.SmallBlindSeat,
-                    BigBlindSeat = (Seat)table.BigBlindSeat!,
-                    ButtonSeat = (Seat)table.ButtonSeat!,
+                    SmallBlindSeat = table.Positions!.SmallBlindSeat,
+                    BigBlindSeat = table.Positions.BigBlindSeat,
+                    ButtonSeat = table.Positions.ButtonSeat,
                 },
                 Players = table.ActivePlayers.Select(GetHandPlayer).ToList()
             }
