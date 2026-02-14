@@ -4,6 +4,7 @@ using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Service.Hand;
 using Application.Test.Storage;
+using Application.Test.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.Test.Command;
@@ -14,30 +15,12 @@ public class SubmitPlayerActionTest
     public async Task HandleAsync_Valid_ShouldSubmitPlayerAction()
     {
         // Arrange
-        var repository = new StubRepository();
-        var storage = new StubStorage();
-        var eventDispatcher = new StubEventDispatcher();
+        var unitOfWork = CreateUnitOfWork();
         var handService = new StubHandService();
-        var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
-        await SitPlayerDownAsync(
-            repository: repository,
-            storage: storage,
-            eventDispatcher: eventDispatcher,
-            tableUid: tableUid,
-            nickname: "Alice",
-            seat: 2,
-            stack: 1000
-        );
-        await SitPlayerDownAsync(
-            repository: repository,
-            storage: storage,
-            eventDispatcher: eventDispatcher,
-            tableUid: tableUid,
-            nickname: "Bobby",
-            seat: 4,
-            stack: 1000
-        );
-        await StartHandAsync(repository, storage, handService, tableUid);
+        var tableUid = await CreateTableAsync(unitOfWork);
+        await SitPlayerDownAsync(unitOfWork, tableUid, "Alice", 2, 1000);
+        await SitPlayerDownAsync(unitOfWork, tableUid, "Bobby", 4, 1000);
+        await StartHandAsync(unitOfWork, handService, tableUid);
 
         var command = new SubmitPlayerActionCommand
         {
@@ -46,7 +29,7 @@ public class SubmitPlayerActionTest
             Type = "RaiseBy",
             Amount = 20
         };
-        var handler = new SubmitPlayerActionHandler(repository, handService);
+        var handler = new SubmitPlayerActionHandler(unitOfWork.Repository, handService);
 
         // Act
         var response = await handler.HandleAsync(command);
@@ -56,12 +39,9 @@ public class SubmitPlayerActionTest
         Assert.Equal(command.Nickname, response.Nickname);
     }
 
-    private async Task<Guid> CreateTableAsync(
-        StubRepository repository,
-        StubStorage storage,
-        StubEventDispatcher eventDispatcher)
+    private async Task<Guid> CreateTableAsync(StubUnitOfWork unitOfWork)
     {
-        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
+        var handler = new CreateTableHandler(unitOfWork.Repository, unitOfWork);
         var command = new CreateTableCommand
         {
             Rules = new CreateTableCommandRules
@@ -75,20 +55,19 @@ public class SubmitPlayerActionTest
             }
         };
         var response = await handler.HandleAsync(command);
+        await unitOfWork.EventDispatcher.ClearDispatchedEvents(response.Uid);
         return response.Uid;
     }
 
     private async Task SitPlayerDownAsync(
-        StubRepository repository,
-        StubStorage storage,
-        StubEventDispatcher eventDispatcher,
+        StubUnitOfWork unitOfWork,
         Guid tableUid,
         string nickname,
         int seat,
         int stack
     )
     {
-        var handler = new SitPlayerDownHandler(repository, storage, eventDispatcher);
+        var handler = new SitPlayerDownHandler(unitOfWork.Repository, unitOfWork);
         var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
@@ -97,16 +76,16 @@ public class SubmitPlayerActionTest
             Stack = stack
         };
         await handler.HandleAsync(command);
+        await unitOfWork.EventDispatcher.ClearDispatchedEvents(tableUid);
     }
 
     private async Task StartHandAsync(
-        StubRepository repository,
-        StubStorage storage,
+        StubUnitOfWork unitOfWork,
         StubHandService handService,
         Guid tableUid
     )
     {
-        var table = Table.FromEvents(tableUid, await repository.GetEventsAsync(tableUid));
+        var table = Table.FromEvents(tableUid, await unitOfWork.Repository.GetEventsAsync(tableUid));
         table.RotateButton();
 
         var handUid = await handService.StartAsync(
@@ -126,22 +105,25 @@ public class SubmitPlayerActionTest
                     BigBlindSeat = table.Positions.BigBlindSeat,
                     ButtonSeat = table.Positions.ButtonSeat,
                 },
-                Players = table.ActivePlayers.Select(GetHandPlayer).ToList()
+                Players = table.ActivePlayers.Select(x => new HandPlayer
+                {
+                    Nickname = x.Nickname,
+                    Seat = x.Seat,
+                    Stack = x.Stack
+                }).ToList()
             }
         );
         table.StartCurrentHand(handUid);
 
-        await repository.AddEventsAsync(tableUid, table.PullEvents());
-        await storage.SaveViewAsync(table);
+        unitOfWork.RegisterTable(table);
+        await unitOfWork.CommitAsync();
     }
 
-    private HandPlayer GetHandPlayer(Player player)
+    private StubUnitOfWork CreateUnitOfWork()
     {
-        return new HandPlayer
-        {
-            Nickname = player.Nickname,
-            Seat = player.Seat,
-            Stack = player.Stack
-        };
+        var repository = new StubRepository();
+        var storage = new StubStorage();
+        var eventDispatcher = new StubEventDispatcher();
+        return new StubUnitOfWork(repository, storage, eventDispatcher);
     }
 }

@@ -1,5 +1,6 @@
 using Application.Connection;
 using Application.Repository;
+using Application.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.IntegrationEvent;
@@ -19,7 +20,8 @@ public record BlindPostedIntegrationEvent : IIntegrationEvent
 
 public class BlindPostedHandler(
     IConnectionRegistry connectionRegistry,
-    IRepository repository
+    IRepository repository,
+    IUnitOfWork unitOfWork
 ) : IIntegrationEventHandler<BlindPostedIntegrationEvent>
 {
     public async Task HandleAsync(BlindPostedIntegrationEvent integrationEvent)
@@ -36,8 +38,8 @@ public class BlindPostedHandler(
 
             table.DebitPlayerChips(integrationEvent.Nickname, integrationEvent.Amount);
 
-            events = table.PullEvents();
-            await repository.AddEventsAsync(table.Uid, events);
+            unitOfWork.RegisterTable(table);
+            await unitOfWork.CommitAsync();
         }
     }
 }

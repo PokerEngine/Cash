@@ -1,5 +1,6 @@
 using Application.Connection;
 using Application.Repository;
+using Application.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.IntegrationEvent;
@@ -19,7 +20,8 @@ public record BetRefundedIntegrationEvent : IIntegrationEvent
 
 public class BetRefundedHandler(
     IConnectionRegistry connectionRegistry,
-    IRepository repository
+    IRepository repository,
+    IUnitOfWork unitOfWork
 ) : IIntegrationEventHandler<BetRefundedIntegrationEvent>
 {
     public async Task HandleAsync(BetRefundedIntegrationEvent integrationEvent)
@@ -36,8 +38,8 @@ public class BetRefundedHandler(
 
             table.CreditPlayerChips(integrationEvent.Nickname, integrationEvent.Amount);
 
-            events = table.PullEvents();
-            await repository.AddEventsAsync(table.Uid, events);
+            unitOfWork.RegisterTable(table);
+            await unitOfWork.CommitAsync();
         }
     }
 }

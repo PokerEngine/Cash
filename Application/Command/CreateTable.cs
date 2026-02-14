@@ -1,6 +1,5 @@
-using Application.Event;
 using Application.Repository;
-using Application.Storage;
+using Application.UnitOfWork;
 using Domain.Entity;
 using Domain.ValueObject;
 
@@ -28,8 +27,7 @@ public record CreateTableResponse : ICommandResponse
 
 public class CreateTableHandler(
     IRepository repository,
-    IStorage storage,
-    IEventDispatcher eventDispatcher
+    IUnitOfWork unitOfWork
 ) : ICommandHandler<CreateTableCommand, CreateTableResponse>
 {
     public async Task<CreateTableResponse> HandleAsync(CreateTableCommand command)
@@ -49,19 +47,8 @@ public class CreateTableHandler(
             }
         );
 
-        var events = table.PullEvents();
-        await repository.AddEventsAsync(table.Uid, events);
-        await storage.SaveViewAsync(table);
-
-        var context = new EventContext
-        {
-            TableUid = table.Uid
-        };
-
-        foreach (var @event in events)
-        {
-            await eventDispatcher.DispatchAsync(@event, context);
-        }
+        unitOfWork.RegisterTable(table);
+        await unitOfWork.CommitAsync();
 
         return new CreateTableResponse
         {

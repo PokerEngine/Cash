@@ -5,6 +5,7 @@ using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Service.Hand;
 using Application.Test.Storage;
+using Application.Test.UnitOfWork;
 
 namespace Application.Test.Query;
 
@@ -14,15 +15,13 @@ public class GetTableDetailTest
     public async Task HandleAsync_Exists_ShouldReturn()
     {
         // Arrange
-        var repository = new StubRepository();
-        var storage = new StubStorage();
-        var eventDispatcher = new StubEventDispatcher();
+        var unitOfWork = CreateUnitOfWork();
         var handService = new StubHandService();
-        var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
-        await SitPlayerDownAsync(repository, storage, eventDispatcher, tableUid, "Alice", 2, 1000);
+        var tableUid = await CreateTableAsync(unitOfWork);
+        await SitPlayerDownAsync(unitOfWork, tableUid, "Alice", 2, 1000);
 
         var query = new GetTableDetailQuery { Uid = tableUid };
-        var handler = new GetTableDetailHandler(storage, handService);
+        var handler = new GetTableDetailHandler(unitOfWork.Storage, handService);
 
         // Act
         var response = await handler.HandleAsync(query);
@@ -57,13 +56,9 @@ public class GetTableDetailTest
         Assert.Equal("The table is not found", exc.Message);
     }
 
-    private async Task<Guid> CreateTableAsync(
-        StubRepository repository,
-        StubStorage storage,
-        StubEventDispatcher eventDispatcher
-    )
+    private async Task<Guid> CreateTableAsync(StubUnitOfWork unitOfWork)
     {
-        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
+        var handler = new CreateTableHandler(unitOfWork.Repository, unitOfWork);
         var command = new CreateTableCommand
         {
             Rules = new CreateTableCommandRules
@@ -77,20 +72,19 @@ public class GetTableDetailTest
             }
         };
         var response = await handler.HandleAsync(command);
+        await unitOfWork.EventDispatcher.ClearDispatchedEvents(response.Uid);
         return response.Uid;
     }
 
     private async Task SitPlayerDownAsync(
-        StubRepository repository,
-        StubStorage storage,
-        StubEventDispatcher eventDispatcher,
+        StubUnitOfWork unitOfWork,
         Guid tableUid,
         string nickname,
         int seat,
         int stack
     )
     {
-        var handler = new SitPlayerDownHandler(repository, storage, eventDispatcher);
+        var handler = new SitPlayerDownHandler(unitOfWork.Repository, unitOfWork);
         var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
@@ -98,6 +92,15 @@ public class GetTableDetailTest
             Seat = seat,
             Stack = stack
         };
+        await unitOfWork.EventDispatcher.ClearDispatchedEvents(tableUid);
         await handler.HandleAsync(command);
+    }
+
+    private StubUnitOfWork CreateUnitOfWork()
+    {
+        var repository = new StubRepository();
+        var storage = new StubStorage();
+        var eventDispatcher = new StubEventDispatcher();
+        return new StubUnitOfWork(repository, storage, eventDispatcher);
     }
 }

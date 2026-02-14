@@ -7,6 +7,7 @@ using Application.Repository;
 using Application.Service.Hand;
 using Application.Service.HandManager;
 using Application.Storage;
+using Application.UnitOfWork;
 using Domain.Event;
 using Infrastructure.Client.MongoDb;
 using Infrastructure.Client.RabbitMq;
@@ -53,6 +54,9 @@ public static class Bootstrapper
             builder.Configuration.GetSection(MongoDbStorageOptions.SectionName)
         );
         builder.Services.AddSingleton<IStorage, MongoDbStorage>();
+
+        // Register unit of work
+        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Register connection registry
         builder.Services.AddSingleton<IConnectionRegistry, InMemoryConnectionRegistry>();

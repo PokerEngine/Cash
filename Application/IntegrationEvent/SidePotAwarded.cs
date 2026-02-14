@@ -1,7 +1,7 @@
 using Application.Connection;
 using Application.Repository;
+using Application.UnitOfWork;
 using Domain.Entity;
-using Domain.ValueObject;
 
 namespace Application.IntegrationEvent;
 
@@ -20,7 +20,8 @@ public record SidePotAwardedIntegrationEvent : IIntegrationEvent
 
 public class SidePotAwardedHandler(
     IConnectionRegistry connectionRegistry,
-    IRepository repository
+    IRepository repository,
+    IUnitOfWork unitOfWork
 ) : IIntegrationEventHandler<SidePotAwardedIntegrationEvent>
 {
     public async Task HandleAsync(SidePotAwardedIntegrationEvent integrationEvent)
@@ -40,8 +41,8 @@ public class SidePotAwardedHandler(
                 table.CreditPlayerChips(nickname, award);
             }
 
-            events = table.PullEvents();
-            await repository.AddEventsAsync(table.Uid, events);
+            unitOfWork.RegisterTable(table);
+            await unitOfWork.CommitAsync();
         }
 
         // TODO: calculate rake

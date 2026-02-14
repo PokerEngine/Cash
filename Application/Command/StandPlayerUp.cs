@@ -1,6 +1,5 @@
-using Application.Event;
 using Application.Repository;
-using Application.Storage;
+using Application.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.Command;
@@ -19,8 +18,7 @@ public record StandPlayerUpResponse : ICommandResponse
 
 public class StandPlayerUpHandler(
     IRepository repository,
-    IStorage storage,
-    IEventDispatcher eventDispatcher
+    IUnitOfWork unitOfWork
 ) : ICommandHandler<StandPlayerUpCommand, StandPlayerUpResponse>
 {
     public async Task<StandPlayerUpResponse> HandleAsync(StandPlayerUpCommand command)
@@ -32,19 +30,8 @@ public class StandPlayerUpHandler(
 
         table.StandPlayerUp(command.Nickname);
 
-        var events = table.PullEvents();
-        await repository.AddEventsAsync(table.Uid, events);
-        await storage.SaveViewAsync(table);
-
-        var context = new EventContext
-        {
-            TableUid = table.Uid
-        };
-
-        foreach (var @event in events)
-        {
-            await eventDispatcher.DispatchAsync(@event, context);
-        }
+        unitOfWork.RegisterTable(table);
+        await unitOfWork.CommitAsync();
 
         return new StandPlayerUpResponse
         {

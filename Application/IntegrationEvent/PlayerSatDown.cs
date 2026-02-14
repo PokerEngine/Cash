@@ -1,6 +1,7 @@
 using Application.Connection;
 using Application.Repository;
 using Application.Service.HandManager;
+using Application.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.IntegrationEvent;
@@ -21,7 +22,8 @@ public record PlayerSatDownIntegrationEvent : IIntegrationEvent
 public class PlayerSatDownHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository,
-    IHandManager handManager
+    IHandManager handManager,
+    IUnitOfWork unitOfWork
 ) : IIntegrationEventHandler<PlayerSatDownIntegrationEvent>
 {
     public async Task HandleAsync(PlayerSatDownIntegrationEvent integrationEvent)
@@ -38,7 +40,7 @@ public class PlayerSatDownHandler(
             await handManager.StartHandAsync(table);
         }
 
-        events = table.PullEvents();
-        await repository.AddEventsAsync(table.Uid, events);
+        unitOfWork.RegisterTable(table);
+        await unitOfWork.CommitAsync();
     }
 }

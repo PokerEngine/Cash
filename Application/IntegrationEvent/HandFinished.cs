@@ -1,6 +1,7 @@
 using Application.Connection;
 using Application.Repository;
 using Application.Service.HandManager;
+using Application.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.IntegrationEvent;
@@ -19,7 +20,8 @@ public record HandFinishedIntegrationEvent : IIntegrationEvent
 public class HandFinishedHandler(
     IConnectionRegistry connectionRegistry,
     IRepository repository,
-    IHandManager handManager
+    IHandManager handManager,
+    IUnitOfWork unitOfWork
 ) : IIntegrationEventHandler<HandFinishedIntegrationEvent>
 {
     public async Task HandleAsync(HandFinishedIntegrationEvent integrationEvent)
@@ -39,7 +41,7 @@ public class HandFinishedHandler(
             await handManager.StartHandAsync(table);
         }
 
-        events = table.PullEvents();
-        await repository.AddEventsAsync(table.Uid, events);
+        unitOfWork.RegisterTable(table);
+        await unitOfWork.CommitAsync();
     }
 }

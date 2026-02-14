@@ -3,6 +3,7 @@ using Application.Query;
 using Application.Test.Event;
 using Application.Test.Repository;
 using Application.Test.Storage;
+using Application.Test.UnitOfWork;
 
 namespace Application.Test.Query;
 
@@ -12,14 +13,12 @@ public class GetTableListTest
     public async Task HandleAsync_WhenExists_ShouldReturn()
     {
         // Arrange
-        var repository = new StubRepository();
-        var storage = new StubStorage();
-        var eventDispatcher = new StubEventDispatcher();
-        var tableUid = await CreateTableAsync(repository, storage, eventDispatcher);
-        await SitPlayerDownAsync(repository, storage, eventDispatcher, tableUid, "Alice", 2, 1000);
+        var unitOfWork = CreateUnitOfWork();
+        var tableUid = await CreateTableAsync(unitOfWork);
+        await SitPlayerDownAsync(unitOfWork, tableUid, "Alice", 2, 1000);
 
         var query = new GetTableListQuery();
-        var handler = new GetTableListHandler(storage);
+        var handler = new GetTableListHandler(unitOfWork.Storage);
 
         // Act
         var response = await handler.HandleAsync(query);
@@ -49,13 +48,9 @@ public class GetTableListTest
         Assert.Empty(response.Items);
     }
 
-    private async Task<Guid> CreateTableAsync(
-        StubRepository repository,
-        StubStorage storage,
-        StubEventDispatcher eventDispatcher
-    )
+    private async Task<Guid> CreateTableAsync(StubUnitOfWork unitOfWork)
     {
-        var handler = new CreateTableHandler(repository, storage, eventDispatcher);
+        var handler = new CreateTableHandler(unitOfWork.Repository, unitOfWork);
         var command = new CreateTableCommand
         {
             Rules = new CreateTableCommandRules
@@ -69,20 +64,19 @@ public class GetTableListTest
             }
         };
         var response = await handler.HandleAsync(command);
+        await unitOfWork.EventDispatcher.ClearDispatchedEvents(response.Uid);
         return response.Uid;
     }
 
     private async Task SitPlayerDownAsync(
-        StubRepository repository,
-        StubStorage storage,
-        StubEventDispatcher eventDispatcher,
+        StubUnitOfWork unitOfWork,
         Guid tableUid,
         string nickname,
         int seat,
         int stack
     )
     {
-        var handler = new SitPlayerDownHandler(repository, storage, eventDispatcher);
+        var handler = new SitPlayerDownHandler(unitOfWork.Repository, unitOfWork);
         var command = new SitPlayerDownCommand
         {
             Uid = tableUid,
@@ -91,5 +85,14 @@ public class GetTableListTest
             Stack = stack
         };
         await handler.HandleAsync(command);
+        await unitOfWork.EventDispatcher.ClearDispatchedEvents(tableUid);
+    }
+
+    private StubUnitOfWork CreateUnitOfWork()
+    {
+        var repository = new StubRepository();
+        var storage = new StubStorage();
+        var eventDispatcher = new StubEventDispatcher();
+        return new StubUnitOfWork(repository, storage, eventDispatcher);
     }
 }

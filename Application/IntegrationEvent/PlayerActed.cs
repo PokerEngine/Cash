@@ -1,5 +1,6 @@
 using Application.Connection;
 using Application.Repository;
+using Application.UnitOfWork;
 using Domain.Entity;
 
 namespace Application.IntegrationEvent;
@@ -20,7 +21,8 @@ public record PlayerActedIntegrationEvent : IIntegrationEvent
 
 public class PlayerActedHandler(
     IConnectionRegistry connectionRegistry,
-    IRepository repository
+    IRepository repository,
+    IUnitOfWork unitOfWork
 ) : IIntegrationEventHandler<PlayerActedIntegrationEvent>
 {
     public async Task HandleAsync(PlayerActedIntegrationEvent integrationEvent)
@@ -37,8 +39,8 @@ public class PlayerActedHandler(
 
             table.DebitPlayerChips(integrationEvent.Nickname, integrationEvent.Amount);
 
-            events = table.PullEvents();
-            await repository.AddEventsAsync(table.Uid, events);
+            unitOfWork.RegisterTable(table);
+            await unitOfWork.CommitAsync();
         }
     }
 }
